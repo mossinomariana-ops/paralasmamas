@@ -72,6 +72,7 @@ def inject_config():
             'app_name': config.APP_NOMBRE,
             'paleta_light': config.PALETA_LIGHT,
             'paleta_dark': config.PALETA_DARK,
+            'marca': config.MARCA,
         },
         'static_version': _static_version(),
         'usuario': usuario,
@@ -347,7 +348,7 @@ def api_lactancia_eliminar(id):
 # =============================================================================
 @app.route('/manifest.webmanifest')
 def manifest():
-    pal = config.PALETA_LIGHT
+    marca = config.MARCA
     data = {
         "name": "Lactancia — Banco de leche",
         "short_name": "Lactancia",
@@ -357,8 +358,8 @@ def manifest():
         "display": "standalone",
         "orientation": "portrait",
         "lang": "es-AR",
-        "background_color": pal['fondo'],
-        "theme_color": pal['acento'],
+        "background_color": marca['fondo_light'],
+        "theme_color": marca['theme_light'],
         "icons": [
             {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
             {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
@@ -380,4 +381,7 @@ def service_worker():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5060, debug=True)
+    # 5065 y no 5060: Chrome bloquea el 5060 (lo reserva para telefonía SIP) y
+    # devuelve ERR_UNSAFE_PORT sin llegar a abrir la app. Solo aplica al
+    # desarrollo local; en PythonAnywhere el puerto lo maneja el servidor.
+    app.run(host='127.0.0.1', port=5065, debug=True)

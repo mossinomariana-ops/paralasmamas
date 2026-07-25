@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% set es_registro = (modo == 'registro') %}
 {% block titulo %}{{ 'Crear cuenta' if es_registro else 'Iniciar sesión' }}{% endblock %}
+{% block body_clase %}lac-body lac-body--auth{% endblock %}
 
 {% block contenido %}
 <div class="lac-auth-wrap">

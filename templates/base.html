@@ -15,8 +15,8 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
 
   {# PWA — app instalable #}
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="{{ cfg.paleta_light.acento }}" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="{{ cfg.paleta_dark.acento }}" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="{{ cfg.marca.theme_light }}" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="{{ cfg.marca.theme_dark }}" media="(prefers-color-scheme: dark)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -47,7 +47,9 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 
-<body>
+{# La clase del body decide la paleta: las pantallas de acceso piden `lac-body`
+   para heredar el tema cálido; lactancia.html lo activa por `:has(.lac-wrap)`. #}
+<body class="{% block body_clase %}{% endblock %}">
 
   {% if usuario %}
   <div class="site-topbar">

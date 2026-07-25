@@ -38,6 +38,17 @@ PALETA_LIGHT = {
     'moneda-ars': '#74acdf', 'moneda-usd': '#3d8b37', 'deco-1': '#1f2937',
     'deco-2': '#374151', 'deco-3': '#6b7280', 'deco-4': '#d1d5db',
 }
+# Colores de MARCA para el sistema operativo: barra del navegador (theme-color) y
+# pantalla de arranque de la PWA. Van aparte de PALETA_LIGHT/DARK porque esas dos
+# son la base genérica de style.css, y la identidad real de la app es la paleta
+# cálida (coral sobre crema) que la hoja aplica sobre `body.lac-body`.
+MARCA = {
+    'theme_light': '#DB6A54',   # coral atardecer (= --color-acento cálido)
+    'fondo_light': '#FBF3E9',   # crema
+    'theme_dark':  '#DB6A54',
+    'fondo_dark':  '#241A16',   # cacao oscuro
+}
+
 PALETA_DARK = {
     'acento': '#6366f1', 'acento-oscuro': '#4f46e5', 'fondo': '#0f172a',
     'superficie': '#1e293b', 'texto': '#e5e7eb', 'texto-muted': '#94a3b8',

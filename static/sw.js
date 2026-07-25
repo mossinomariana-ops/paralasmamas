@@ -7,7 +7,7 @@
                       archivos llevan ?v=<version>, así un cambio se re-baja).
    ========================================================================= */
 
-const VERSION = 'lac-v1';
+const VERSION = 'lac-v2';
 const SHELL_CACHE = 'lac-shell-' + VERSION;
 const RUNTIME_CACHE = 'lac-runtime-' + VERSION;
 
@@ -59,7 +59,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/static/')) {
+  // Los videos quedan FUERA de la caché: pesan varios MB y el navegador los
+  // pide por pedacitos (respuestas 206), que la caché no sabe guardar.
+  if (url.pathname.startsWith('/static/') && !/\.(mp4|webm|mov)$/i.test(url.pathname)) {
     event.respondWith(
       caches.open(RUNTIME_CACHE).then((cache) =>
         cache.match(req).then((cached) => {

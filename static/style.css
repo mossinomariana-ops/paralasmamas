@@ -8298,3 +8298,129 @@ body.lac-body .lac-item { border-radius: 12px; }
 .lac-auth-login-link a{color:var(--color-acento);font-weight:600;text-decoration:none;}
 .lac-auth-error{background:var(--color-peligro-suave);color:var(--color-peligro);border-radius:10px;padding:.6rem .75rem;margin-bottom:1rem;font-size:.9rem;}
 .lac-auth-recordar{display:flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--color-texto-muted);margin:.25rem 0 1rem;text-align:left;cursor:pointer;}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Bienvenida — portada con video de la app de fondo
+   ─────────────────────────────────────────────────────────────────────────
+   La bienvenida es la carta de presentación: un recorrido por la app en
+   loop de fondo y, encima, la tarjeta con el ícono y los accesos.
+   El video NO es imprescindible: si el archivo no está, queda el velo
+   crema y la pantalla se ve igual de terminada. La legibilidad manda —
+   si el video es muy claro, se sube la opacidad del velo, no se baja.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* `lac-body` sirve para heredar la paleta cálida, pero arrastra el layout de
+   la pantalla interna: convierte el <main> en contenedor flex (ver la regla
+   `body.lac-body .contenido-principal` más arriba), y ahí el hero se encogía
+   al ancho de la tarjeta en vez de ocupar la pantalla. En las pantallas de
+   acceso el <main> vuelve a ser un bloque común, sin padding, para que el
+   fondo llegue de borde a borde. */
+body.lac-body--portada .contenido-principal,
+body.lac-body--auth .contenido-principal{display:block;min-height:0;padding:0;}
+
+/* En la bienvenida manda el video: se anula la ilustración fija que
+   body.lac-body pinta en su ::before. */
+body.lac-body--portada::before{display:none;}
+
+.lac-portada{
+  position:relative;
+  /* svh = alto real del visor con la barra del navegador a la vista (iOS). */
+  min-height:100svh;
+  display:flex;align-items:center;
+  padding:1.5rem;
+  overflow:hidden;
+}
+
+/* ── Fondo ────────────────────────────────────────────────────────────── */
+.lac-portada__fondo{position:absolute;inset:0;z-index:0;background:var(--color-fondo);}
+.lac-portada__media{
+  width:100%;height:100%;
+  object-fit:cover;      /* cubre la pantalla sin deformar el video */
+  object-position:center;
+  display:block;
+}
+/* Velo cálido en diagonal: opaco del lado de la tarjeta, casi limpio del
+   lado libre, para que el video se vea pero el texto siempre se lea. */
+.lac-portada__velo{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(100deg,
+      rgba(251,243,233,.95) 0%,
+      rgba(251,243,233,.90) 32%,
+      rgba(251,243,233,.52) 60%,
+      rgba(251,243,233,.34) 100%),
+    radial-gradient(900px 500px at 82% -6%, rgba(255,214,170,.38), transparent 62%);
+}
+
+/* ── Tarjeta ──────────────────────────────────────────────────────────── */
+.lac-portada__panel{position:relative;z-index:1;width:100%;max-width:1180px;margin:0 auto;}
+.lac-portada__card{
+  max-width:420px;
+  margin:0;                /* pegada a la izquierda del panel */
+  /* Mismo "vidrio esmerilado" que usan los paneles de la app. */
+  background:rgba(255,253,249,.74);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(236,221,205,.85);
+  box-shadow:var(--sombra-card);
+}
+
+/* ── Celular: no hay lugar para dos columnas ──────────────────────────── */
+@media (max-width:860px){
+  .lac-portada{padding:1.25rem 1rem;}
+  .lac-portada__card{margin:0 auto;}
+  /* Velo parejo (la tarjeta pasa por el medio del video) y un poco más claro
+     que en compu: acá la tarjeta tapa casi todo, así que el velo puede dejar
+     ver más el video sin comprometer la lectura. */
+  .lac-portada__velo{
+    background:
+      linear-gradient(180deg,
+        rgba(251,243,233,.72) 0%,
+        rgba(251,243,233,.84) 45%,
+        rgba(251,243,233,.72) 100%);
+  }
+}
+
+/* ── Modo noche ───────────────────────────────────────────────────────── */
+html[data-theme="dark"] .lac-portada__velo{
+  background:
+    linear-gradient(100deg,
+      rgba(36,26,22,.94) 0%,
+      rgba(36,26,22,.88) 32%,
+      rgba(36,26,22,.55) 60%,
+      rgba(36,26,22,.38) 100%),
+    radial-gradient(900px 500px at 82% -6%, rgba(240,151,123,.16), transparent 62%);
+}
+html[data-theme="dark"] .lac-portada__card{
+  background:rgba(45,33,28,.78);
+  border-color:rgba(110,83,70,.55);
+}
+@media (max-width:860px){
+  html[data-theme="dark"] .lac-portada__velo{
+    background:
+      linear-gradient(180deg,
+        rgba(36,26,22,.76) 0%,
+        rgba(36,26,22,.86) 45%,
+        rgba(36,26,22,.76) 100%);
+  }
+}
+
+/* ── Sin movimiento: quien tenga las animaciones desactivadas ve el poster ── */
+@media (prefers-reduced-motion: reduce){
+  .lac-portada__media{display:none;}
+}
+
+/* ── Login y registro: mismo fondo cálido, sin video ───────────────────── */
+body.lac-body--auth .lac-auth-wrap{background:transparent;}
+/* Se repinta el ::before de body.lac-body sin la ilustración: acá no aporta
+   (la tarjeta ocupa casi todo) y evita pedir un archivo que no existe. */
+body.lac-body--auth::before{
+  background:
+    linear-gradient(180deg, rgba(251,243,233,.96), rgba(251,243,233,.88)),
+    radial-gradient(900px 500px at 82% -6%, rgba(255,214,170,.38), transparent 62%);
+}
+html[data-theme="dark"] body.lac-body--auth::before{
+  background:
+    linear-gradient(180deg, rgba(36,26,22,.96), rgba(36,26,22,.90)),
+    radial-gradient(900px 500px at 82% -6%, rgba(240,151,123,.16), transparent 62%);
+}

@@ -1,0 +1,22 @@
+Video de fondo de la pantalla de bienvenida
+===========================================
+
+Poné acá DOS archivos, con estos nombres exactos:
+
+  tour.mp4          el video que se ve de fondo
+  tour-poster.jpg   una captura del primer cuadro del video
+
+Mientras no estén, la pantalla igual se ve bien: queda el fondo crema.
+No hay que tocar ningún código, alcanza con copiar los archivos acá.
+
+Cómo tiene que ser el video
+---------------------------
+  Formato .......... MP4 (códec H.264)
+  Peso ............. máximo 4 MB
+  Resolución ....... 1280 x 720 (horizontal)
+  Duración ......... 15 a 25 segundos
+  Final ............ que termine parecido a como empieza (se repite en loop)
+  Audio ............ SIN audio (se reproduce mudo igual y pesa menos)
+
+El límite de 4 MB importa: el hosting gratis tiene poco espacio y las mamás
+abren la app con datos móviles.
