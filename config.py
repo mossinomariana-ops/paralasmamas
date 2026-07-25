@@ -20,10 +20,34 @@ DEFAULTS = {
     'lactancia_aviso_heladera_horas':     12,
     'lactancia_aviso_descongelada_horas': 6,
     'lactancia_freezar_hasta_horas':      24,
+    # Para combinar dos extracciones en una sola bolsa las dos tienen que estar
+    # a la misma temperatura: se pide que lleven al menos estas horas enfriando
+    # en la heladera desde la extracción.
+    'lactancia_combinar_min_horas':       3,
+    # Capacidad de las bolsitas: apagada por defecto. Si la mamá la enciende, la
+    # app no la deja cargar más ml que la capacidad que declare.
+    'lactancia_bolsa_capacidad_activa':   False,
+    'lactancia_bolsa_capacidad_ml':       150,
+    'lactancia_pedir_confirmacion':       True,
     'lactancia_recordatorio_activo':      False,
     'lactancia_recordatorio_hora':        '21:00',
     'bebe_nombre':            '',   # vacío → la UI usa "el bebé"
     'bebe_fecha_nacimiento':  '',
+}
+
+# Rango permitido de cada valor configurable (mínimo, máximo). La pantalla de
+# Configuraciones también los limita, pero el que manda es este: la validación
+# de verdad se hace en el servidor.
+LIMITES = {
+    'freezer_meses':            (1, 24),
+    'heladera_horas':           (1, 168),
+    'descongelada_horas':       (1, 72),
+    'aviso_freezer_dias':       (1, 90),
+    'aviso_heladera_horas':     (1, 72),
+    'aviso_descongelada_horas': (1, 48),
+    'freezar_hasta_horas':      (1, 72),
+    'combinar_min_horas':       (0, 24),
+    'bolsa_capacidad_ml':       (10, 2000),
 }
 
 # Paleta de colores (mismos tonos que la app original). Se inyecta como

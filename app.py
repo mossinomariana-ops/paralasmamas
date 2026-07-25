@@ -53,6 +53,15 @@ def _es_ajax():
     return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
+def _horas_texto(horas):
+    """Horas (float) → texto corto para un mensaje: '40 min', '2 h', '2 h 20'."""
+    minutos = max(1, int(round(horas * 60)))
+    h, m = divmod(minutos, 60)
+    if not h:
+        return f"{m} min"
+    return f"{h} h" if not m else f"{h} h {m} min"
+
+
 def _static_version():
     """mtime más reciente de los estáticos principales → cache-busting."""
     try:
@@ -96,7 +105,7 @@ def api_lactancia():
 @app.route('/api/lactancia/crear', methods=['POST'])
 def api_lactancia_crear():
     try:
-        datos = logica._lac_leer_form_alta(request.form)
+        datos = logica._lac_leer_form_alta(request.form, logica._lac_params())
         database.agregar_partida_lactancia(**datos)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
@@ -189,9 +198,32 @@ def api_lactancia_freezar():
                 "Hay partidas vencidas entre las tildadas: confirmá que se pasaron "
                 "al freezer antes de vencerse para poder freezarlas.")
 
+        # Para juntar DOS o más extracciones en una sola bolsa, todas tienen que
+        # estar ya frías: se pide un mínimo de horas en la heladera desde la
+        # extracción (configurable). Con una sola partida no se combina nada, así
+        # que la regla no aplica.
+        minimo = params['combinar_min_horas']
+        if len(partidas) > 1 and minimo > 0:
+            tibias = [p for p in partidas
+                      if logica._lac_horas_en_heladera(p, ahora) < minimo]
+            if tibias:
+                falta = max(minimo - logica._lac_horas_en_heladera(p, ahora)
+                            for p in tibias)
+                cuantas = ('Una de las partidas tildadas' if len(tibias) == 1
+                           else f'{len(tibias)} de las partidas tildadas')
+                raise ValueError(
+                    f"{cuantas} todavía no llegó a las {minimo} h en la heladera. "
+                    "Para combinarlas las dos tienen que estar a la misma "
+                    f"temperatura: esperá {_horas_texto(falta)} y volvé a probar.")
+
         volumen_ml = sum(p['volumen_ml'] for p in partidas)
         if volumen_ml > 2000:
             raise ValueError("El volumen combinado supera los 2000 ml; freezá en tandas.")
+        if params['bolsa_capacidad_activa'] and volumen_ml > params['bolsa_capacidad_ml']:
+            raise ValueError(
+                f"Lo tildado suma {volumen_ml} ml y tus bolsitas son de "
+                f"{params['bolsa_capacidad_ml']} ml. Tildá menos partidas, o subí "
+                "la capacidad en Configuraciones.")
 
         mas_vieja = min(partidas,
                         key=lambda p: (p['fecha_extraccion'], p['hora_extraccion'] or ''))
@@ -240,6 +272,60 @@ def api_lactancia_recordatorio():
             raise ValueError("La hora del recordatorio debe ser HH:MM (ej. 21:00).")
         database.guardar_perfil(recordatorio_activo=1 if activo else 0,
                                 recordatorio_hora=hora)
+        if _es_ajax():
+            return jsonify({'ok': True, **logica._lac_payload()})
+        return redirect(url_for('inicio'))
+    except ValueError as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 400
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        return redirect(url_for('inicio'))
+
+
+@app.route('/api/lactancia/config', methods=['POST'])
+def api_lactancia_config():
+    """Guarda las Configuraciones de la mamá (tiempos, capacidad de bolsitas y
+    confirmaciones). Solo se tocan los campos que vengan en el formulario."""
+    try:
+        campos = {}
+
+        for corto, _clave in logica.LAC_PARAMS_NUM:
+            if corto not in request.form:
+                continue
+            crudo = (request.form.get(corto) or '').strip()
+            try:
+                valor = int(crudo)
+            except ValueError:
+                raise ValueError(f"«{corto.replace('_', ' ')}» tiene que ser un número entero.")
+            minimo, maximo = config.LIMITES[corto]
+            if not minimo <= valor <= maximo:
+                raise ValueError(
+                    f"«{corto.replace('_', ' ')}» tiene que estar entre {minimo} y {maximo}.")
+            campos[corto] = valor
+
+        for corto in ('bolsa_capacidad_activa', 'pedir_confirmacion'):
+            if corto in request.form:
+                campos[corto] = 1 if request.form.get(corto) in ('1', 'true', 'on', 'True') else 0
+
+        if not campos:
+            raise ValueError("No llegó ninguna configuración para guardar.")
+
+        # Coherencia: avisar antes de vencer, no después.
+        nuevos = {**logica._lac_params(), **campos}
+        if nuevos['aviso_heladera_horas'] > nuevos['heladera_horas']:
+            raise ValueError("El aviso de la heladera no puede ser mayor que el "
+                             "tiempo de vencimiento en la heladera.")
+        if nuevos['aviso_descongelada_horas'] > nuevos['descongelada_horas']:
+            raise ValueError("El aviso de la leche descongelada no puede ser mayor "
+                             "que su tiempo de vencimiento.")
+        if nuevos['aviso_freezer_dias'] > nuevos['freezer_meses'] * 30:
+            raise ValueError("El aviso del freezer no puede ser mayor que el tiempo "
+                             "de vencimiento en el freezer.")
+
+        database.guardar_perfil(**campos)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
         return redirect(url_for('inicio'))
@@ -307,7 +393,8 @@ def api_lactancia_editar(id):
         partida = database.obtener_partida_lactancia(id)
         if partida is None:
             raise ValueError(f"No existe la partida {id}.")
-        volumen_ml = logica._lac_parsear_volumen(request.form.get('volumen_ml'))
+        volumen_ml = logica._lac_parsear_volumen(request.form.get('volumen_ml'),
+                                                 logica._lac_params())
         notas = (request.form.get('notas') or '').strip()[:200]
         fecha, hora = logica._lac_parsear_extraccion(request.form)
         database.editar_partida_lactancia(id, fecha, hora, volumen_ml, notas)

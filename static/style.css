@@ -5818,8 +5818,7 @@ details[open] > .lac-panel-summary { border-bottom: 1px solid var(--color-borde)
   .lac-wrap[data-lac-sec="heladera"]     .lac-sec--heladera,
   .lac-wrap[data-lac-sec="resumen"]      .lac-sec--resumen,
   .lac-wrap[data-lac-sec="historial"]    .lac-sec--historial,
-  .lac-wrap[data-lac-sec="bebe"]         .lac-sec--bebe,
-  .lac-wrap[data-lac-sec="recordatorio"] .lac-sec--recordatorio { display: flex; }
+  .lac-wrap[data-lac-sec="config"]       .lac-sec--config { display: flex; }
 }
 
 
@@ -8313,6 +8312,120 @@ html[data-theme="dark"] body:has(.lac-wrap) .lac-fridge {
 /* Un toque más suave/tierno en superficies grandes del módulo */
 body.lac-body .lac-panel { border-radius: var(--radio-borde); }
 body.lac-body .lac-item { border-radius: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Hoja "Configuraciones" — tiempos, bolsitas y preferencias de cada mamá
+   Adentro viven también los subpaneles Bebé y Recordatorio.
+   ═══════════════════════════════════════════════════════════════════════ */
+.lac-config { padding: 0 0.9rem 0.9rem; }
+
+.lac-config-intro {
+  margin: 0 0 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-texto-muted);
+}
+
+.lac-config-grupo {
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px dashed var(--color-borde);
+}
+.lac-config-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-acento);
+}
+
+/* Una fila = etiqueta a la izquierda, número + unidad a la derecha. En pantalla
+   angosta el número no se achica: lo que se achica es la etiqueta. */
+.lac-config-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+.lac-config-label { min-width: 0; }
+.lac-config-num {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+}
+.lac-config-num input {
+  width: 4.2rem;
+  box-sizing: border-box;
+  padding: 0.32rem 0.45rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font-family: var(--fuente-principal);
+  font-size: 0.86rem;
+  text-align: right;
+}
+.lac-config-num input:focus { outline: none; box-shadow: var(--sombra-focus); }
+.lac-config-num em {
+  font-style: normal;
+  font-size: 0.76rem;
+  color: var(--color-texto-muted);
+  white-space: nowrap;
+}
+
+.lac-config-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.lac-config-check input { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 1px; }
+
+.lac-config-hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--color-texto-muted);
+}
+
+/* Fila del número de capacidad: apagada mientras el tilde esté sin marcar */
+.lac-config-fila.is-inactiva { opacity: 0.45; pointer-events: none; }
+
+#lac-config-guardar { margin-top: 0.2rem; }
+
+/* ── Subpaneles (Bebé y Recordatorio dentro de Configuraciones) ─────────── */
+.lac-subpanel {
+  margin-top: 0.85rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  overflow: hidden;
+}
+.lac-subpanel-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.lac-subpanel-summary::-webkit-details-marker { display: none; }
+.lac-subpanel-summary::after {
+  content: "▾";
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--color-texto-muted);
+}
+.lac-subpanel[open] > .lac-subpanel-summary::after { content: "▴"; }
+.lac-subpanel .lac-ico { color: var(--color-acento); }
+
 
 /* ═══════════════════════════════════════════════════════════════════════
    Pantallas de acceso (bienvenida / login / registro) — app Lactancia

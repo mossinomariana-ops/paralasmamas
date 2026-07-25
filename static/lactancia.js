@@ -479,6 +479,7 @@ opciones" (⋯) de cada partida.
         renderAviso();
         renderBebe();
         renderRecordatorio();
+        renderConfig();
         renderTablero();
         renderListas();
         // Estándar de notificaciones: refrescar la campana del header tras
@@ -699,22 +700,19 @@ opciones" (⋯) de cada partida.
     // Mari 2026-07-13). `confirmAccion` es la función que corre al confirmar.
     var confirmAccion = null;
 
-    // Preferencia por DISPOSITIVO (localStorage, no se sincroniza entre
-    // teléfonos): si está en '0', las confirmaciones se saltan. Por defecto
-    // activadas. Envuelto en try/catch por si localStorage no está disponible.
+    // Preferencia guardada en el PERFIL de la mamá (no en el teléfono): se
+    // cambia desde Configuraciones y la acompaña a cualquier dispositivo donde
+    // entre con su cuenta. Si el dato todavía no llegó, se asume que sí.
     function confirmacionesActivadas() {
-        try { return localStorage.getItem('lac-confirmar') !== '0'; }
-        catch (e) { return true; }
-    }
-    function setConfirmaciones(on) {
-        try { localStorage.setItem('lac-confirmar', on ? '1' : '0'); } catch (e) {}
+        var p = DATOS.params || {};
+        return p.pedir_confirmacion !== false;
     }
 
     // opts.check (opcional): texto de un checkbox OBLIGATORIO — el botón de
     // confirmar queda deshabilitado hasta tildarlo (ej. freezar una vencida:
     // hay que declarar que se pasó al freezer antes de vencerse).
     function abrirConfirm(opts) {
-        // Preferencia "sin confirmación" (por dispositivo): ejecuta la acción
+        // Preferencia "sin confirmación" (de Configuraciones): ejecuta la acción
         // directo, sin modal ni checkbox ni input opcional. Aplica a TODAS.
         if (!confirmacionesActivadas()) {
             var inSalto = $('lac-confirm-input');
@@ -953,6 +951,54 @@ opciones" (⋯) de cada partida.
         }, function () { btn.disabled = false; });
     }
 
+    // ── Configuraciones (tiempos, bolsitas y confirmaciones) ────────────────
+    // Los valores viven en el perfil de la mamá y llegan en DATOS.params, ya
+    // resueltos por el servidor (lo que ella configuró o, si no tocó nada, el
+    // valor por defecto). Acá solo se pintan y se mandan de vuelta.
+    var CFG_NUM = ['freezer_meses', 'heladera_horas', 'descongelada_horas',
+                   'aviso_freezer_dias', 'aviso_heladera_horas',
+                   'aviso_descongelada_horas', 'combinar_min_horas',
+                   'freezar_hasta_horas', 'bolsa_capacidad_ml'];
+    var CFG_BOOL = ['bolsa_capacidad_activa', 'pedir_confirmacion'];
+
+    // La capacidad solo se edita si la mamá declaró que sus bolsitas tienen tope.
+    function pintarCapacidad() {
+        var tog = $('cfg-bolsa_capacidad_activa');
+        var fila = $('cfg-bolsa-fila');
+        if (tog && fila) fila.classList.toggle('is-inactiva', !tog.checked);
+    }
+
+    function renderConfig() {
+        var p = DATOS.params || {};
+        CFG_NUM.forEach(function (k) {
+            var el = $('cfg-' + k);
+            // No pisar lo que la mamá está tipeando en ese momento.
+            if (el && p[k] !== undefined && document.activeElement !== el) el.value = p[k];
+        });
+        CFG_BOOL.forEach(function (k) {
+            var el = $('cfg-' + k);
+            if (el && p[k] !== undefined) el.checked = !!p[k];
+        });
+        pintarCapacidad();
+    }
+
+    function guardarConfig() {
+        var params = new URLSearchParams();
+        CFG_NUM.forEach(function (k) {
+            var el = $('cfg-' + k);
+            if (el) params.append(k, (el.value || '').trim());
+        });
+        CFG_BOOL.forEach(function (k) {
+            var el = $('cfg-' + k);
+            if (el) params.append(k, el.checked ? '1' : '0');
+        });
+        var btn = $('lac-config-guardar');
+        btn.disabled = true;
+        postAccion('/api/lactancia/config', params, function () {
+            toast('⚙️ Configuraciones guardadas.');
+        }, function () { btn.disabled = false; });
+    }
+
     // ── Selector de sección (SOLO mobile) ────────────────────────────────────
     // Cambia data-lac-sec en .lac-wrap (el CSS muestra solo esa sección) y, si
     // la sección elegida es un <details> (bebé/recordatorio/historial), la abre.
@@ -1028,17 +1074,9 @@ opciones" (⋯) de cada partida.
         $('lac-rec-guardar').addEventListener('click', guardarRecordatorio);
         $('lac-bebe-guardar').addEventListener('click', guardarBebe);
 
-        // Toggle "pedir confirmación" (preferencia por dispositivo)
-        var ctog = $('lac-confirmar-toggle');
-        if (ctog) {
-            ctog.checked = confirmacionesActivadas();
-            ctog.addEventListener('change', function () {
-                setConfirmaciones(this.checked);
-                toast(this.checked
-                    ? '🔒 Te voy a pedir confirmación en cada acción.'
-                    : '⚡ Acciones sin confirmación (en este dispositivo).', 'info');
-            });
-        }
+        $('lac-config-guardar').addEventListener('click', guardarConfig);
+        var capTog = $('cfg-bolsa_capacidad_activa');
+        if (capTog) capTog.addEventListener('change', pintarCapacidad);
 
         // Hoja "Más opciones" → acciones sobre masPartidaId
         $('lac-mas-usada').addEventListener('click', function () {

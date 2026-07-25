@@ -39,20 +39,37 @@ def _act_sumar_intervalo(fecha, n, unidad):
     return fecha.replace(year=anio, month=mes, day=dia)
 
 
-def _lac_params():
-    """Los 7 parámetros de conservación/aviso (int), iguales para todas las
-    mamás (config.DEFAULTS). Cada una ajusta según su profesional (disclaimer)."""
+# Parámetros numéricos: nombre corto → clave en config.DEFAULTS.
+LAC_PARAMS_NUM = (
+    ('freezer_meses',            'lactancia_freezer_meses'),
+    ('heladera_horas',           'lactancia_heladera_horas'),
+    ('descongelada_horas',       'lactancia_descongelada_horas'),
+    ('aviso_freezer_dias',       'lactancia_aviso_freezer_dias'),
+    ('aviso_heladera_horas',     'lactancia_aviso_heladera_horas'),
+    ('aviso_descongelada_horas', 'lactancia_aviso_descongelada_horas'),
+    ('freezar_hasta_horas',      'lactancia_freezar_hasta_horas'),
+    ('combinar_min_horas',       'lactancia_combinar_min_horas'),
+    ('bolsa_capacidad_ml',       'lactancia_bolsa_capacidad_ml'),
+)
+
+
+def _lac_params(perfil=None):
+    """Los tiempos de conservación y aviso de ESTA mamá.
+
+    Cada una los ajusta desde Configuraciones según su profesional. En la base
+    un valor en NULL significa "todavía no lo tocó": ahí vale el de
+    config.DEFAULTS. Por eso se compara contra None y no por verdadero/falso —
+    un 0 configurado es un valor válido, no un "vacío"."""
+    if perfil is None:
+        perfil = database.obtener_perfil()
     params = {}
-    for clave, corta in (
-        ('lactancia_freezer_meses',            'freezer_meses'),
-        ('lactancia_heladera_horas',           'heladera_horas'),
-        ('lactancia_descongelada_horas',       'descongelada_horas'),
-        ('lactancia_aviso_freezer_dias',       'aviso_freezer_dias'),
-        ('lactancia_aviso_heladera_horas',     'aviso_heladera_horas'),
-        ('lactancia_aviso_descongelada_horas', 'aviso_descongelada_horas'),
-        ('lactancia_freezar_hasta_horas',      'freezar_hasta_horas'),
-    ):
-        params[corta] = int(config.DEFAULTS[clave])
+    for corto, clave in LAC_PARAMS_NUM:
+        propio = perfil.get(corto)
+        params[corto] = int(propio) if propio is not None else int(config.DEFAULTS[clave])
+    for corto, clave in (('bolsa_capacidad_activa', 'lactancia_bolsa_capacidad_activa'),
+                         ('pedir_confirmacion',     'lactancia_pedir_confirmacion')):
+        propio = perfil.get(corto)
+        params[corto] = bool(propio) if propio is not None else bool(config.DEFAULTS[clave])
     return params
 
 
@@ -211,13 +228,21 @@ def _lac_payload():
 
 
 # ── Validación de formularios ────────────────────────────────────────────────
-def _lac_parsear_volumen(valor):
+def _lac_parsear_volumen(valor, params=None):
+    """Valida el volumen en ml. Si la mamá activó la capacidad de sus bolsitas
+    en Configuraciones, además no la deja pasarse de esa capacidad."""
     try:
         volumen = int(str(valor if valor is not None else '').strip())
     except ValueError:
         raise ValueError("El volumen (ml) debe ser un número entero.")
     if not 1 <= volumen <= 2000:
         raise ValueError("El volumen debe estar entre 1 y 2000 ml.")
+    if params and params.get('bolsa_capacidad_activa'):
+        tope = int(params['bolsa_capacidad_ml'])
+        if volumen > tope:
+            raise ValueError(
+                f"Tus bolsitas son de {tope} ml. Si querés cargar más, subí la "
+                "capacidad en Configuraciones o cargalo en dos bolsitas.")
     return volumen
 
 
@@ -250,11 +275,11 @@ def _lac_parsear_fecha_cierre(valor):
     return valor
 
 
-def _lac_leer_form_alta(form):
+def _lac_leer_form_alta(form, params=None):
     ubicacion = form.get('ubicacion', '')
     if ubicacion not in LAC_UBICACIONES:
         raise ValueError(f"Ubicación inválida: {ubicacion}")
-    volumen_ml = _lac_parsear_volumen(form.get('volumen_ml'))
+    volumen_ml = _lac_parsear_volumen(form.get('volumen_ml'), params)
     notas = (form.get('notas') or '').strip()[:200]
     fecha, hora = _lac_parsear_extraccion(form)
     return dict(ubicacion=ubicacion, fecha_extraccion=fecha, hora_extraccion=hora,

@@ -27,9 +27,20 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # Usuaria activa del request en curso (por hilo). app.py la fija en cada request.
 _local = threading.local()
 
+# Bases ya puestas al día en este proceso. La estructura de la base de cada
+# usuaria se crea al registrarse, pero cuando la app suma una tabla o una
+# columna las bases que YA existen no se enteran solas. Por eso se revisa la
+# primera vez que la usuaria entra tras arrancar la app: es una consulta y
+# después queda anotada acá. Sin esto, una mamá que ya venía usando la app se
+# encontraría con un error al guardar algo nuevo.
+_al_dia = set()
+
 
 def set_usuario_actual(uid):
     _local.uid = uid
+    if uid not in _al_dia:
+        crear_tablas_usuaria(uid)
+        _al_dia.add(uid)
 
 
 def _uid_actual():
@@ -90,11 +101,43 @@ def crear_tablas_usuaria(uid):
         )
     ''')
     cur.execute('INSERT OR IGNORE INTO perfil (id) VALUES (1)')
+
+    # Configuraciones de la usuaria. Van como columnas nuevas y NO en el CREATE
+    # de arriba, porque las bases que ya existen no se vuelven a crear: hay que
+    # agregarlas a mano. Quedan en NULL, que significa "usar el valor por
+    # defecto de config.DEFAULTS" — así una mamá que nunca tocó nada sigue
+    # exactamente igual que antes.
+    columnas = {fila[1] for fila in cur.execute('PRAGMA table_info(perfil)')}
+    for nombre, tipo in (
+        ('freezer_meses',            'INTEGER'),
+        ('heladera_horas',           'INTEGER'),
+        ('descongelada_horas',       'INTEGER'),
+        ('aviso_freezer_dias',       'INTEGER'),
+        ('aviso_heladera_horas',     'INTEGER'),
+        ('aviso_descongelada_horas', 'INTEGER'),
+        ('freezar_hasta_horas',      'INTEGER'),
+        ('combinar_min_horas',       'INTEGER'),
+        ('bolsa_capacidad_activa',   'INTEGER'),
+        ('bolsa_capacidad_ml',       'INTEGER'),
+        ('pedir_confirmacion',       'INTEGER'),
+    ):
+        if nombre not in columnas:
+            cur.execute(f'ALTER TABLE perfil ADD COLUMN {nombre} {tipo}')
+
     conn.commit()
     conn.close()
 
 
-# ── Perfil de la usuaria (bebé + recordatorio) ───────────────────────────────
+# Columnas del perfil que la usuaria puede editar desde Configuraciones.
+PERFIL_CONFIG = (
+    'freezer_meses', 'heladera_horas', 'descongelada_horas',
+    'aviso_freezer_dias', 'aviso_heladera_horas', 'aviso_descongelada_horas',
+    'freezar_hasta_horas', 'combinar_min_horas',
+    'bolsa_capacidad_activa', 'bolsa_capacidad_ml', 'pedir_confirmacion',
+)
+
+
+# ── Perfil de la usuaria (bebé + recordatorio + configuraciones) ─────────────
 def obtener_perfil():
     conn = conectar()
     fila = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
@@ -103,10 +146,10 @@ def obtener_perfil():
 
 
 def guardar_perfil(**campos):
-    """Actualiza solo las columnas pasadas del perfil (bebe_nombre,
-    bebe_fecha_nacimiento, recordatorio_activo, recordatorio_hora)."""
+    """Actualiza solo las columnas pasadas del perfil: datos del bebé, el
+    recordatorio nocturno y las configuraciones de PERFIL_CONFIG."""
     permitidas = ('bebe_nombre', 'bebe_fecha_nacimiento',
-                  'recordatorio_activo', 'recordatorio_hora')
+                  'recordatorio_activo', 'recordatorio_hora') + PERFIL_CONFIG
     sets, args = [], []
     for k, v in campos.items():
         if k in permitidas:
