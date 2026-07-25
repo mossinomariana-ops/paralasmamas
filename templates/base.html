@@ -51,18 +51,49 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
    para heredar el tema cálido; lactancia.html lo activa por `:has(.lac-wrap)`. #}
 <body class="{% block body_clase %}{% endblock %}">
 
+  {# Barra superior: SIN marca (ni ícono, ni "Lactancia", ni subtítulo). Solo el
+     bloque de acciones, arriba a la derecha y en tres filas:
+       1) usuaria (foto + nombre) — solo con cuenta de Google
+       2) Salir
+       3) sol/luna  ·  idioma (el idioma se suma cuando la traducción exista) #}
   {% if usuario %}
   <div class="site-topbar">
     <header class="site-header">
-      <div class="header-content">
-        <h1>🍼 Lactancia</h1>
-        <p class="subtitulo">El banco de leche de tu bebé</p>
-      </div>
-      <div class="header-acciones">
-        <button type="button" id="theme-toggle" class="header-icon-btn" title="Cambiar tema" aria-label="Cambiar tema">
-          <span id="theme-icon" class="theme-icon">🌙</span>
-        </button>
-        <a href="{{ url_for('auth.salir') }}" class="header-logout-btn" title="Cerrar sesión">Salir</a>
+      <div class="header-acciones header-acciones--filas">
+
+        {% if usuario.nombre or usuario.foto %}
+        <div class="header-fila header-fila--usuaria">
+          {% if usuario.foto %}
+          <img class="header-user-photo" src="{{ usuario.foto }}" alt="" width="28" height="28">
+          {% endif %}
+          <span class="header-user-nombre">{{ usuario.nombre }}</span>
+        </div>
+        {% endif %}
+
+        <div class="header-fila">
+          <a href="{{ url_for('auth.salir') }}" class="header-logout-btn" title="Cerrar sesión">Salir</a>
+        </div>
+
+        <div class="header-fila header-fila--prefs">
+          {# Un solo botón con los dos dibujos: el CSS muestra el que corresponde
+             según el tema, así no hay que repintar nada desde JS. #}
+          <button type="button" id="theme-toggle" class="header-icon-btn"
+                  title="Cambiar entre día y noche" aria-label="Cambiar entre día y noche">
+            <svg class="lac-ico lac-ico-luna" viewBox="0 0 24 24" aria-hidden="true">
+              <path class="relleno" d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/>
+              <path d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/>
+              <path d="M6.6 4.6v1.7M5.7 5.5h1.7"/>
+              <path d="M9.9 7.4v1.2M9.3 8h1.2"/>
+            </svg>
+            <svg class="lac-ico lac-ico-sol" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="relleno" cx="12" cy="12" r="4.5"/>
+              <circle cx="12" cy="12" r="4.5"/>
+              <path d="M12 2.7v2.1M12 19.2v2.1M2.7 12h2.1M19.2 12h2.1"/>
+              <path d="M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"/>
+            </svg>
+          </button>
+        </div>
+
       </div>
     </header>
   </div>
@@ -75,21 +106,17 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-  {# Cambio de tema (claro/oscuro) — mínimo, sin dependencias #}
+  {# Cambio de tema (claro/oscuro) — mínimo, sin dependencias.
+     Qué dibujo se ve (sol o luna) lo decide el CSS a partir de data-theme;
+     acá solo se cambia el tema y se recuerda la elección. #}
   <script>
     (function () {
       var btn = document.getElementById('theme-toggle');
-      var icon = document.getElementById('theme-icon');
-      function pintar() {
-        var oscuro = document.documentElement.dataset.theme === 'dark';
-        if (icon) icon.textContent = oscuro ? '☀️' : '🌙';
-      }
-      pintar();
-      if (btn) btn.addEventListener('click', function () {
+      if (!btn) return;
+      btn.addEventListener('click', function () {
         var nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = nuevo;
         localStorage.setItem('tema', nuevo);
-        pintar();
       });
     })();
   </script>

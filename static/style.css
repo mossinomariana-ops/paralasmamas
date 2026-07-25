@@ -227,33 +227,18 @@ body.has-dev-banner .site-topbar {
 /* ============================================================================
    HEADER (encabezado superior)
    ============================================================================ */
-/* Grilla de 3 columnas (1fr auto 1fr): ☰ a la izq, marca centrada real, y el
-   cluster de acciones a la der — así el sol/acciones NUNCA se superponen al
-   título (bug mobile). Las columnas laterales 1fr equilibran = marca centrada. */
+/* La barra ya no lleva marca (ni ícono, ni título, ni subtítulo): quedó solo el
+   bloque de acciones, alineado a la derecha. Por eso una sola columna en vez de
+   la grilla de 3 que centraba el título. */
 .site-header {
   background-color: var(--color-deco-1);
   color: white;
-  padding: 0.2rem 1rem;
+  padding: 0.35rem 1rem;
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr;
+  justify-items: end;
   align-items: center;
-  gap: 0.4rem;
-}
-
-.header-content { min-width: 0; text-align: center; }
-.header-content h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.site-header h1 {
-  color: white;
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.site-header .subtitulo {
-  margin: 0;
-  opacity: 0.85;
-  font-size: 0.72rem;
 }
 
 /* ── Usuario logueado (header) — avatar + Salir viven en .header-acciones ── */
@@ -4844,6 +4829,8 @@ body.has-dev-banner .settings-aside {
 .lac-campo input[type="text"],
 .lac-campo input[type="number"],
 .lac-campo input[type="time"],
+.lac-campo input[type="email"],
+.lac-campo input[type="password"],
 .lac-campo input.flatpickr-mobile {
   width: 100%;
   box-sizing: border-box;
@@ -7086,6 +7073,55 @@ span.rut-ahora-emoji { cursor: default; }
   gap: 0.5rem;
 }
 
+/* ── Bloque de acciones en TRES filas (pedido de Mari) ──────────────────────
+   1) usuaria (foto + nombre) · 2) Salir · 3) sol/luna · idioma
+   Todo pegado a la derecha, mismo orden en escritorio y en celular. */
+.header-acciones--filas {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.18rem;
+}
+.header-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 22px;
+}
+.header-fila--usuaria { gap: 0.45rem; }
+.header-user-nombre {
+  color: var(--color-texto-invertido);
+  font-size: 0.82rem;
+  font-weight: 600;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* En la fila de preferencias los botones son más chicos: son secundarios y
+   así las tres filas no estiran de más la barra. */
+.header-fila--prefs .header-icon-btn {
+  width: 26px;
+  height: 26px;
+}
+
+/* ── Sol y luna: dibujos propios, no emojis ────────────────────────────────
+   Los dos SVG viven en el mismo botón y el CSS muestra el que corresponde:
+   de día se ofrece la luna (pasar a noche) y de noche se ofrece el sol.
+   Van anidados bajo `.header-icon-btn` a propósito: `.lac-ico` fija su propio
+   `display` más abajo en el archivo y, con la misma especificidad, ganaba por
+   orden — se veían los dos dibujos a la vez. */
+.header-icon-btn .lac-ico-sol,
+.header-icon-btn .lac-ico-luna { width: 17px; height: 17px; }
+.header-icon-btn .lac-ico-sol { display: none; color: #E9A94C; }  /* miel tirando a coral */
+.header-icon-btn .lac-ico-luna { display: block; color: #9FC0D1; } /* celeste de la app */
+.lac-ico-sol .relleno { fill: #DB6A54; opacity: 0.30; }  /* corazón coral del sol */
+.lac-ico-luna .relleno { fill: #9FC0D1; opacity: 0.22; }
+html[data-theme="dark"] .header-icon-btn .lac-ico-sol { display: block; }
+html[data-theme="dark"] .header-icon-btn .lac-ico-luna { display: none; }
+
+/* Ícono de teléfono (botón "Instalar app"): toma el color del texto del botón */
+.lac-ico-tel { width: 18px; height: 18px; }
+
 /* Badge de la campana: pill roja arriba-derecha del botón (misma receta que el
    viejo contador de Lactancia en la nav). El botón es position:relative — ver
    `.header-icon-btn`. Lo renderiza base.html server-side y lo mantiene Notif. */
@@ -8412,15 +8448,52 @@ html[data-theme="dark"] .lac-portada__card{
 
 /* ── Login y registro: mismo fondo cálido, sin video ───────────────────── */
 body.lac-body--auth .lac-auth-wrap{background:transparent;}
-/* Se repinta el ::before de body.lac-body sin la ilustración: acá no aporta
-   (la tarjeta ocupa casi todo) y evita pedir un archivo que no existe. */
+
+/* La tarjeta de acceso usa el mismo "vidrio esmerilado" que los paneles de la
+   app: translúcida sobre el fondo cálido, con poco contraste contra él. Antes
+   era `.tarjeta` a secas, que pinta un blanco opaco (--color-superficie). */
+body.lac-body--auth .lac-auth-card{
+  background:rgba(255,253,249,.72);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(236,221,205,.85);
+}
+html[data-theme="dark"] body.lac-body--auth .lac-auth-card{
+  background:rgba(45,33,28,.76);
+  border-color:rgba(110,83,70,.55);
+}
+/* Los campos también translúcidos, para que no queden recuadros blancos
+   flotando sobre la tarjeta. */
+body.lac-body--auth .lac-campo input{
+  background:rgba(255,253,249,.62);
+  border-color:rgba(236,221,205,.95);
+}
+html[data-theme="dark"] body.lac-body--auth .lac-campo input{
+  background:rgba(255,253,249,.10);
+  border-color:rgba(110,83,70,.65);
+}
+/* El botón "Crear una cuenta" es el secundario: sobre la tarjeta translúcida
+   el blanco opaco se notaba como un parche. */
+body.lac-body--auth .lac-auth-btn-secundario,
+body.lac-body--portada .lac-auth-btn-secundario{
+  background:rgba(255,253,249,.55);
+}
+html[data-theme="dark"] body.lac-body--auth .lac-auth-btn-secundario,
+html[data-theme="dark"] body.lac-body--portada .lac-auth-btn-secundario{
+  background:rgba(255,253,249,.08);
+}
+/* Login y registro llevan la misma ilustración de fondo que la app, con el velo
+   un poco más cerrado que adentro: acá el contenido es texto y campos chicos,
+   y la lectura manda. */
 body.lac-body--auth::before{
   background:
-    linear-gradient(180deg, rgba(251,243,233,.96), rgba(251,243,233,.88)),
-    radial-gradient(900px 500px at 82% -6%, rgba(255,214,170,.38), transparent 62%);
+    linear-gradient(180deg, rgba(251,243,233,.90) 0%, rgba(251,243,233,.84) 100%),
+    radial-gradient(900px 500px at 82% -6%, rgba(255,214,170,.34), transparent 62%),
+    url('img/fondo-lactancia.jpg') center / cover no-repeat;
 }
 html[data-theme="dark"] body.lac-body--auth::before{
   background:
-    linear-gradient(180deg, rgba(36,26,22,.96), rgba(36,26,22,.90)),
-    radial-gradient(900px 500px at 82% -6%, rgba(240,151,123,.16), transparent 62%);
+    linear-gradient(180deg, rgba(36,26,22,.90) 0%, rgba(36,26,22,.86) 100%),
+    radial-gradient(900px 500px at 82% -6%, rgba(240,151,123,.16), transparent 62%),
+    url('img/fondo-lactancia.jpg') center / cover no-repeat;
 }

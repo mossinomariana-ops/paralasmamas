@@ -38,13 +38,22 @@
     var btn = document.createElement('button');
     btn.id = 'pwa-install-btn';
     btn.type = 'button';
-    btn.textContent = '📲 Instalar app';
+    // Teléfono dibujado con el mismo trazo que el resto de los íconos de la app
+    // (.lac-ico), en vez del emoji 📲, que cada sistema dibuja a su manera.
+    btn.innerHTML =
+      '<svg class="lac-ico lac-ico-tel" viewBox="0 0 24 24" aria-hidden="true">'
+      + '<rect class="relleno" x="6.4" y="2.7" width="11.2" height="18.6" rx="2.6"/>'
+      + '<rect x="6.4" y="2.7" width="11.2" height="18.6" rx="2.6"/>'
+      + '<path d="M10.3 5.1h3.4"/>'
+      + '<path d="M12 10.2c1.6 1.9 2.8 3.4 2.8 4.9a2.8 2.8 0 1 1-5.6 0c0-1.5 1.2-3 2.8-4.9Z"/>'
+      + '</svg><span>Instalar app</span>';
     btn.style.cssText = [
       'position:fixed', 'left:50%', 'transform:translateX(-50%)', 'bottom:16px',
       'z-index:2000', 'background:var(--color-acento,#4f46e5)',
       'color:var(--color-texto-invertido,#fff)', 'border:none', 'border-radius:999px',
       'padding:.7rem 1.3rem', 'font-size:1rem', 'font-weight:600',
-      'box-shadow:0 4px 14px rgba(0,0,0,.2)', 'cursor:pointer'
+      'box-shadow:0 4px 14px rgba(0,0,0,.2)', 'cursor:pointer',
+      'display:flex', 'align-items:center', 'gap:.5rem'
     ].join(';');
     btn.addEventListener('click', function () {
       if (!deferredPrompt) return;
