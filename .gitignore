@@ -1,0 +1,12 @@
+# Datos de las usuarias (bases SQLite) y clave de sesión — NUNCA al repo
+data/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,368 @@
+# =============================================================================
+# database.py — Capa de datos de la app Lactancia (multiusuario).
+# =============================================================================
+# AISLAMIENTO POR USUARIA: cada mamá tiene SU PROPIO archivo SQLite en
+# data/u_<id>.db. conectar() abre el de la usuaria activa (según la sesión, que
+# app.py fija con set_usuario_actual()). Así los datos de una mamá jamás se
+# cruzan con los de otra, y al instalar/registrarse su base nace vacía.
+#
+# Base CENTRAL usuarios.db: solo el registro de cuentas (invitadas + con mail).
+#
+# Las funciones de partidas son la misma capa de datos PURA de la app original:
+# NO calculan vencimientos ni estados (eso vive en logica.py). Las partidas
+# cerradas (motivo_cierre no NULL) son el historial: viven en la misma tabla.
+# =============================================================================
+
+import os
+import sqlite3
+import threading
+from datetime import datetime
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+USUARIOS_DB = os.path.join(DATA_DIR, 'usuarios.db')
+
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# Usuaria activa del request en curso (por hilo). app.py la fija en cada request.
+_local = threading.local()
+
+
+def set_usuario_actual(uid):
+    _local.uid = uid
+
+
+def _uid_actual():
+    uid = getattr(_local, 'uid', None)
+    if uid is None:
+        raise RuntimeError("No hay usuaria activa en este request.")
+    return uid
+
+
+def _ahora_iso():
+    return datetime.now().isoformat(timespec='seconds')
+
+
+# ── Conexión a la base de la usuaria activa ──────────────────────────────────
+def _ruta_db_usuaria(uid):
+    return os.path.join(DATA_DIR, f'u_{int(uid)}.db')
+
+
+def conectar(uid=None):
+    """Abre la base SQLite de la usuaria (la activa si no se pasa uid)."""
+    if uid is None:
+        uid = _uid_actual()
+    conn = sqlite3.connect(_ruta_db_usuaria(uid), detect_types=sqlite3.PARSE_DECLTYPES)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def crear_tablas_usuaria(uid):
+    """Crea (si no existen) las tablas de la base de una usuaria: sus partidas
+    y su perfil (bebé + recordatorio). Idempotente."""
+    conn = conectar(uid)
+    cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS lactancia_partidas (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            ubicacion        TEXT    NOT NULL,
+            cargada          TEXT    NOT NULL,
+            fecha_extraccion TEXT    NOT NULL,
+            hora_extraccion  TEXT,
+            volumen_ml       INTEGER NOT NULL,
+            motivo_cierre    TEXT,
+            fecha_cierre     TEXT,
+            notas            TEXT    DEFAULT '',
+            origen_id        INTEGER,
+            actualizado      TEXT,
+            tipo             TEXT,
+            consumido_ml     INTEGER
+        )
+    ''')
+    # Perfil: una sola fila (id=1) por base de usuaria.
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS perfil (
+            id                    INTEGER PRIMARY KEY CHECK (id = 1),
+            bebe_nombre           TEXT    DEFAULT '',
+            bebe_fecha_nacimiento TEXT    DEFAULT '',
+            recordatorio_activo   INTEGER DEFAULT 0,
+            recordatorio_hora     TEXT    DEFAULT '21:00'
+        )
+    ''')
+    cur.execute('INSERT OR IGNORE INTO perfil (id) VALUES (1)')
+    conn.commit()
+    conn.close()
+
+
+# ── Perfil de la usuaria (bebé + recordatorio) ───────────────────────────────
+def obtener_perfil():
+    conn = conectar()
+    fila = conn.execute('SELECT * FROM perfil WHERE id = 1').fetchone()
+    conn.close()
+    return dict(fila) if fila else {}
+
+
+def guardar_perfil(**campos):
+    """Actualiza solo las columnas pasadas del perfil (bebe_nombre,
+    bebe_fecha_nacimiento, recordatorio_activo, recordatorio_hora)."""
+    permitidas = ('bebe_nombre', 'bebe_fecha_nacimiento',
+                  'recordatorio_activo', 'recordatorio_hora')
+    sets, args = [], []
+    for k, v in campos.items():
+        if k in permitidas:
+            sets.append(f'{k} = ?')
+            args.append(v)
+    if not sets:
+        return
+    conn = conectar()
+    conn.execute(f"UPDATE perfil SET {', '.join(sets)} WHERE id = 1", args)
+    conn.commit()
+    conn.close()
+
+
+# =============================================================================
+# BASE CENTRAL: usuarios (cuentas)
+# =============================================================================
+def conectar_usuarios():
+    conn = sqlite3.connect(USUARIOS_DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_usuarios():
+    """Crea la tabla central de cuentas. Se llama una vez al iniciar la app."""
+    conn = conectar_usuarios()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            tipo          TEXT NOT NULL,          -- 'invitada' | 'cuenta'
+            email         TEXT UNIQUE,            -- NULL en invitadas
+            password_hash TEXT,                   -- NULL en invitadas
+            creado        TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+def crear_usuario(tipo, email=None, password_hash=None):
+    """Inserta una usuaria (invitada o cuenta), le crea su base propia y
+    devuelve su id."""
+    conn = conectar_usuarios()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO usuarios (tipo, email, password_hash, creado) VALUES (?, ?, ?, ?)',
+        (tipo, email, password_hash, _ahora_iso())
+    )
+    conn.commit()
+    uid = cur.lastrowid
+    conn.close()
+    crear_tablas_usuaria(uid)
+    return uid
+
+
+def obtener_usuario_por_email(email):
+    conn = conectar_usuarios()
+    fila = conn.execute('SELECT * FROM usuarios WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    return dict(fila) if fila else None
+
+
+def obtener_usuario(uid):
+    conn = conectar_usuarios()
+    fila = conn.execute('SELECT * FROM usuarios WHERE id = ?', (uid,)).fetchone()
+    conn.close()
+    return dict(fila) if fila else None
+
+
+# =============================================================================
+# PARTIDAS DE LACTANCIA (capa de datos pura; opera sobre la base de la usuaria)
+# =============================================================================
+def obtener_partidas_lactancia(ubicacion=None):
+    """Devuelve todas las partidas (orden crudo por fecha_extraccion, id).
+    El orden FIFO definitivo (por vencimiento calculado) lo arma logica.py."""
+    conn = conectar()
+    if ubicacion is None:
+        filas = conn.execute(
+            'SELECT * FROM lactancia_partidas ORDER BY fecha_extraccion, id'
+        ).fetchall()
+    else:
+        filas = conn.execute(
+            'SELECT * FROM lactancia_partidas WHERE ubicacion = ? ORDER BY fecha_extraccion, id',
+            (ubicacion,)
+        ).fetchall()
+    conn.close()
+    return filas
+
+
+def obtener_partida_lactancia(partida_id):
+    """Devuelve una partida por su id, o None si no existe."""
+    conn = conectar()
+    fila = conn.execute(
+        'SELECT * FROM lactancia_partidas WHERE id = ?', (partida_id,)
+    ).fetchone()
+    conn.close()
+    return fila
+
+
+def agregar_partida_lactancia(ubicacion, fecha_extraccion, hora_extraccion, volumen_ml,
+                              notas='', origen_id=None, tipo='fresca'):
+    """Inserta una partida nueva y devuelve su id. `cargada` = timestamp real
+    del servidor (auditoría inmutable). `tipo` por defecto 'fresca'."""
+    conn = conectar()
+    cursor = conn.cursor()
+    ahora = _ahora_iso()
+    cursor.execute('''
+        INSERT INTO lactancia_partidas (
+            ubicacion, tipo, cargada, fecha_extraccion, hora_extraccion,
+            volumen_ml, notas, origen_id, actualizado
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (ubicacion, tipo, ahora, fecha_extraccion, hora_extraccion, volumen_ml,
+          notas, origen_id, ahora))
+    conn.commit()
+    nuevo_id = cursor.lastrowid
+    conn.close()
+    return nuevo_id
+
+
+def editar_partida_lactancia(partida_id, fecha_extraccion, hora_extraccion, volumen_ml, notas):
+    """Actualiza los campos editables de una partida. NO toca ubicacion ni cargada."""
+    conn = conectar()
+    conn.execute('''
+        UPDATE lactancia_partidas
+        SET fecha_extraccion=?, hora_extraccion=?, volumen_ml=?, notas=?, actualizado=?
+        WHERE id=?
+    ''', (fecha_extraccion, hora_extraccion, volumen_ml, notas, _ahora_iso(), partida_id))
+    conn.commit()
+    conn.close()
+
+
+def cerrar_partida_lactancia(partida_id, motivo, fecha_cierre, notas=None, consumido_ml=None):
+    """Cierra una partida como 'usada' o 'descartada'. consumido_ml se setea
+    SIEMPRE (NULL si no viene). `notas` solo se actualiza si viene."""
+    conn = conectar()
+    sets = ['motivo_cierre=?', 'fecha_cierre=?', 'consumido_ml=?', 'actualizado=?']
+    args = [motivo, fecha_cierre, consumido_ml, _ahora_iso()]
+    if notas is not None:
+        sets.append('notas=?')
+        args.append(notas)
+    args.append(partida_id)
+    conn.execute(f"UPDATE lactancia_partidas SET {', '.join(sets)} WHERE id=?", args)
+    conn.commit()
+    conn.close()
+
+
+def combinar_partidas_lactancia(ids, fecha_extraccion, hora_extraccion, volumen_ml,
+                                fecha_cierre):
+    """Freeza en bloque: N partidas de heladera → 1 partida nueva de freezer.
+    Cierra cada heladera de origen como 'trasladada' con origen_id = la nueva.
+    Devuelve el id de la partida nueva de freezer. Operación atómica."""
+    conn = conectar()
+    cursor = conn.cursor()
+    ahora = _ahora_iso()
+    cursor.execute('''
+        INSERT INTO lactancia_partidas (
+            ubicacion, tipo, cargada, fecha_extraccion, hora_extraccion,
+            volumen_ml, notas, origen_id, actualizado
+        )
+        VALUES ('freezer', 'congelada', ?, ?, ?, ?, '', NULL, ?)
+    ''', (ahora, fecha_extraccion, hora_extraccion, volumen_ml, ahora))
+    nuevo_id = cursor.lastrowid
+    for partida_id in ids:
+        cursor.execute('''
+            UPDATE lactancia_partidas
+            SET motivo_cierre='trasladada', fecha_cierre=?, origen_id=?, actualizado=?
+            WHERE id=?
+        ''', (fecha_cierre, nuevo_id, ahora, partida_id))
+    conn.commit()
+    conn.close()
+    return nuevo_id
+
+
+def bajar_partida_lactancia(freezer_id, fecha_cierre):
+    """Baja una bolsa del FREEZER a la HELADERA para descongelar (inverso de
+    combinar, 1 → 1). Crea una heladera 'descongelada' y cierra la de freezer
+    como trasladada. Devuelve el id de la nueva heladera. Operación atómica."""
+    conn = conectar()
+    try:
+        cursor = conn.cursor()
+        f = cursor.execute(
+            'SELECT ubicacion, motivo_cierre, fecha_extraccion, hora_extraccion, '
+            'volumen_ml, notas FROM lactancia_partidas WHERE id = ?', (freezer_id,)
+        ).fetchone()
+        if f is None:
+            raise ValueError('La partida no existe.')
+        if f['ubicacion'] != 'freezer':
+            raise ValueError('Solo se pueden bajar bolsas del freezer.')
+        if f['motivo_cierre'] is not None:
+            raise ValueError('Esa bolsa ya no está en el freezer.')
+        ahora = _ahora_iso()
+        cursor.execute('''
+            INSERT INTO lactancia_partidas (
+                ubicacion, tipo, cargada, fecha_extraccion, hora_extraccion,
+                volumen_ml, notas, origen_id, actualizado
+            )
+            VALUES ('heladera', 'descongelada', ?, ?, ?, ?, ?, NULL, ?)
+        ''', (ahora, f['fecha_extraccion'], f['hora_extraccion'],
+              f['volumen_ml'], f['notas'], ahora))
+        nueva_id = cursor.lastrowid
+        cursor.execute('''
+            UPDATE lactancia_partidas
+            SET motivo_cierre='trasladada', fecha_cierre=?, origen_id=?, actualizado=?
+            WHERE id=?
+        ''', (fecha_cierre, nueva_id, ahora, freezer_id))
+        conn.commit()
+        return nueva_id
+    finally:
+        conn.close()
+
+
+def reabrir_partida_lactancia(partida_id):
+    """Deshace el cierre de una partida. Si era 'trasladada' (freezada en una
+    combinación), deshace la combinación COMPLETA (borra la hija de freezer si
+    sigue abierta y reabre todas las heladeras de la combinación)."""
+    conn = conectar()
+    try:
+        cursor = conn.cursor()
+        fila = cursor.execute(
+            'SELECT motivo_cierre, origen_id FROM lactancia_partidas WHERE id = ?',
+            (partida_id,)
+        ).fetchone()
+        if fila is None:
+            raise ValueError('La partida no existe.')
+        ahora = _ahora_iso()
+
+        if fila['motivo_cierre'] == 'trasladada' and fila['origen_id']:
+            hija = cursor.execute(
+                'SELECT id, motivo_cierre FROM lactancia_partidas WHERE id = ?',
+                (fila['origen_id'],)
+            ).fetchone()
+            if hija is not None:
+                if hija['motivo_cierre'] is not None:
+                    raise ValueError('No se puede reabrir: la partida freezada con esta leche ya se cerró.')
+                cursor.execute('DELETE FROM lactancia_partidas WHERE id = ?', (hija['id'],))
+                cursor.execute('''
+                    UPDATE lactancia_partidas
+                    SET motivo_cierre=NULL, fecha_cierre=NULL, origen_id=NULL, actualizado=?
+                    WHERE origen_id=? AND motivo_cierre='trasladada'
+                ''', (ahora, hija['id']))
+                conn.commit()
+                return
+
+        cursor.execute('''
+            UPDATE lactancia_partidas
+            SET motivo_cierre=NULL, fecha_cierre=NULL, origen_id=NULL, actualizado=?
+            WHERE id=?
+        ''', (ahora, partida_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def eliminar_partida_lactancia(partida_id):
+    """Elimina la partida definitivamente (corrección de cargas erróneas)."""
+    conn = conectar()
+    conn.execute('DELETE FROM lactancia_partidas WHERE id = ?', (partida_id,))
+    conn.commit()
+    conn.close()

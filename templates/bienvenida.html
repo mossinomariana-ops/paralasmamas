@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Bienvenida{% endblock %}
+
+{% block contenido %}
+<div class="lac-auth-wrap">
+  <div class="lac-auth-card tarjeta">
+
+    <img class="lac-auth-logo" src="/static/icons/icon-192.png" alt="" width="96" height="96">
+    <h2 class="lac-auth-titulo">Tu banco de leche</h2>
+    <p class="lac-auth-sub">Llevá el stock de tu leche materna: freezer, heladera,
+      vencimientos y avisos. Simple y en tu teléfono.</p>
+
+    {# ── Entrar sin cuenta (invitada) ── #}
+    <form method="post" action="{{ url_for('auth.invitada') }}" class="lac-auth-form">
+      <button type="submit" class="lac-btn-block lac-auth-btn-principal">
+        Entrar sin cuenta
+      </button>
+    </form>
+    <p class="lac-auth-aviso">
+      ⚠️ Tus datos se guardan solo en <strong>este teléfono</strong>. Si borrás los
+      datos del navegador o cambiás de celular, se pierden. Para no perderlos nunca,
+      creá una cuenta.
+    </p>
+
+    <div class="lac-auth-sep"><span>o</span></div>
+
+    {# ── Cuenta ── #}
+    <a href="{{ url_for('auth.registro') }}" class="lac-btn-block lac-auth-btn-secundario">
+      Crear una cuenta
+    </a>
+    <p class="lac-auth-login-link">
+      ¿Ya tenés cuenta? <a href="{{ url_for('auth.login') }}">Iniciá sesión</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

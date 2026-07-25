@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set es_registro = (modo == 'registro') %}
+{% block titulo %}{{ 'Crear cuenta' if es_registro else 'Iniciar sesión' }}{% endblock %}
+
+{% block contenido %}
+<div class="lac-auth-wrap">
+  <div class="lac-auth-card tarjeta">
+
+    <img class="lac-auth-logo" src="/static/icons/icon-192.png" alt="" width="80" height="80">
+    <h2 class="lac-auth-titulo">{{ 'Crear una cuenta' if es_registro else 'Iniciar sesión' }}</h2>
+    <p class="lac-auth-sub">
+      {% if es_registro %}Con una cuenta entrás desde cualquier teléfono y no perdés tus datos.
+      {% else %}Entrá con tu mail y clave.{% endif %}
+    </p>
+
+    {% if error %}<div class="lac-auth-error">{{ error }}</div>{% endif %}
+
+    <form method="post"
+          action="{{ url_for('auth.registro') if es_registro else url_for('auth.login') }}"
+          class="lac-auth-form">
+      <div class="lac-campo">
+        <label for="au-email">Mail</label>
+        <input type="email" id="au-email" name="email" value="{{ email or '' }}"
+               autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="lac-campo">
+        <label for="au-pass">Clave</label>
+        <input type="password" id="au-pass" name="password"
+               autocomplete="{{ 'new-password' if es_registro else 'current-password' }}"
+               required minlength="6" placeholder="Al menos 6 caracteres">
+      </div>
+      {% if es_registro %}
+      <div class="lac-campo">
+        <label for="au-pass2">Repetir clave</label>
+        <input type="password" id="au-pass2" name="password2"
+               autocomplete="new-password" required minlength="6">
+      </div>
+      {% endif %}
+
+      <label class="lac-auth-recordar">
+        <input type="checkbox" name="recordar" value="1" checked>
+        <span>Recordar en este dispositivo (no cerrar sesión)</span>
+      </label>
+
+      <button type="submit" class="lac-btn-block lac-auth-btn-principal">
+        {{ 'Crear cuenta' if es_registro else 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="lac-auth-login-link">
+      {% if es_registro %}
+        ¿Ya tenés cuenta? <a href="{{ url_for('auth.login') }}">Iniciá sesión</a>
+      {% else %}
+        ¿No tenés cuenta? <a href="{{ url_for('auth.registro') }}">Creá una</a>
+      {% endif %}
+    </p>
+    <p class="lac-auth-login-link">
+      <a href="{{ url_for('auth.bienvenida') }}">← Volver</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

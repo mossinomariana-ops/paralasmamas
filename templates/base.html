@@ -1,0 +1,99 @@
+{#
+================================================================================
+base.html — Plantilla base de la app Lactancia.
+Header propio (marca + tema + salir), paleta por CSS vars y bloques de contenido.
+El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
+================================================================================#}
+<!DOCTYPE html>
+<html lang="es-AR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block titulo %}Lactancia{% endblock %} · Lactancia</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>">
+
+  {# PWA — app instalable #}
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="{{ cfg.paleta_light.acento }}" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="{{ cfg.paleta_dark.acento }}" media="(prefers-color-scheme: dark)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Lactancia">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon-180.png">
+
+  {# Anti-flicker: aplica el tema guardado antes del primer paint #}
+  <script>
+    (function () {
+      var t = localStorage.getItem('tema') || 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+
+  {# Paleta dinámica desde config → variables CSS que usa style.css #}
+  <style>
+    :root {
+      {% for var, val in cfg.paleta_light.items() %}--color-{{ var }}: {{ val }};
+      {% endfor %}
+    }
+    html[data-theme="dark"] {
+      {% for var, val in cfg.paleta_dark.items() %}--color-{{ var }}: {{ val }};
+      {% endfor %}
+    }
+  </style>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ static_version }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+
+<body>
+
+  {% if usuario %}
+  <div class="site-topbar">
+    <header class="site-header">
+      <div class="header-content">
+        <h1>🍼 Lactancia</h1>
+        <p class="subtitulo">El banco de leche de tu bebé</p>
+      </div>
+      <div class="header-acciones">
+        <button type="button" id="theme-toggle" class="header-icon-btn" title="Cambiar tema" aria-label="Cambiar tema">
+          <span id="theme-icon" class="theme-icon">🌙</span>
+        </button>
+        <a href="{{ url_for('auth.salir') }}" class="header-logout-btn" title="Cerrar sesión">Salir</a>
+      </div>
+    </header>
+  </div>
+  {% endif %}
+
+  <main class="contenido-principal">
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+  {# Cambio de tema (claro/oscuro) — mínimo, sin dependencias #}
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      var icon = document.getElementById('theme-icon');
+      function pintar() {
+        var oscuro = document.documentElement.dataset.theme === 'dark';
+        if (icon) icon.textContent = oscuro ? '☀️' : '🌙';
+      }
+      pintar();
+      if (btn) btn.addEventListener('click', function () {
+        var nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = nuevo;
+        localStorage.setItem('tema', nuevo);
+        pintar();
+      });
+    })();
+  </script>
+
+  <script src="{{ url_for('static', filename='pwa.js') }}?v={{ static_version }}"></script>
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>
