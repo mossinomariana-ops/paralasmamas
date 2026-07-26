@@ -120,6 +120,7 @@ def crear_tablas_usuaria(uid):
         ('bolsa_capacidad_activa',   'INTEGER'),
         ('bolsa_capacidad_ml',       'INTEGER'),
         ('pedir_confirmacion',       'INTEGER'),
+        ('idioma',                   'TEXT'),
     ):
         if nombre not in columnas:
             cur.execute(f'ALTER TABLE perfil ADD COLUMN {nombre} {tipo}')
@@ -134,6 +135,7 @@ PERFIL_CONFIG = (
     'aviso_freezer_dias', 'aviso_heladera_horas', 'aviso_descongelada_horas',
     'freezar_hasta_horas', 'combinar_min_horas',
     'bolsa_capacidad_activa', 'bolsa_capacidad_ml', 'pedir_confirmacion',
+    'idioma',
 )
 
 

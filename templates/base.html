@@ -5,7 +5,7 @@ Header propio (marca + tema + salir), paleta por CSS vars y bloques de contenido
 El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
 ================================================================================#}
 <!DOCTYPE html>
-<html lang="es-AR">
+<html lang="{{ 'en' if idioma == 'en' else 'es-AR' }}">
 
 <head>
   <meta charset="UTF-8">
@@ -71,14 +71,16 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
         {% endif %}
 
         <div class="header-fila">
-          <a href="{{ url_for('auth.salir') }}" class="header-logout-btn" title="Cerrar sesión">Salir</a>
+          <a href="{{ url_for('auth.salir') }}" class="header-logout-btn"
+             title="{{ t('Cerrar sesión') }}">{{ t('Salir') }}</a>
         </div>
 
         <div class="header-fila header-fila--prefs">
           {# Un solo botón con los dos dibujos: el CSS muestra el que corresponde
              según el tema, así no hay que repintar nada desde JS. #}
           <button type="button" id="theme-toggle" class="header-icon-btn"
-                  title="Cambiar entre día y noche" aria-label="Cambiar entre día y noche">
+                  title="{{ t('Cambiar entre día y noche') }}"
+                  aria-label="{{ t('Cambiar entre día y noche') }}">
             <svg class="lac-ico lac-ico-luna" viewBox="0 0 24 24" aria-hidden="true">
               <path class="relleno" d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/>
               <path d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/>
@@ -92,6 +94,17 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
               <path d="M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"/>
             </svg>
           </button>
+
+          <span class="header-sep" aria-hidden="true">/</span>
+
+          {# Tarjeta de idioma: muestra SIEMPRE el idioma al que se cambia, no
+             el actual. Es un form de verdad (no JS) para que funcione igual si
+             el JavaScript falla; el servidor redirige de vuelta a la app. #}
+          <form method="post" action="{{ url_for('api_lactancia_idioma') }}" class="header-idioma">
+            <input type="hidden" name="idioma" value="{{ 'en' if idioma == 'es' else 'es' }}">
+            <button type="submit" class="header-idioma-btn"
+                    title="{{ t('Cambiar el idioma de la app') }}">{{ 'Inglés' if idioma == 'es' else 'Spanish' }}</button>
+          </form>
         </div>
 
       </div>

@@ -18,6 +18,7 @@ from flask import (
 
 import config
 import database
+import i18n
 import logica
 from auth import init_auth
 
@@ -83,6 +84,12 @@ def inject_config():
             'paleta_dark': config.PALETA_DARK,
             'marca': config.MARCA,
         },
+        # Traducción: `t` para los textos de las plantillas, `idioma` para saber
+        # qué ofrece la tarjeta del header, y el diccionario que se le pasa al
+        # JavaScript para los textos que arma él.
+        't': i18n.t,
+        'idioma': i18n.idioma_actual(),
+        'dic_idioma': i18n.diccionario_js(),
         'static_version': _static_version(),
         'usuario': usuario,
         'es_invitada': bool(usuario and usuario.get('tipo') == 'invitada'),
@@ -112,7 +119,7 @@ def api_lactancia_crear():
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -155,7 +162,7 @@ def api_lactancia_cerrar(id):
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -209,21 +216,22 @@ def api_lactancia_freezar():
             if tibias:
                 falta = max(minimo - logica._lac_horas_en_heladera(p, ahora)
                             for p in tibias)
-                cuantas = ('Una de las partidas tildadas' if len(tibias) == 1
-                           else f'{len(tibias)} de las partidas tildadas')
-                raise ValueError(
-                    f"{cuantas} todavía no llegó a las {minimo} h en la heladera. "
+                cuantas = (i18n.t('Una de las partidas tildadas') if len(tibias) == 1
+                           else i18n.t('{n} de las partidas tildadas', n=len(tibias)))
+                raise ValueError(i18n.t(
+                    "{cuantas} todavía no llegó a las {minimo} h en la heladera. "
                     "Para combinarlas las dos tienen que estar a la misma "
-                    f"temperatura: esperá {_horas_texto(falta)} y volvé a probar.")
+                    "temperatura: esperá {falta} y volvé a probar.",
+                    cuantas=cuantas, minimo=minimo, falta=_horas_texto(falta)))
 
         volumen_ml = sum(p['volumen_ml'] for p in partidas)
         if volumen_ml > 2000:
             raise ValueError("El volumen combinado supera los 2000 ml; freezá en tandas.")
         if params['bolsa_capacidad_activa'] and volumen_ml > params['bolsa_capacidad_ml']:
-            raise ValueError(
-                f"Lo tildado suma {volumen_ml} ml y tus bolsitas son de "
-                f"{params['bolsa_capacidad_ml']} ml. Tildá menos partidas, o subí "
-                "la capacidad en Configuraciones.")
+            raise ValueError(i18n.t(
+                "Lo tildado suma {suma} ml y tus bolsitas son de {tope} ml. "
+                "Tildá menos partidas, o subí la capacidad en Configuraciones.",
+                suma=volumen_ml, tope=params['bolsa_capacidad_ml']))
 
         mas_vieja = min(partidas,
                         key=lambda p: (p['fecha_extraccion'], p['hora_extraccion'] or ''))
@@ -235,7 +243,7 @@ def api_lactancia_freezar():
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -253,7 +261,7 @@ def api_lactancia_bajar(id):
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -277,7 +285,7 @@ def api_lactancia_recordatorio():
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -331,7 +339,30 @@ def api_lactancia_config():
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        return redirect(url_for('inicio'))
+
+
+@app.route('/api/lactancia/idioma', methods=['POST'])
+def api_lactancia_idioma():
+    """Cambia el idioma de la app. Devuelve `recargar` porque los textos de las
+    pantallas los arma el servidor: la forma más simple y segura de que quede
+    TODO en el idioma nuevo es volver a pedir la página."""
+    try:
+        elegido = (request.form.get('idioma') or '').strip()
+        if elegido not in i18n.IDIOMAS:
+            raise ValueError(f"Idioma inválido: {elegido}")
+        database.guardar_perfil(idioma=elegido)
+        if _es_ajax():
+            return jsonify({'ok': True, 'recargar': True})
+        return redirect(url_for('inicio'))
+    except ValueError as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -357,7 +388,7 @@ def api_lactancia_bebe():
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -379,7 +410,7 @@ def api_lactancia_reabrir(id):
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -403,7 +434,7 @@ def api_lactancia_editar(id):
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():
@@ -422,7 +453,7 @@ def api_lactancia_eliminar(id):
         return redirect(url_for('inicio'))
     except ValueError as e:
         if _es_ajax():
-            return jsonify({'ok': False, 'error': str(e)}), 400
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():

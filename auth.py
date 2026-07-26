@@ -19,6 +19,7 @@ from flask import (
 from werkzeug.security import generate_password_hash, check_password_hash
 
 import database
+import i18n
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -84,13 +85,13 @@ def registro():
 
     error = None
     if not _EMAIL_RE.match(email):
-        error = "Escribí un mail válido."
+        error = i18n.t("Escribí un mail válido.")
     elif len(clave) < 6:
-        error = "La clave tiene que tener al menos 6 caracteres."
+        error = i18n.t("La clave tiene que tener al menos 6 caracteres.")
     elif clave != clave2:
-        error = "Las dos claves no coinciden."
+        error = i18n.t("Las dos claves no coinciden.")
     elif database.obtener_usuario_por_email(email):
-        error = "Ya existe una cuenta con ese mail. Probá iniciar sesión."
+        error = i18n.t("Ya existe una cuenta con ese mail. Probá iniciar sesión.")
     if error:
         return render_template('login.html', modo='registro', error=error, email=email)
 
@@ -116,7 +117,7 @@ def login():
     if usuario is None or not usuario.get('password_hash') \
             or not check_password_hash(usuario['password_hash'], clave):
         return render_template('login.html', modo='login',
-                               error="Mail o clave incorrectos.", email=email)
+                               error=i18n.t("Mail o clave incorrectos."), email=email)
 
     _iniciar_sesion(usuario['id'], recordar=recordar)
     return redirect(url_for('inicio'))

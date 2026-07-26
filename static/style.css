@@ -7103,6 +7103,34 @@ span.rut-ahora-emoji { cursor: default; }
   height: 26px;
 }
 
+/* La barrita que separa las dos tarjetas de la última fila (sol/luna · idioma) */
+.header-sep {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* Tarjeta de idioma: mismo lenguaje visual que "Salir" (borde fino sobre el
+   header oscuro). Muestra el idioma AL QUE se cambia, no el actual. */
+.header-idioma { margin: 0; display: flex; }
+.header-idioma-btn {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  font-family: var(--fuente-principal);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.header-idioma-btn:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+}
+.header-idioma-btn:focus { outline: none; box-shadow: var(--sombra-focus); }
+
 /* ── Sol y luna: dibujos propios, no emojis ────────────────────────────────
    Los dos SVG viven en el mismo botón y el CSS muestra el que corresponde:
    de día se ofrece la luna (pasar a noche) y de noche se ofrece el sol.

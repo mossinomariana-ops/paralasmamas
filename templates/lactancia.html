@@ -33,7 +33,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 
 {% extends "base.html" %}
 
-{% block titulo %}Lactancia{% endblock %}
+{% block titulo %}{{ t('Lactancia') }}{% endblock %}
 
 {% block contenido %}
 <div class="lac-wrap" data-lac-sec="cargar">
@@ -41,7 +41,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
   <!-- Frase de mamá para el bebé (hero). Cambiar el texto es una sola línea. -->
   <div class="lac-hero">
     <svg class="lac-ico lac-hero-corazon" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 20.3S4.6 15.5 4.6 10.3A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7.4 2.7C19.4 15.5 12 20.3 12 20.3Z"/><path d="M12 20.3S4.6 15.5 4.6 10.3A3.9 3.9 0 0 1 12 7.6a3.9 3.9 0 0 1 7.4 2.7C19.4 15.5 12 20.3 12 20.3Z"/></svg>
-    <span class="lac-frase">Con todo mi amor, mamá</span>
+    <span class="lac-frase">{{ t('Con todo mi amor, mamá') }}</span>
   </div>
 
   <!-- Aviso al entrar (lo llena el JS solo si hay vencidas / por vencer) -->
@@ -54,7 +54,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
      Abre por defecto en "Cargar" (lo más usado). El JS cambia data-lac-sec de
      .lac-wrap y el CSS muestra solo la sección elegida. #}
   <div class="lac-nav-mobile">
-    <span class="lac-nav-label">Ver</span>
+    <span class="lac-nav-label">{{ t('Ver') }}</span>
     <div class="lac-nav-menu">
       {# Menú PROPIO (no <select> nativo): el nativo solo admite texto, así que
          no podía mostrar nuestros íconos dibujados. El JS abre/cierra la lista
@@ -65,13 +65,13 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         <span class="lac-nav-chevron" aria-hidden="true">▾</span>
       </button>
       <ul class="lac-nav-lista" id="lac-nav-lista" role="listbox" hidden>
-        <li><button type="button" class="lac-nav-opt" data-sec="cargar" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg><span>Cargar</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="heladera" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M5 9.6h14"/><path d="M8.2 5.9v2.1M8.2 11.4v2.6"/></svg><span>Heladera</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="resumen" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg><span>Resumen</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="historial" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg><span>Historial</span></button></li>
+        <li><button type="button" class="lac-nav-opt" data-sec="cargar" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg><span>{{ t('Cargar') }}</span></button></li>
+        <li><button type="button" class="lac-nav-opt" data-sec="heladera" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M5 9.6h14"/><path d="M8.2 5.9v2.1M8.2 11.4v2.6"/></svg><span>{{ t('Heladera') }}</span></button></li>
+        <li><button type="button" class="lac-nav-opt" data-sec="resumen" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg><span>{{ t('Resumen') }}</span></button></li>
+        <li><button type="button" class="lac-nav-opt" data-sec="historial" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg><span>{{ t('Historial') }}</span></button></li>
         {# Bebé y Recordatorio ya no son hojas propias: viven dentro de
            Configuraciones, junto con los tiempos y las preferencias. #}
-        <li><button type="button" class="lac-nav-opt" data-sec="config" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg><span>Configuraciones</span></button></li>
+        <li><button type="button" class="lac-nav-opt" data-sec="config" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg><span>{{ t('Configuraciones') }}</span></button></li>
       </ul>
     </div>
   </div>
@@ -88,7 +88,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
            Un solo form: toda extracción entra por HELADERA. ────────────────── -->
       <section class="lac-panel lac-panel--alta lac-sec lac-sec--cargar">
         <div class="lac-panel-header">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg> Cargar</div>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg> {{ t('Cargar') }}</div>
         </div>
         <div class="lac-quickadd">
 
@@ -101,12 +101,10 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
       <!-- ── Resumen de stock ─────────────────────────────────────────────── -->
       <section class="lac-panel lac-panel--tablero lac-sec lac-sec--resumen">
         <div class="lac-panel-header">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg> Resumen</div>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg> {{ t('Resumen') }}</div>
         </div>
         <div class="lac-tablero" id="lac-tablero"></div>
-        <p class="lac-disclaimer">🩺 Ajustá los tiempos de conservación según la
-          recomendación de tu profesional de confianza. Los avisos de la app son
-          orientativos y nunca te bloquean.</p>
+        <p class="lac-disclaimer">🩺 {{ t('Ajustá los tiempos de conservación según la recomendación de tu profesional de confianza. Los avisos de la app son orientativos y nunca te bloquean.') }}</p>
       </section>
 
       <!-- ══ Configuraciones ═══════════════════════════════════════════════
@@ -117,99 +115,93 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
            defecto de config.DEFAULTS. -->
       <details class="lac-panel lac-panel--config lac-sec lac-sec--config">
         <summary class="lac-panel-summary">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg> Configuraciones</div>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg> {{ t('Configuraciones') }}</div>
         </summary>
         <div class="lac-config">
 
-          <p class="lac-config-intro">Estos son los tiempos con los que la app
-            calcula los vencimientos y te avisa. Ajustalos según lo que te
-            indique tu profesional.</p>
+          <p class="lac-config-intro">{{ t('Estos son los tiempos con los que la app calcula los vencimientos y te avisa. Ajustalos según lo que te indique tu profesional.') }}</p>
 
           <div class="lac-config-grupo">
-            <h4 class="lac-config-titulo">¿Cuánto dura la leche?</h4>
+            <h4 class="lac-config-titulo">{{ t('¿Cuánto dura la leche?') }}</h4>
             <label class="lac-config-fila">
-              <span class="lac-config-label">En el freezer</span>
-              <span class="lac-config-num"><input type="number" id="cfg-freezer_meses" min="1" max="24" inputmode="numeric"><em>meses</em></span>
+              <span class="lac-config-label">{{ t('En el freezer') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-freezer_meses" min="1" max="24" inputmode="numeric"><em>{{ t('meses') }}</em></span>
             </label>
             <label class="lac-config-fila">
-              <span class="lac-config-label">En la heladera</span>
-              <span class="lac-config-num"><input type="number" id="cfg-heladera_horas" min="1" max="168" inputmode="numeric"><em>horas</em></span>
+              <span class="lac-config-label">{{ t('En la heladera') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-heladera_horas" min="1" max="168" inputmode="numeric"><em>{{ t('horas') }}</em></span>
             </label>
             <label class="lac-config-fila">
-              <span class="lac-config-label">Ya descongelada</span>
-              <span class="lac-config-num"><input type="number" id="cfg-descongelada_horas" min="1" max="72" inputmode="numeric"><em>horas</em></span>
+              <span class="lac-config-label">{{ t('Ya descongelada') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-descongelada_horas" min="1" max="72" inputmode="numeric"><em>{{ t('horas') }}</em></span>
             </label>
           </div>
 
           <div class="lac-config-grupo">
-            <h4 class="lac-config-titulo">¿Con cuánta anticipación te aviso?</h4>
+            <h4 class="lac-config-titulo">{{ t('¿Con cuánta anticipación te aviso?') }}</h4>
             <label class="lac-config-fila">
-              <span class="lac-config-label">Del freezer</span>
-              <span class="lac-config-num"><input type="number" id="cfg-aviso_freezer_dias" min="1" max="90" inputmode="numeric"><em>días antes</em></span>
+              <span class="lac-config-label">{{ t('Del freezer') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-aviso_freezer_dias" min="1" max="90" inputmode="numeric"><em>{{ t('días antes') }}</em></span>
             </label>
             <label class="lac-config-fila">
-              <span class="lac-config-label">De la heladera</span>
-              <span class="lac-config-num"><input type="number" id="cfg-aviso_heladera_horas" min="1" max="72" inputmode="numeric"><em>horas antes</em></span>
+              <span class="lac-config-label">{{ t('De la heladera') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-aviso_heladera_horas" min="1" max="72" inputmode="numeric"><em>{{ t('horas antes') }}</em></span>
             </label>
             <label class="lac-config-fila">
-              <span class="lac-config-label">De la descongelada</span>
-              <span class="lac-config-num"><input type="number" id="cfg-aviso_descongelada_horas" min="1" max="48" inputmode="numeric"><em>horas antes</em></span>
-            </label>
-          </div>
-
-          <div class="lac-config-grupo">
-            <h4 class="lac-config-titulo">Al juntar extracciones</h4>
-            <label class="lac-config-fila">
-              <span class="lac-config-label">Tienen que llevar al menos</span>
-              <span class="lac-config-num"><input type="number" id="cfg-combinar_min_horas" min="0" max="24" inputmode="numeric"><em>horas en la heladera</em></span>
-            </label>
-            <p class="lac-config-hint">Para juntar dos extracciones en una misma
-              bolsa las dos tienen que estar a la misma temperatura. Poné 0 si no
-              querés que la app te lo controle.</p>
-            <label class="lac-config-fila">
-              <span class="lac-config-label">Vienen tildadas si llevan menos de</span>
-              <span class="lac-config-num"><input type="number" id="cfg-freezar_hasta_horas" min="1" max="72" inputmode="numeric"><em>horas</em></span>
+              <span class="lac-config-label">{{ t('De la descongelada') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-aviso_descongelada_horas" min="1" max="48" inputmode="numeric"><em>{{ t('horas antes') }}</em></span>
             </label>
           </div>
 
           <div class="lac-config-grupo">
-            <h4 class="lac-config-titulo">Tus bolsitas</h4>
+            <h4 class="lac-config-titulo">{{ t('Al juntar extracciones') }}</h4>
+            <label class="lac-config-fila">
+              <span class="lac-config-label">{{ t('Tienen que llevar al menos') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-combinar_min_horas" min="0" max="24" inputmode="numeric"><em>{{ t('horas en la heladera') }}</em></span>
+            </label>
+            <p class="lac-config-hint">{{ t('Para juntar dos extracciones en una misma bolsa las dos tienen que estar a la misma temperatura. Poné 0 si no querés que la app te lo controle.') }}</p>
+            <label class="lac-config-fila">
+              <span class="lac-config-label">{{ t('Vienen tildadas si llevan menos de') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-freezar_hasta_horas" min="1" max="72" inputmode="numeric"><em>{{ t('horas') }}</em></span>
+            </label>
+          </div>
+
+          <div class="lac-config-grupo">
+            <h4 class="lac-config-titulo">{{ t('Tus bolsitas') }}</h4>
             <label class="lac-config-check">
               <input type="checkbox" id="cfg-bolsa_capacidad_activa">
-              <span>Mis bolsitas tienen una <strong>capacidad máxima</strong></span>
+              <span>{{ t('Mis bolsitas tienen una') }} <strong>{{ t('capacidad máxima') }}</strong></span>
             </label>
             <label class="lac-config-fila" id="cfg-bolsa-fila">
-              <span class="lac-config-label">Capacidad</span>
-              <span class="lac-config-num"><input type="number" id="cfg-bolsa_capacidad_ml" min="10" max="2000" inputmode="numeric"><em>ml</em></span>
+              <span class="lac-config-label">{{ t('Capacidad') }}</span>
+              <span class="lac-config-num"><input type="number" id="cfg-bolsa_capacidad_ml" min="10" max="2000" inputmode="numeric"><em>{{ t('ml') }}</em></span>
             </label>
-            <p class="lac-config-hint">Con esto activado, la app no te deja
-              cargar ni combinar más de esa cantidad en una bolsita.</p>
+            <p class="lac-config-hint">{{ t('Con esto activado, la app no te deja cargar ni combinar más de esa cantidad en una bolsita.') }}</p>
           </div>
 
           <div class="lac-config-grupo">
-            <h4 class="lac-config-titulo">Confirmaciones</h4>
+            <h4 class="lac-config-titulo">{{ t('Confirmaciones') }}</h4>
             <label class="lac-config-check">
               <input type="checkbox" id="cfg-pedir_confirmacion">
-              <span>Pedirme <strong>confirmación</strong> antes de cada acción</span>
+              <span>{{ t('Pedirme') }} <strong>{{ t('confirmación') }}</strong> {{ t('antes de cada acción') }}</span>
             </label>
-            <p class="lac-config-hint">Si lo desactivás, las acciones se hacen al
-              toque, sin el cartel de confirmación.</p>
+            <p class="lac-config-hint">{{ t('Si lo desactivás, las acciones se hacen al toque, sin el cartel de confirmación.') }}</p>
           </div>
 
-          <button type="button" class="lac-btn-block lac-btn-auto" id="lac-config-guardar">Guardar configuraciones</button>
+          <button type="button" class="lac-btn-block lac-btn-auto" id="lac-config-guardar">{{ t('Guardar configuraciones') }}</button>
 
           <!-- ── Datos del bebé (habilita la edad y los cortes por mes) ────── -->
           <details class="lac-subpanel">
             <summary class="lac-subpanel-summary">
               <svg class="lac-ico lac-ico-bebe" viewBox="0 0 24 24" aria-hidden="true"><circle class="relleno" cx="16.7" cy="8.3" r="2.7"/><circle cx="16.7" cy="8.3" r="2.7"/><path d="M14.4 9.4C11 9.5 8.3 10.6 6.8 12.4"/><path d="M14.3 10.8 14.9 17.7"/><path d="M10.7 11.4 11 17.7"/><path d="M6.8 12.4C6 13.2 5.7 14.2 6.1 15.3 6.4 16.2 7.2 16.9 8.2 17.7"/><path d="M4.6 17.9h15.2"/></svg>
-              Bebé <span class="lac-bebe-edad" id="lac-bebe-edad"></span>
+              {{ t('Bebé') }} <span class="lac-bebe-edad" id="lac-bebe-edad"></span>
             </summary>
             <div class="lac-bebe">
-              <input type="text" id="lac-bebe-nombre" class="lac-bebe-nombre" placeholder="Nombre del bebé" maxlength="40">
+              <input type="text" id="lac-bebe-nombre" class="lac-bebe-nombre" placeholder="{{ t('Nombre del bebé') }}" maxlength="40">
               <div class="lac-bebe-row">
-                <label for="lac-bebe-nac" class="lac-bebe-label">Nació el</label>
+                <label for="lac-bebe-nac" class="lac-bebe-label">{{ t('Nació el') }}</label>
                 <input type="text" id="lac-bebe-nac" class="lac-bebe-nac" placeholder="dd/mm/aaaa">
-                <button type="button" class="btn-acento lac-bebe-guardar" id="lac-bebe-guardar">Guardar</button>
+                <button type="button" class="btn-acento lac-bebe-guardar" id="lac-bebe-guardar">{{ t('Guardar') }}</button>
               </div>
             </div>
           </details>
@@ -218,20 +210,19 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           <details class="lac-subpanel">
             <summary class="lac-subpanel-summary">
               <svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/><path d="M15 3.2a7.2 7.2 0 1 0 6.1 10.1A5.7 5.7 0 0 1 15 3.2Z"/></svg>
-              Recordatorio
+              {{ t('Recordatorio') }}
             </summary>
             <div class="lac-recordatorio">
               <label class="lac-rec-toggle">
                 <input type="checkbox" id="lac-rec-activo">
-                <span>Recordarme de noche <strong>bajar bolsitas</strong> del freezer a la heladera (para el jardín)</span>
+                <span>{{ t('Recordarme de noche') }} <strong>{{ t('bajar bolsitas') }}</strong> {{ t('del freezer a la heladera (para el jardín)') }}</span>
               </label>
               <div class="lac-rec-hora-row">
-                <label for="lac-rec-hora" class="lac-rec-hora-label">A las</label>
+                <label for="lac-rec-hora" class="lac-rec-hora-label">{{ t('A las') }}</label>
                 <input type="text" id="lac-rec-hora" class="lac-rec-hora-input" placeholder="21:00" inputmode="numeric">
-                <button type="button" class="btn-acento lac-rec-guardar" id="lac-rec-guardar">Guardar</button>
+                <button type="button" class="btn-acento lac-rec-guardar" id="lac-rec-guardar">{{ t('Guardar') }}</button>
               </div>
-              <p class="lac-rec-hint">Es un aviso dentro de la app (la 🔔). El aviso al
-                celular con la app cerrada va a llegar cuando la hagamos app instalable.</p>
+              <p class="lac-rec-hint">{{ t('Es un aviso dentro de la app (la 🔔). El aviso al celular con la app cerrada va a llegar cuando la hagamos app instalable.') }}</p>
             </div>
           </details>
 
@@ -249,8 +240,8 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
       <!-- ── Freezer arriba (FIFO: usar siempre la primera) ────────────────── -->
       <section class="lac-panel lac-panel--freezer lac-door lac-door--freezer">
         <div class="lac-panel-header">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.5 10 4.7M12 6.5l2-1.8M12 17.5l-2 1.8M12 17.5l2 1.8"/><path d="M5.6 8.2 5.2 5.7M5.6 8.2 3.1 8.6M18.4 8.2l2.5.4M18.4 8.2l.4-2.5M5.6 15.8l-2.5.4M5.6 15.8l-.4 2.5M18.4 15.8l.4 2.5M18.4 15.8l2.5-.4"/></svg> Freezer <span class="lac-count" id="lac-freezer-count"></span></div>
-          <span class="lac-fifo-hint" title="Lo primero que entra, primero que sale">FIFO: usar la primera</span>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.5 10 4.7M12 6.5l2-1.8M12 17.5l-2 1.8M12 17.5l2 1.8"/><path d="M5.6 8.2 5.2 5.7M5.6 8.2 3.1 8.6M18.4 8.2l2.5.4M18.4 8.2l.4-2.5M5.6 15.8l-2.5.4M5.6 15.8l-.4 2.5M18.4 15.8l.4 2.5M18.4 15.8l2.5-.4"/></svg> {{ t('Freezer') }} <span class="lac-count" id="lac-freezer-count"></span></div>
+          <span class="lac-fifo-hint" title="{{ t('Lo primero que entra, primero que sale') }}">{{ t('FIFO: usar la primera') }}</span>
         </div>
         <div class="lac-lista-scroll" id="lac-lista-freezer"></div>
       </section>
@@ -259,9 +250,9 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
            El botón ⬆ freeza la combinación de las partidas tildadas. ───────── -->
       <section class="lac-panel lac-panel--heladera lac-door lac-door--heladera">
         <div class="lac-panel-header">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M8 12.5h8l-.7 6.4a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L8 12.5Z"/><path d="M7.4 6h9.2l-1.3 12.9a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L7.4 6Z"/><path d="M7.7 9h8.6"/></svg> Heladera <span class="lac-count" id="lac-heladera-count"></span></div>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M8 12.5h8l-.7 6.4a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L8 12.5Z"/><path d="M7.4 6h9.2l-1.3 12.9a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L7.4 6Z"/><path d="M7.7 9h8.6"/></svg> {{ t('Heladera') }} <span class="lac-count" id="lac-heladera-count"></span></div>
           <button type="button" class="lac-btn-freezar" id="lac-btn-freezar"
-                  title="Freezar las tildadas: combina las partidas seleccionadas en una sola partida de freezer (volumen sumado, extracción más vieja)">⬆</button>
+                  title="{{ t('Freezar las tildadas: combina las partidas seleccionadas en una sola partida de freezer (volumen sumado, extracción más vieja)') }}">⬆</button>
         </div>
         <div class="lac-lista-scroll" id="lac-lista-heladera"></div>
       </section>
@@ -272,7 +263,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
     <!-- ══ Columna derecha: historial ════════════════════════════════════════ -->
     <div class="lac-col lac-col--der">
       <details class="lac-panel lac-panel--historial lac-sec lac-sec--historial" open>
-        <summary class="lac-historial-summary"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg> Historial <span class="lac-count" id="lac-historial-count"></span></summary>
+        <summary class="lac-historial-summary"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg> {{ t('Historial') }} <span class="lac-count" id="lac-historial-count"></span></summary>
         <div class="lac-lista-scroll lac-lista-historial" id="lac-lista-historial"></div>
       </details>
     </div>
@@ -284,22 +275,22 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-cerrar" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3 id="lac-cf-titulo">✓ Marcar usada <span class="lac-modal-sub" id="lac-cf-sub"></span></h3>
-      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="Cerrar">×</button>
+      <h3 id="lac-cf-titulo">✓ {{ t('Marcar usada') }} <span class="lac-modal-sub" id="lac-cf-sub"></span></h3>
+      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body">
       <div class="lac-campo">
-        <label for="lac-cf-fecha" id="lac-cf-fecha-label">¿Cuándo se usó?</label>
+        <label for="lac-cf-fecha" id="lac-cf-fecha-label">{{ t('¿Cuándo se usó?') }}</label>
         <input type="text" id="lac-cf-fecha" placeholder="DD/MM/AAAA" autocomplete="off">
       </div>
       <div class="lac-campo">
-        <label for="lac-cf-notas">Notas (opcional)</label>
+        <label for="lac-cf-notas">{{ t('Notas (opcional)') }}</label>
         <input type="text" id="lac-cf-notas" maxlength="200">
       </div>
     </div>
     <div class="lac-modal-foot">
-      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>Cancelar</button>
-      <button type="button" class="lac-btn-block lac-btn-auto" id="lac-cf-guardar">Confirmar</button>
+      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>{{ t('Cancelar') }}</button>
+      <button type="button" class="lac-btn-block lac-btn-auto" id="lac-cf-guardar">{{ t('Confirmar') }}</button>
     </div>
   </div>
 </div>
@@ -308,14 +299,14 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-mas" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span>⋯</span><span>Partida <span class="lac-modal-sub" id="lac-mas-sub"></span></span></h3>
-      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="Cerrar">×</button>
+      <h3><span>⋯</span><span>{{ t('Partida') }} <span class="lac-modal-sub" id="lac-mas-sub"></span></span></h3>
+      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body lac-menu">
-      <button type="button" class="lac-menu-btn" id="lac-mas-usada">✓ Marcar usada con otra fecha…</button>
-      <button type="button" class="lac-menu-btn" id="lac-mas-descartada">🗑 Marcar descartada con otra fecha…</button>
-      <button type="button" class="lac-menu-btn" id="lac-mas-editar">✎ Editar partida…</button>
-      <button type="button" class="lac-menu-btn lac-menu-btn-peligro" id="lac-mas-eliminar">✕ Eliminar definitivamente…</button>
+      <button type="button" class="lac-menu-btn" id="lac-mas-usada">✓ {{ t('Marcar usada con otra fecha…') }}</button>
+      <button type="button" class="lac-menu-btn" id="lac-mas-descartada">🗑 {{ t('Marcar descartada con otra fecha…') }}</button>
+      <button type="button" class="lac-menu-btn" id="lac-mas-editar">✎ {{ t('Editar partida…') }}</button>
+      <button type="button" class="lac-menu-btn lac-menu-btn-peligro" id="lac-mas-eliminar">✕ {{ t('Eliminar definitivamente…') }}</button>
     </div>
   </div>
 </div>
@@ -324,32 +315,32 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-editor" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span>✎</span><span>Editar partida <span class="lac-modal-sub" id="lac-ed-sub"></span></span></h3>
-      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="Cerrar">×</button>
+      <h3><span>✎</span><span>{{ t('Editar partida') }} <span class="lac-modal-sub" id="lac-ed-sub"></span></span></h3>
+      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body">
       <div class="lac-campo">
-        <label for="lac-ed-volumen">Volumen (ml)</label>
+        <label for="lac-ed-volumen">{{ t('Volumen (ml)') }}</label>
         <input type="number" id="lac-ed-volumen" min="1" max="2000" inputmode="numeric">
       </div>
       <div class="lac-form-grid">
         <div class="lac-campo">
-          <label for="lac-ed-fecha">Fecha de extracción</label>
+          <label for="lac-ed-fecha">{{ t('Fecha de extracción') }}</label>
           <input type="text" id="lac-ed-fecha" placeholder="DD/MM/AAAA" autocomplete="off">
         </div>
         <div class="lac-campo">
-          <label for="lac-ed-hora">Hora de extracción</label>
+          <label for="lac-ed-hora">{{ t('Hora de extracción') }}</label>
           <input type="text" id="lac-ed-hora" placeholder="HH:MM" autocomplete="off">
         </div>
       </div>
       <div class="lac-campo">
-        <label for="lac-ed-notas">Notas</label>
+        <label for="lac-ed-notas">{{ t('Notas') }}</label>
         <input type="text" id="lac-ed-notas" maxlength="200">
       </div>
     </div>
     <div class="lac-modal-foot">
-      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>Cancelar</button>
-      <button type="button" class="lac-btn-block lac-btn-auto" id="lac-ed-guardar">Guardar cambios</button>
+      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>{{ t('Cancelar') }}</button>
+      <button type="button" class="lac-btn-block lac-btn-auto" id="lac-ed-guardar">{{ t('Guardar cambios') }}</button>
     </div>
   </div>
 </div>
@@ -358,8 +349,8 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-confirm" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span id="lac-confirm-emoji">⚠️</span><span id="lac-confirm-titulo">Eliminar partida</span></h3>
-      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="Cerrar">×</button>
+      <h3><span id="lac-confirm-emoji">⚠️</span><span id="lac-confirm-titulo">{{ t('Eliminar partida') }}</span></h3>
+      <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body">
       <p class="lac-confirm-msg" id="lac-confirm-msg"></p>
@@ -380,8 +371,8 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
       </label>
     </div>
     <div class="lac-modal-foot">
-      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>Volver</button>
-      <button type="button" class="btn-peligro" id="lac-confirm-si">Sí, eliminar</button>
+      <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>{{ t('Volver') }}</button>
+      <button type="button" class="btn-peligro" id="lac-confirm-si">{{ t('Sí, eliminar') }}</button>
     </div>
   </div>
 </div>
@@ -393,6 +384,11 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 {% block scripts %}
 <script>
   window.LAC_DATOS = {{ datos|tojson }};
+  {# Diccionario para los textos que arma el JavaScript. Va SOLO acá y no en
+     base.html: son unos 12 KB y las pantallas de acceso no cargan lactancia.js,
+     así que ahí sería peso al pedo. En español viaja vacío. #}
+  window.LAC_IDIOMA = {{ idioma|tojson }};
+  window.LAC_T = {{ dic_idioma|tojson }};
 </script>
 <script src="{{ url_for('static', filename='lactancia.js') }}?v={{ static_version }}"></script>
 {% endblock %}

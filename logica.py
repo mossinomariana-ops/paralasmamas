@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, time, date
 
 import config
 import database
+import i18n
 
 LAC_UBICACIONES = ('freezer', 'heladera')
 LAC_MOTIVOS_CIERRE = ('usada', 'descartada', 'trasladada')
@@ -240,9 +241,9 @@ def _lac_parsear_volumen(valor, params=None):
     if params and params.get('bolsa_capacidad_activa'):
         tope = int(params['bolsa_capacidad_ml'])
         if volumen > tope:
-            raise ValueError(
-                f"Tus bolsitas son de {tope} ml. Si querés cargar más, subí la "
-                "capacidad en Configuraciones o cargalo en dos bolsitas.")
+            raise ValueError(i18n.t(
+                "Tus bolsitas son de {tope} ml. Si querés cargar más, subí la "
+                "capacidad en Configuraciones o cargalo en dos bolsitas.", tope=tope))
     return volumen
 
 

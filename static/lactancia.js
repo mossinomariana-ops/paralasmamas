@@ -61,6 +61,23 @@ opciones" (⋯) de cada partida.
 
     function $(id) { return document.getElementById(id); }
 
+    // ── Traducción ───────────────────────────────────────────────────────────
+    // El diccionario lo manda el servidor en window.LAC_T (vacío si la app está
+    // en español: los textos de acá ya están escritos en español).
+    // Los huecos van entre llaves para que el inglés pueda ordenarlos distinto:
+    //   T('Vence en {n} días', {n: 3})  →  'Expires in 3 days'
+    function T(texto, valores) {
+        var s = (window.LAC_T && window.LAC_T[texto]) || texto;
+        if (valores) {
+            Object.keys(valores).forEach(function (k) {
+                s = s.split('{' + k + '}').join(valores[k]);
+            });
+        }
+        return s;
+    }
+
+    function enIngles() { return window.LAC_IDIOMA === 'en'; }
+
     // ── Fechas y formato es-AR ───────────────────────────────────────────────
     function hoy() {
         var d = new Date();
@@ -89,8 +106,11 @@ opciones" (⋯) de cada partida.
         return d;
     }
 
-    var MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
-                 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    var MESES = enIngles()
+        ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        : ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+           'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
     // '12 mar 2026' | '—'
     function fmtFecha(f) {
@@ -109,17 +129,19 @@ opciones" (⋯) de cada partida.
     function fmtMl(n) { return (Number(n) || 0) + ' ml'; }
 
     function fmtLitros(ml) {
-        return ((Number(ml) || 0) / 1000).toFixed(2).replace('.', ',') + ' L';
+        var n = ((Number(ml) || 0) / 1000).toFixed(2);
+        // En español la coma es el separador decimal; en inglés, el punto.
+        return (enIngles() ? n : n.replace('.', ',')) + ' L';
     }
 
     // Freezer: texto relativo desde dias_restantes (del server)
     function textoVencFreezer(dias) {
         if (dias === null || dias === undefined) return '';
-        if (dias === 0) return 'Vence hoy';
-        if (dias === 1) return 'Vence mañana';
-        if (dias > 1) return 'Vence en ' + dias + ' días';
-        if (dias === -1) return 'Venció ayer';
-        return 'Venció hace ' + Math.abs(dias) + ' días';
+        if (dias === 0) return T('Vence hoy');
+        if (dias === 1) return T('Vence mañana');
+        if (dias > 1) return T('Vence en {n} días', { n: dias });
+        if (dias === -1) return T('Venció ayer');
+        return T('Venció hace {n} días', { n: Math.abs(dias) });
     }
 
     // Heladera: texto relativo desde horas_restantes (del server). Nunca se
@@ -128,12 +150,13 @@ opciones" (⋯) de cada partida.
         if (horas === null || horas === undefined) return '';
         if (horas < 0) {
             var h = Math.abs(horas);
-            if (h < 24) return 'Venció hace ' + h + ' h';
-            return 'Venció hace ' + Math.floor(h / 24) + (h < 48 ? ' día' : ' días');
+            if (h < 24) return T('Venció hace {n} h', { n: h });
+            var d = Math.floor(h / 24);
+            return d === 1 ? T('Venció hace 1 día') : T('Venció hace {n} días', { n: d });
         }
-        if (horas === 0) return 'Vence dentro de 1 h';
-        if (horas === 1) return 'Vence en 1 h';
-        return 'Vence en ' + horas + ' h';
+        if (horas === 0) return T('Vence dentro de 1 h');
+        if (horas === 1) return T('Vence en 1 h');
+        return T('Vence en {n} h', { n: horas });
     }
 
     // ── Estados ──────────────────────────────────────────────────────────────
@@ -150,7 +173,7 @@ opciones" (⋯) de cada partida.
     };
 
     function pill(estado) {
-        var label = ESTADO_LABEL[estado] || estado;
+        var label = T(ESTADO_LABEL[estado] || estado);
         return '<span class="lac-pill lac-pill-' + estado + '">' + label + '</span>';
     }
 
@@ -265,10 +288,12 @@ opciones" (⋯) de cada partida.
             return;
         }
         var partes = [];
-        if (vencidas) partes.push(vencidas === 1 ? '1 partida vencida' : vencidas + ' partidas vencidas');
-        if (pronto) partes.push(pronto === 1 ? '1 por vencer' : pronto + ' por vencer');
+        if (vencidas) partes.push(vencidas === 1 ? T('1 partida vencida')
+                                                 : T('{n} partidas vencidas', { n: vencidas }));
+        if (pronto) partes.push(pronto === 1 ? T('1 por vencer')
+                                             : T('{n} por vencer', { n: pronto }));
         el.className = 'lac-aviso ' + (vencidas ? 'is-peligro' : 'is-alerta');
-        el.innerHTML = '⚠ ' + partes.join(' y ') + '. Revisá el stock.';
+        el.innerHTML = '⚠ ' + partes.join(T(' y ')) + T('. Revisá el stock.');
         el.hidden = false;
     }
 
@@ -299,20 +324,20 @@ opciones" (⋯) de cada partida.
         if (vacio) {
             cont.innerHTML = '<div class="lac-vacia">' +
                 '<span class="lac-vacia-em">🍼</span>' +
-                '<span class="lac-vacia-t">Todavía no hay partidas cargadas</span>' +
-                '<span>Freezá la primera desde el panel Cargar 💪</span>' +
+                '<span class="lac-vacia-t">' + T('Todavía no hay partidas cargadas') + '</span>' +
+                '<span>' + T('Freezá la primera desde el panel Cargar') + ' 💪</span>' +
             '</div>';
             return;
         }
 
         var html = '<div class="lac-stats">' +
-            stat(t.freezer_bolsas || 0, 'Bolsas disponibles') +
-            stat(fmtMl(t.freezer_ml), 'Stock freezer (' + fmtLitros(t.freezer_ml) + ')') +
-            stat(t.freezer_vence_pronto || 0, 'Vencen pronto', t.freezer_vence_pronto ? 'is-alerta' : '') +
-            stat(t.freezer_vencidas || 0, 'Vencidas', t.freezer_vencidas ? 'is-peligro' : '') +
-            stat(t.freezer_proximo_venc ? fmtFechaCorta(t.freezer_proximo_venc) : '—', 'Próxima a vencer') +
-            stat(t.usadas_total || 0, 'Usadas') +
-            stat(t.descartadas_total || 0, 'Descartadas') +
+            stat(t.freezer_bolsas || 0, T('Bolsas disponibles')) +
+            stat(fmtMl(t.freezer_ml), T('Stock freezer') + ' (' + fmtLitros(t.freezer_ml) + ')') +
+            stat(t.freezer_vence_pronto || 0, T('Vencen pronto'), t.freezer_vence_pronto ? 'is-alerta' : '') +
+            stat(t.freezer_vencidas || 0, T('Vencidas'), t.freezer_vencidas ? 'is-peligro' : '') +
+            stat(t.freezer_proximo_venc ? fmtFechaCorta(t.freezer_proximo_venc) : '—', T('Próxima a vencer')) +
+            stat(t.usadas_total || 0, T('Usadas')) +
+            stat(t.descartadas_total || 0, T('Descartadas')) +
         '</div>';
 
         // Heladera aparte: stock de otra naturaleza, no se suma al freezer
@@ -324,13 +349,13 @@ opciones" (⋯) de cada partida.
                     proxima = p.horas_restantes;
                 }
             });
-            hel = '🥛 En heladera: <strong>' + t.heladera_bolsas +
-                (t.heladera_bolsas === 1 ? ' partida' : ' partidas') +
+            hel = '🥛 ' + T('En heladera:') + ' <strong>' + t.heladera_bolsas + ' ' +
+                (t.heladera_bolsas === 1 ? T('partida') : T('partidas')) +
                 ' · ' + fmtMl(t.heladera_ml) + '</strong>' +
-                (proxima !== null ? ' <span class="lac-sep">·</span> la próxima ' +
+                (proxima !== null ? ' <span class="lac-sep">·</span> ' + T('la próxima') + ' ' +
                     textoVencHeladera(proxima).toLowerCase() : '');
         } else {
-            hel = '🥛 Heladera vacía';
+            hel = '🥛 ' + T('Heladera vacía');
         }
         html += '<div class="lac-stats-heladera">' + hel + '</div>';
 
@@ -339,21 +364,23 @@ opciones" (⋯) de cada partida.
         // promedio móvil (días de stock y bolsita sugerida) que se ajustan solos
         // con el consumo real. Los que aún no tienen datos muestran "—".
         var dias = (t.dias_stock !== null && t.dias_stock !== undefined)
-            ? t.dias_stock + (t.dias_stock === 1 ? ' día' : ' días') : '—';
+            ? t.dias_stock + ' ' + (t.dias_stock === 1 ? T('día') : T('días')) : '—';
         var bolsa = (t.bolsa_sugerida_ml !== null && t.bolsa_sugerida_ml !== undefined)
             ? fmtMl(t.bolsa_sugerida_ml) : '—';
-        html += '<div class="lac-kpis-titulo">Ciclo de la leche</div>' +
+        html += '<div class="lac-kpis-titulo">' + T('Ciclo de la leche') + '</div>' +
             '<div class="lac-kpis">' +
-            kpiCard('💧', fmtLitros(t.producido_ml), 'Producción total',
-                    'todo lo que produjiste', 'lac-kpi--amor') +
-            kpiCard('🍼', fmtMl(t.consumida_ml || 0), 'Consumida por ' + nombreBebe()) +
-            kpiCard('🧊→🥛', fmtMl(t.descongelada_ml || 0), 'Descongelada') +
-            kpiCard('🚱', fmtMl(t.desperdicio_ml || 0), 'Desperdicio', null,
+            kpiCard('💧', fmtLitros(t.producido_ml), T('Producción total'),
+                    T('todo lo que produjiste'), 'lac-kpi--amor') +
+            kpiCard('🍼', fmtMl(t.consumida_ml || 0), T('Consumida por {bebe}', { bebe: nombreBebe() })) +
+            kpiCard('🧊→🥛', fmtMl(t.descongelada_ml || 0), T('Descongelada')) +
+            kpiCard('🚱', fmtMl(t.desperdicio_ml || 0), T('Desperdicio'), null,
                     (t.desperdicio_ml ? 'is-alerta' : '')) +
-            kpiCard('📅', dias, 'Alcanza para',
-                    (t.dias_stock == null ? 'cuando ' + nombreBebe() + ' tome de las bolsitas' : 'al ritmo actual')) +
-            kpiCard('📏', bolsa, 'Bolsita sugerida',
-                    (t.bolsa_sugerida_ml == null ? 'según el consumo de ' + nombreBebe() : 'promedio real')) +
+            kpiCard('📅', dias, T('Alcanza para'),
+                    (t.dias_stock == null ? T('cuando {bebe} tome de las bolsitas', { bebe: nombreBebe() })
+                                          : T('al ritmo actual'))) +
+            kpiCard('📏', bolsa, T('Bolsita sugerida'),
+                    (t.bolsa_sugerida_ml == null ? T('según el consumo de {bebe}', { bebe: nombreBebe() })
+                                                 : T('promedio real'))) +
         '</div>';
 
         cont.innerHTML = html;
@@ -367,7 +394,7 @@ opciones" (⋯) de cada partida.
     // "Extraída 10 jul · 14:30 h" — FECHA primero, hora después (pedido de
     // Mari 2026-07-14; sin hora cargada queda solo la fecha)
     function extraidaTxt(p) {
-        return 'Extraída ' + fmtFechaCorta(p.fecha_extraccion) +
+        return T('Extraída') + ' ' + fmtFechaCorta(p.fecha_extraccion) +
             (p.hora_extraccion ? ' · ' + p.hora_extraccion + ' h' : '');
     }
 
@@ -382,10 +409,10 @@ opciones" (⋯) de cada partida.
                 '</div>' + notasHtml(p) +
             '</div>' +
             '<div class="lac-item-actions">' +
-                '<button type="button" class="lac-btn-bajar" data-lac-bajar="' + p.id + '" title="Bajar a la heladera para descongelar">⬇ Bajar</button>' +
-                '<button type="button" class="lac-btn-usar" data-lac-usar="' + p.id + '" title="Se le dio a ' + nombreBebe() + ' (fecha de hoy)">✓ Usada</button>' +
-                '<button type="button" class="lac-btn-icono" data-lac-tirar="' + p.id + '" title="Descartar (fecha de hoy)">🗑</button>' +
-                '<button type="button" class="lac-btn-icono" data-lac-mas="' + p.id + '" title="Más opciones">⋯</button>' +
+                '<button type="button" class="lac-btn-bajar" data-lac-bajar="' + p.id + '" title="' + T('Bajar a la heladera para descongelar') + '">⬇ ' + T('Bajar') + '</button>' +
+                '<button type="button" class="lac-btn-usar" data-lac-usar="' + p.id + '" title="' + T('Se le dio a {bebe} (fecha de hoy)', { bebe: nombreBebe() }) + '">✓ ' + T('Usada') + '</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-tirar="' + p.id + '" title="' + T('Descartar (fecha de hoy)') + '">🗑</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-mas="' + p.id + '" title="' + T('Más opciones') + '">⋯</button>' +
             '</div>' +
         '</div>';
     }
@@ -399,8 +426,8 @@ opciones" (⋯) de cada partida.
     function checkHeladera(p) {
         var venc = !p.freezable;
         return '<label class="lac-check' + (venc ? ' lac-check--venc' : '') + '" title="' +
-                (venc ? 'Vencida: se puede freezar igual, pero vas a tener que confirmar que se pasó al freezer antes de vencerse'
-                      : 'Tildala para mandarla al freezer con ⬆') + '">' +
+                (venc ? T('Vencida: se puede freezar igual, pero vas a tener que confirmar que se pasó al freezer antes de vencerse')
+                      : T('Tildala para mandarla al freezer con ⬆')) + '">' +
             '<input type="checkbox" class="lac-check-input" value="' + p.id + '"' +
                 (venc ? ' data-venc="1"' : '') + '>' +
         '</label>';
@@ -411,9 +438,9 @@ opciones" (⋯) de cada partida.
     // van a convivir los dos tipos (ej. cuando León arranque el jardín).
     function tipoTag(p) {
         if (p.tipo === 'descongelada') {
-            return '<span class="lac-tipo lac-tipo--desc" title="Bajada del freezer para descongelar">❄→🥛 Descongelada</span>';
+            return '<span class="lac-tipo lac-tipo--desc" title="' + T('Bajada del freezer para descongelar') + '">❄→🥛 ' + T('Descongelada') + '</span>';
         }
-        return '<span class="lac-tipo lac-tipo--fresca" title="Extraída y puesta directo en la heladera">🥛 Fresca</span>';
+        return '<span class="lac-tipo lac-tipo--fresca" title="' + T('Extraída y puesta directo en la heladera') + '">🥛 ' + T('Fresca') + '</span>';
     }
 
     function itemHeladera(p) {
@@ -428,9 +455,9 @@ opciones" (⋯) de cada partida.
                 '</div>' + notasHtml(p) +
             '</div>' +
             '<div class="lac-item-actions">' +
-                '<button type="button" class="lac-btn-usar" data-lac-usar="' + p.id + '" title="Se le dio a ' + nombreBebe() + ' (fecha de hoy)">✓ Usada</button>' +
-                '<button type="button" class="lac-btn-icono" data-lac-tirar="' + p.id + '" title="Descartar (fecha de hoy)">🗑</button>' +
-                '<button type="button" class="lac-btn-icono" data-lac-mas="' + p.id + '" title="Más opciones">⋯</button>' +
+                '<button type="button" class="lac-btn-usar" data-lac-usar="' + p.id + '" title="' + T('Se le dio a {bebe} (fecha de hoy)', { bebe: nombreBebe() }) + '">✓ ' + T('Usada') + '</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-tirar="' + p.id + '" title="' + T('Descartar (fecha de hoy)') + '">🗑</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-mas="' + p.id + '" title="' + T('Más opciones') + '">⋯</button>' +
                 checkHeladera(p) +
             '</div>' +
         '</div>';
@@ -440,18 +467,18 @@ opciones" (⋯) de cada partida.
 
     function itemHistorial(p) {
         var ubi = p.ubicacion === 'freezer' ? '🧊' : '🥛';
-        var verbo = CIERRE_VERBO[p.motivo_cierre] || 'Cerrada el';
+        var verbo = T(CIERRE_VERBO[p.motivo_cierre] || 'Cerrada el');
         return '<div class="lac-item lac-item--hist">' +
             '<div class="lac-item-body">' +
                 '<div class="lac-item-top"><span class="lac-item-vol">' + fmtMl(p.volumen_ml) + '</span>' +
-                    pill(p.estado) + ' <span class="lac-hist-ubi" title="' + (p.ubicacion === 'freezer' ? 'Freezer' : 'Heladera') + '">' + ubi + '</span></div>' +
+                    pill(p.estado) + ' <span class="lac-hist-ubi" title="' + (p.ubicacion === 'freezer' ? T('Freezer') : T('Heladera')) + '">' + ubi + '</span></div>' +
                 '<div class="lac-item-meta">' + extraidaTxt(p) +
                     ' <span class="lac-sep">·</span> ' + verbo + ' ' + fmtFechaCorta(p.fecha_cierre) +
                 '</div>' + notasHtml(p) +
             '</div>' +
             '<div class="lac-item-actions">' +
-                '<button type="button" class="lac-btn-icono" data-lac-reabrir="' + p.id + '" title="Reabrir (deshacer el cierre)">↩</button>' +
-                '<button type="button" class="lac-btn-icono" data-lac-eliminar="' + p.id + '" title="Eliminar definitivamente">✕</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-reabrir="' + p.id + '" title="' + T('Reabrir (deshacer el cierre)') + '">↩</button>' +
+                '<button type="button" class="lac-btn-icono" data-lac-eliminar="' + p.id + '" title="' + T('Eliminar definitivamente') + '">✕</button>' +
             '</div>' +
         '</div>';
     }
@@ -468,11 +495,11 @@ opciones" (⋯) de cada partida.
 
     function renderListas() {
         renderLista('lac-lista-freezer', 'lac-freezer-count', DATOS.freezer, itemFreezer,
-            'Sin partidas en el freezer.');
+            T('Sin partidas en el freezer.'));
         renderLista('lac-lista-heladera', 'lac-heladera-count', DATOS.heladera, itemHeladera,
-            'Nada en la heladera. Lo que sobre al final del día, se freeza.');
+            T('Nada en la heladera. Lo que sobre al final del día, se freeza.'));
         renderLista('lac-lista-historial', 'lac-historial-count', DATOS.historial, itemHistorial,
-            'Todavía no se cerró ninguna partida.');
+            T('Todavía no se cerró ninguna partida.'));
     }
 
     function renderTodo() {
@@ -488,8 +515,8 @@ opciones" (⋯) de cada partida.
         // Hint del form de alta con el parámetro vigente
         var hint = $('lac-ex-hint');
         if (hint && DATOS.params.heladera_horas) {
-            hint.textContent = 'Va a la heladera y vence a las ' + DATOS.params.heladera_horas +
-                ' h de la extracción. Lo que juntes lo freezás con el botón ⬆️ de Heladera.';
+            hint.textContent = T('Va a la heladera y vence a las {h} h de la extracción. Lo que juntes lo freezás con el botón ⬆️ de Heladera.',
+                                 { h: DATOS.params.heladera_horas });
         }
     }
 
@@ -501,13 +528,13 @@ opciones" (⋯) de cada partida.
 
     function subPartida(p) {
         return '· ' + fmtMl(p.volumen_ml) + ' · ' +
-            (p.ubicacion === 'freezer' ? 'freezer' : 'heladera');
+            (p.ubicacion === 'freezer' ? T('freezer') : T('heladera'));
     }
 
     // ── Cierres one-click (fecha = hoy) con Deshacer ─────────────────────────
     function deshacerCierre(id, textoOk) {
         postAccion('/api/lactancia/' + id + '/reabrir', new URLSearchParams(), function () {
-            toast(textoOk || '↩ Deshecho: la partida volvió al stock.', 'info');
+            toast(textoOk || ('↩ ' + T('Deshecho: la partida volvió al stock.')), 'info');
         });
     }
 
@@ -520,10 +547,10 @@ opciones" (⋯) de cada partida.
             params.append('consumido_ml', consumido);
         }
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
-            var vol = p ? fmtMl(p.volumen_ml) : 'Partida';
+            var vol = p ? fmtMl(p.volumen_ml) : T('Partida');
             var texto = (motivo === 'usada')
-                ? '✓ ' + vol + ' marcada como usada.'
-                : '🗑 ' + vol + ' descartada.';
+                ? '✓ ' + T('{vol} marcada como usada.', { vol: vol })
+                : '🗑 ' + T('{vol} descartada.', { vol: vol });
             toast(texto, 'ok', function () { deshacerCierre(id); });
         });
     }
@@ -535,10 +562,10 @@ opciones" (⋯) de cada partida.
         cfPartidaId = id;
         cfMotivo = motivo;
         $('lac-cf-titulo').childNodes[0].textContent = (motivo === 'usada')
-            ? '✓ Marcar usada ' : '🗑 Marcar descartada ';
+            ? '✓ ' + T('Marcar usada') + ' ' : '🗑 ' + T('Marcar descartada') + ' ';
         $('lac-cf-sub').textContent = subPartida(p);
         $('lac-cf-fecha-label').textContent = (motivo === 'usada')
-            ? '¿Cuándo se usó?' : '¿Cuándo se descartó?';
+            ? T('¿Cuándo se usó?') : T('¿Cuándo se descartó?');
         fpCfFecha.setDate(isoDate(hoy()), true);
         $('lac-cf-notas').value = '';
         $('lac-modal-cerrar').hidden = false;
@@ -548,7 +575,7 @@ opciones" (⋯) de cada partida.
         if (cfPartidaId === null) return;
         var fecha = $('lac-cf-fecha').value;
         if (!fecha) {
-            toast('⚠ Elegí la fecha de cierre.', 'error');
+            toast('⚠ ' + T('Elegí la fecha de cierre.'), 'error');
             return;
         }
         var params = new URLSearchParams();
@@ -560,7 +587,8 @@ opciones" (⋯) de cada partida.
         btn.disabled = true;
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
             $('lac-modal-cerrar').hidden = true;
-            toast(cfMotivo === 'usada' ? '✓ Partida marcada como usada.' : '🗑 Partida descartada.',
+            toast(cfMotivo === 'usada' ? '✓ ' + T('Partida marcada como usada.')
+                                       : '🗑 ' + T('Partida descartada.'),
                 'ok', function () { deshacerCierre(id); });
         }, function () { btn.disabled = false; });
     }
@@ -573,7 +601,7 @@ opciones" (⋯) de cada partida.
         var checks = document.querySelectorAll('#lac-lista-heladera .lac-check-input:checked');
         var ids = [].map.call(checks, function (c) { return c.value; });
         if (!ids.length) {
-            toast('⚠ Tildá al menos una partida de heladera.', 'error');
+            toast('⚠ ' + T('Tildá al menos una partida de heladera.'), 'error');
             return;
         }
         // Si hay vencidas entre las tildadas, hay que declarar que se pasaron
@@ -581,11 +609,11 @@ opciones" (⋯) de cada partida.
         var vencidas = [].filter.call(checks, function (c) { return c.dataset.venc === '1'; }).length;
         if (vencidas) {
             abrirConfirm({
-                emoji: '❄️', titulo: 'Freezar partidas vencidas', peligro: false, boton: 'Freezar',
+                emoji: '❄️', titulo: T('Freezar partidas vencidas'), peligro: false, boton: T('Freezar'),
                 msg: vencidas === 1
-                    ? 'Una de las partidas tildadas figura vencida en la app.'
-                    : vencidas + ' de las partidas tildadas figuran vencidas en la app.',
-                check: 'Confirmo que se pasó al freezer ANTES de vencerse (se cargó tarde en la app).',
+                    ? T('Una de las partidas tildadas figura vencida en la app.')
+                    : T('{n} de las partidas tildadas figuran vencidas en la app.', { n: vencidas }),
+                check: T('Confirmo que se pasó al freezer ANTES de vencerse (se cargó tarde en la app).'),
                 accion: function () { freezarPost(ids, true); }
             });
             return;
@@ -598,11 +626,12 @@ opciones" (⋯) de cada partida.
             if (p) vol += p.volumen_ml;
         });
         abrirConfirm({
-            emoji: '❄️', titulo: 'Freezar al freezer', peligro: false, boton: 'Sí, freezar',
-            msg: 'Se combinan ' + ids.length +
-                (ids.length === 1 ? ' partida' : ' partidas') +
-                (vol ? ' (' + fmtMl(vol) + ')' : '') +
-                ' en UNA sola partida de freezer, con la fecha de extracción más vieja.',
+            emoji: '❄️', titulo: T('Freezar al freezer'), peligro: false, boton: T('Sí, freezar'),
+            msg: T('Se combinan {n} {cuales}{vol} en UNA sola partida de freezer, con la fecha de extracción más vieja.', {
+                n: ids.length,
+                cuales: ids.length === 1 ? T('partida') : T('partidas'),
+                vol: vol ? ' (' + fmtMl(vol) + ')' : ''
+            }),
             accion: function () { freezarPost(ids, false); }
         });
     }
@@ -619,9 +648,12 @@ opciones" (⋯) de cada partida.
             (data.historial || []).forEach(function (p) {
                 if (ids.indexOf(String(p.id)) !== -1) vol = (vol || 0) + p.volumen_ml;
             });
-            toast('❄️ ' + ids.length + (ids.length === 1 ? ' partida freezada' : ' partidas freezadas') +
-                (vol ? ': ' + fmtMl(vol) + ' al freezer.' : '.'),
-                'ok', function () { deshacerCierre(primero, '↩ Deshecho: volvieron a la heladera.'); });
+            toast('❄️ ' + T('{n} {cuales}{detalle}', {
+                    n: ids.length,
+                    cuales: ids.length === 1 ? T('partida freezada') : T('partidas freezadas'),
+                    detalle: vol ? T(': {vol} al freezer.', { vol: fmtMl(vol) }) : '.'
+                }),
+                'ok', function () { deshacerCierre(primero, '↩ ' + T('Deshecho: volvieron a la heladera.')); });
         }, function () { btn.disabled = false; });
     }
 
@@ -635,20 +667,20 @@ opciones" (⋯) de cada partida.
         if (!p) return;
         var horas = DATOS.params.descongelada_horas || 24;
         abrirConfirm({
-            emoji: '⬇️', titulo: 'Bajar a descongelar', peligro: false, boton: 'Sí, bajar',
-            msg: 'Bajás ' + fmtMl(p.volumen_ml) + ' del freezer a la heladera para ' +
-                'descongelar. Va a estar lista por ' + horas + ' h y no se puede volver a congelar.',
-            check: 'Confirmo que bajé (o bajo ahora) esta bolsita a la heladera.',
+            emoji: '⬇️', titulo: T('Bajar a descongelar'), peligro: false, boton: T('Sí, bajar'),
+            msg: T('Bajás {vol} del freezer a la heladera para descongelar. Va a estar lista por {h} h y no se puede volver a congelar.',
+                   { vol: fmtMl(p.volumen_ml), h: horas }),
+            check: T('Confirmo que bajé (o bajo ahora) esta bolsita a la heladera.'),
             accion: function () { bajarPost(id); }
         });
     }
 
     function bajarPost(id) {
         var p = buscarPartida(id);
-        var vol = p ? fmtMl(p.volumen_ml) : 'La bolsita';
+        var vol = p ? fmtMl(p.volumen_ml) : T('La bolsita');
         postAccion('/api/lactancia/' + id + '/bajar', new URLSearchParams(), function () {
-            toast('⬇️ ' + vol + ' a la heladera para descongelar.',
-                'ok', function () { deshacerCierre(id, '↩ Deshecho: volvió al freezer.'); });
+            toast('⬇️ ' + T('{vol} a la heladera para descongelar.', { vol: vol }),
+                'ok', function () { deshacerCierre(id, '↩ ' + T('Deshecho: volvió al freezer.')); });
         });
     }
 
@@ -681,7 +713,7 @@ opciones" (⋯) de cada partida.
         params.append('volumen_ml', $('lac-ed-volumen').value);
         params.append('notas', $('lac-ed-notas').value.trim());
         if (!$('lac-ed-fecha').value) {
-            toast('⚠ La fecha de extracción es obligatoria.', 'error');
+            toast('⚠ ' + T('La fecha de extracción es obligatoria.'), 'error');
             return;
         }
         params.append('fecha_extraccion', $('lac-ed-fecha').value);
@@ -690,7 +722,7 @@ opciones" (⋯) de cada partida.
         btn.disabled = true;
         postAccion('/api/lactancia/' + edPartidaId + '/editar', params, function () {
             $('lac-modal-editor').hidden = true;
-            toast('✎ Partida actualizada.');
+            toast('✎ ' + T('Partida actualizada.'));
         }, function () { btn.disabled = false; });
     }
 
@@ -767,12 +799,15 @@ opciones" (⋯) de cada partida.
     function pedirCierre(id, motivo) {
         var p = buscarPartida(id);
         if (!p) return;
-        var det = fmtMl(p.volumen_ml) + ' (extraída el ' + fmtFecha(p.fecha_extraccion) + ')';
+        var det = T('{vol} (extraída el {fecha})',
+                    { vol: fmtMl(p.volumen_ml), fecha: fmtFecha(p.fecha_extraccion) });
         if (motivo === 'usada') {
             abrirConfirm({
-                emoji: '✓', titulo: 'Marcar como usada', peligro: false, boton: 'Sí, usada',
-                msg: 'Se le dio a ' + nombreBebe() + ': ' + det + '. Se cierra con fecha de hoy.',
-                input: { label: '¿Cuántos ml tomó ' + nombreBebe() + '? (opcional — ej. dato de la maestra)',
+                emoji: '✓', titulo: T('Marcar como usada'), peligro: false, boton: T('Sí, usada'),
+                msg: T('Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.',
+                       { bebe: nombreBebe(), det: det }),
+                input: { label: T('¿Cuántos ml tomó {bebe}? (opcional — ej. dato de la maestra)',
+                                  { bebe: nombreBebe() }),
                          max: p.volumen_ml },
                 accion: function () {
                     cerrarDirecto(id, 'usada', $('lac-confirm-input').value.trim());
@@ -780,8 +815,8 @@ opciones" (⋯) de cada partida.
             });
         } else {
             abrirConfirm({
-                emoji: '🗑', titulo: 'Descartar partida', peligro: true, boton: 'Sí, descartar',
-                msg: 'Se descarta ' + det + '. Se cierra con fecha de hoy.',
+                emoji: '🗑', titulo: T('Descartar partida'), peligro: true, boton: T('Sí, descartar'),
+                msg: T('Se descarta {det}. Se cierra con fecha de hoy.', { det: det }),
                 accion: function () { cerrarDirecto(id, 'descartada'); }
             });
         }
@@ -791,12 +826,12 @@ opciones" (⋯) de cada partida.
         var p = buscarPartida(id);
         if (!p) return;
         abrirConfirm({
-            emoji: '⚠️', titulo: 'Eliminar partida', peligro: true, boton: 'Sí, eliminar',
-            msg: 'Se elimina definitivamente la partida de ' + fmtMl(p.volumen_ml) +
-                ' (extraída el ' + fmtFecha(p.fecha_extraccion) + '). Esta acción no se puede deshacer.',
+            emoji: '⚠️', titulo: T('Eliminar partida'), peligro: true, boton: T('Sí, eliminar'),
+            msg: T('Se elimina definitivamente la partida de {vol} (extraída el {fecha}). Esta acción no se puede deshacer.',
+                   { vol: fmtMl(p.volumen_ml), fecha: fmtFecha(p.fecha_extraccion) }),
             accion: function () {
                 postAccion('/api/lactancia/' + id + '/eliminar', new URLSearchParams(), function () {
-                    toast('✕ Partida eliminada.', 'info');
+                    toast('✕ ' + T('Partida eliminada.'), 'info');
                 });
             }
         });
@@ -811,17 +846,19 @@ opciones" (⋯) de cada partida.
         if (!p) return;
         var esFreezada = p.motivo_cierre === 'trasladada';
         abrirConfirm({
-            emoji: '↩', titulo: 'Reabrir partida', peligro: false, boton: 'Sí, reabrir',
-            msg: 'Vuelve al stock ' + fmtMl(p.volumen_ml) +
-                ' (extraída el ' + fmtFecha(p.fecha_extraccion) + ')' +
-                (esFreezada ? '. Al ser una freezada, se deshace la combinación COMPLETA.' : '.'),
+            emoji: '↩', titulo: T('Reabrir partida'), peligro: false, boton: T('Sí, reabrir'),
+            msg: T('Vuelve al stock {vol} (extraída el {fecha}){extra}', {
+                vol: fmtMl(p.volumen_ml),
+                fecha: fmtFecha(p.fecha_extraccion),
+                extra: esFreezada ? T('. Al ser una freezada, se deshace la combinación COMPLETA.') : '.'
+            }),
             accion: function () { reabrir(id); }
         });
     }
 
     function reabrir(id) {
         postAccion('/api/lactancia/' + id + '/reabrir', new URLSearchParams(), function () {
-            toast('↩ Partida reabierta: volvió al stock.', 'info');
+            toast('↩ ' + T('Partida reabierta: volvió al stock.'), 'info');
         });
     }
 
@@ -839,7 +876,7 @@ opciones" (⋯) de cada partida.
             e.preventDefault();
             var vol = $('lac-ex-volumen').value.trim();
             if (!vol) {
-                toast('⚠ Cargá el volumen en ml.', 'error');
+                toast('⚠ ' + T('Cargá el volumen en ml.'), 'error');
                 $('lac-ex-volumen').focus();
                 return;
             }
@@ -853,24 +890,29 @@ opciones" (⋯) de cada partida.
             var btn = $('lac-ex-guardar');
             btn.disabled = true;
             postAccion('/api/lactancia/crear', params, function () {
-                toast('🥛 ' + fmtMl(vol) + ' a la heladera.');
+                toast('🥛 ' + T('{vol} a la heladera.', { vol: fmtMl(vol) }));
                 resetFormAlta();
                 $('lac-ex-volumen').focus();
             }, function () { btn.disabled = false; });
         });
     }
 
+    // Calendarios: el formato de fecha es día/mes en los DOS idiomas (decisión
+    // de Mari) — lo único que cambia es el idioma de los nombres de los meses.
+    // 'default' es el inglés que trae flatpickr de fábrica.
+    var LOCALE_FP = enIngles() ? 'default' : 'es';
+
     function initFlatpickrs() {
         fpExFecha = flatpickr($('lac-ex-fecha'), {
-            locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
             allowInput: true, maxDate: 'today'
         });
         fpCfFecha = flatpickr($('lac-cf-fecha'), {
-            locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
             allowInput: true, maxDate: 'today'
         });
         fpEdFecha = flatpickr($('lac-ed-fecha'), {
-            locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
             allowInput: true, maxDate: 'today'
         });
         // Hora en 24h. disableMobile es CLAVE: sin él, flatpickr en celulares
@@ -890,7 +932,7 @@ opciones" (⋯) de cada partida.
             time_24hr: true, allowInput: true, disableMobile: true
         });
         fpBebeNac = flatpickr($('lac-bebe-nac'), {
-            locale: 'es', dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
             allowInput: true, maxDate: 'today'
         });
     }
@@ -909,8 +951,9 @@ opciones" (⋯) de cada partida.
         var banner = $('lac-rec-banner');
         if (banner) {
             if (rec.pendiente) {
-                banner.innerHTML = '🌙 Acordate de <strong>bajar bolsitas del freezer ' +
-                    'a la heladera</strong> para mañana.';
+                banner.innerHTML = '🌙 ' + T('Acordate de') + ' <strong>' +
+                    T('bajar bolsitas del freezer a la heladera') + '</strong> ' +
+                    T('para mañana.');
                 banner.hidden = false;
             } else {
                 banner.hidden = true;
@@ -926,7 +969,7 @@ opciones" (⋯) de cada partida.
         var btn = $('lac-rec-guardar');
         btn.disabled = true;
         postAccion('/api/lactancia/recordatorio', params, function () {
-            toast('🌙 Recordatorio guardado.');
+            toast('🌙 ' + T('Recordatorio guardado.'));
         }, function () { btn.disabled = false; });
     }
 
@@ -947,7 +990,7 @@ opciones" (⋯) de cada partida.
         var btn = $('lac-bebe-guardar');
         btn.disabled = true;
         postAccion('/api/lactancia/bebe', params, function () {
-            toast('👶 Datos del bebé guardados.');
+            toast('👶 ' + T('Datos del bebé guardados.'));
         }, function () { btn.disabled = false; });
     }
 
@@ -995,7 +1038,7 @@ opciones" (⋯) de cada partida.
         var btn = $('lac-config-guardar');
         btn.disabled = true;
         postAccion('/api/lactancia/config', params, function () {
-            toast('⚙️ Configuraciones guardadas.');
+            toast('⚙️ ' + T('Configuraciones guardadas.'));
         }, function () { btn.disabled = false; });
     }
 

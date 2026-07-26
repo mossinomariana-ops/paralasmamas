@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set es_registro = (modo == 'registro') %}
-{% block titulo %}{{ 'Crear cuenta' if es_registro else 'Iniciar sesión' }}{% endblock %}
+{% block titulo %}{{ t('Crear cuenta') if es_registro else t('Iniciar sesión') }}{% endblock %}
 {% block body_clase %}lac-body lac-body--auth{% endblock %}
 
 {% block contenido %}
@@ -8,10 +8,10 @@
   <div class="lac-auth-card tarjeta">
 
     <img class="lac-auth-logo" src="/static/icons/icon-192.png" alt="" width="80" height="80">
-    <h2 class="lac-auth-titulo">{{ 'Crear una cuenta' if es_registro else 'Iniciar sesión' }}</h2>
+    <h2 class="lac-auth-titulo">{{ t('Crear una cuenta') if es_registro else t('Iniciar sesión') }}</h2>
     <p class="lac-auth-sub">
-      {% if es_registro %}Con una cuenta entrás desde cualquier teléfono y no perdés tus datos.
-      {% else %}Entrá con tu mail y clave.{% endif %}
+      {% if es_registro %}{{ t('Con una cuenta entrás desde cualquier teléfono y no perdés tus datos.') }}
+      {% else %}{{ t('Entrá con tu mail y clave.') }}{% endif %}
     </p>
 
     {% if error %}<div class="lac-auth-error">{{ error }}</div>{% endif %}
@@ -20,19 +20,19 @@
           action="{{ url_for('auth.registro') if es_registro else url_for('auth.login') }}"
           class="lac-auth-form">
       <div class="lac-campo">
-        <label for="au-email">Mail</label>
+        <label for="au-email">{{ t('Mail') }}</label>
         <input type="email" id="au-email" name="email" value="{{ email or '' }}"
-               autocomplete="email" required placeholder="tucorreo@ejemplo.com">
+               autocomplete="email" required placeholder="{{ t('tucorreo@ejemplo.com') }}">
       </div>
       <div class="lac-campo">
-        <label for="au-pass">Clave</label>
+        <label for="au-pass">{{ t('Clave') }}</label>
         <input type="password" id="au-pass" name="password"
                autocomplete="{{ 'new-password' if es_registro else 'current-password' }}"
-               required minlength="6" placeholder="Al menos 6 caracteres">
+               required minlength="6" placeholder="{{ t('Al menos 6 caracteres') }}">
       </div>
       {% if es_registro %}
       <div class="lac-campo">
-        <label for="au-pass2">Repetir clave</label>
+        <label for="au-pass2">{{ t('Repetir clave') }}</label>
         <input type="password" id="au-pass2" name="password2"
                autocomplete="new-password" required minlength="6">
       </div>
@@ -40,23 +40,23 @@
 
       <label class="lac-auth-recordar">
         <input type="checkbox" name="recordar" value="1" checked>
-        <span>Recordar en este dispositivo (no cerrar sesión)</span>
+        <span>{{ t('Recordar en este dispositivo (no cerrar sesión)') }}</span>
       </label>
 
       <button type="submit" class="lac-btn-block lac-auth-btn-principal">
-        {{ 'Crear cuenta' if es_registro else 'Entrar' }}
+        {{ t('Crear cuenta') if es_registro else t('Entrar') }}
       </button>
     </form>
 
     <p class="lac-auth-login-link">
       {% if es_registro %}
-        ¿Ya tenés cuenta? <a href="{{ url_for('auth.login') }}">Iniciá sesión</a>
+        {{ t('¿Ya tenés cuenta?') }} <a href="{{ url_for('auth.login') }}">{{ t('Iniciá sesión') }}</a>
       {% else %}
-        ¿No tenés cuenta? <a href="{{ url_for('auth.registro') }}">Creá una</a>
+        {{ t('¿No tenés cuenta?') }} <a href="{{ url_for('auth.registro') }}">{{ t('Creá una') }}</a>
       {% endif %}
     </p>
     <p class="lac-auth-login-link">
-      <a href="{{ url_for('auth.bienvenida') }}">← Volver</a>
+      <a href="{{ url_for('auth.bienvenida') }}">{{ t('← Volver') }}</a>
     </p>
 
   </div>

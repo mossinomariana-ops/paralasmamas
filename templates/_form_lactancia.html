@@ -8,28 +8,28 @@
    carga). #}
           <form id="lac-form-extraccion" action="/api/lactancia/crear" method="post" class="lac-form-alta">
             <input type="hidden" name="ubicacion" value="heladera">
-            <div class="lac-form-titulo">🥛 Nueva extracción</div>
+            <div class="lac-form-titulo">🥛 {{ t('Nueva extracción') }}</div>
             <div class="lac-form-grid">
               <div class="lac-campo">
-                <label for="lac-ex-volumen">Volumen (ml)</label>
+                <label for="lac-ex-volumen">{{ t('Volumen (ml)') }}</label>
                 <input type="number" id="lac-ex-volumen" name="volumen_ml"
-                       min="1" max="2000" inputmode="numeric" placeholder="Ej: 150" required>
+                       min="1" max="2000" inputmode="numeric" placeholder="{{ t('Ej: 150') }}" required>
               </div>
               <div class="lac-campo">
-                <label for="lac-ex-hora">Hora de extracción</label>
+                <label for="lac-ex-hora">{{ t('Hora de extracción') }}</label>
                 <input type="text" id="lac-ex-hora" name="hora_extraccion"
                        placeholder="HH:MM" autocomplete="off" required>
               </div>
               <div class="lac-campo">
-                <label for="lac-ex-fecha">Fecha de extracción</label>
+                <label for="lac-ex-fecha">{{ t('Fecha de extracción') }}</label>
                 <input type="text" id="lac-ex-fecha" name="fecha_extraccion"
                        placeholder="DD/MM/AAAA" autocomplete="off">
               </div>
               <div class="lac-campo">
-                <label for="lac-ex-notas">Notas (opcional)</label>
+                <label for="lac-ex-notas">{{ t('Notas (opcional)') }}</label>
                 <input type="text" id="lac-ex-notas" name="notas" maxlength="200">
               </div>
             </div>
-            <button type="submit" class="lac-btn-block" id="lac-ex-guardar">Guardar</button>
+            <button type="submit" class="lac-btn-block" id="lac-ex-guardar">{{ t('Guardar') }}</button>
             <div class="lac-help" id="lac-ex-hint"></div>
           </form>
