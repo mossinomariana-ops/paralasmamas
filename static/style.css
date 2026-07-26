@@ -8676,3 +8676,73 @@ html[data-theme="dark"] body.lac-body--auth::before{
   font-size:1.35rem;line-height:1;padding:0 .15rem;
   color:var(--color-texto-muted);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Barra de arriba SIN tarjeta (pedido de Mari)
+   ═══════════════════════════════════════════════════════════════════════
+   La barra venía del fondo familiar: una franja oscura fija con letras
+   blancas. Acá se borra la franja para que se vea la ilustración de fondo y
+   los controles queden "apoyados" sobre ella, como el resto de la app.
+
+   Los colores pasan a ser las variables del tema (--color-texto y compañía),
+   así cambian solos entre día y noche. Antes eran blancos fijos: sobre el
+   crema del día quedaban invisibles.
+
+   Se le saca lo de "fija al scrollear": sin franja detrás, el texto de la app
+   pasaría POR DEBAJO de estos botones y se leerían los dos encimados.
+   ═══════════════════════════════════════════════════════════════════════ */
+body.lac-body .site-topbar,
+body:has(.lac-wrap) .site-topbar{
+  position:static;
+  box-shadow:none;
+  background:transparent;
+}
+body.lac-body .site-header,
+body:has(.lac-wrap) .site-header{
+  background:transparent;
+  color:var(--color-texto);
+}
+
+body.lac-body .header-user-nombre,
+body:has(.lac-wrap) .header-user-nombre{ color:var(--color-texto); }
+
+body.lac-body .header-user-photo,
+body:has(.lac-wrap) .header-user-photo{ border-color:var(--color-borde); }
+
+body.lac-body .header-sep,
+body:has(.lac-wrap) .header-sep{ color:var(--color-texto-muted); }
+
+/* "Salir" y el botón de idioma comparten el mismo lenguaje: contorno fino del
+   color del borde del tema. La letra va en --color-texto y NO en el apagado:
+   con letra apagada el contraste daba 4,35:1 sobre el crema, abajo del mínimo
+   para un texto tan chico (0,75rem). Que se lean como secundarios lo logran el
+   tamaño y el contorno fino, no un color lavado. */
+body.lac-body .header-logout-btn,
+body:has(.lac-wrap) .header-logout-btn,
+body.lac-body .header-idioma-btn,
+body:has(.lac-wrap) .header-idioma-btn{
+  color:var(--color-texto);
+  border-color:var(--color-borde);
+  background:transparent;
+}
+body.lac-body .header-logout-btn:hover,
+body:has(.lac-wrap) .header-logout-btn:hover,
+body.lac-body .header-idioma-btn:hover,
+body:has(.lac-wrap) .header-idioma-btn:hover{
+  color:var(--color-texto);
+  border-color:var(--color-acento);
+  background:transparent;
+}
+
+/* Sol / luna: mismo criterio. El glifo tiene su propio color más abajo. */
+body.lac-body .header-icon-btn,
+body:has(.lac-wrap) .header-icon-btn{
+  color:var(--color-texto);
+  border-color:var(--color-borde);
+  background:transparent;
+}
+body.lac-body .header-icon-btn:hover,
+body:has(.lac-wrap) .header-icon-btn:hover{
+  background:transparent;
+  border-color:var(--color-acento);
+}
