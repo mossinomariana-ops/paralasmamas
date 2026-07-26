@@ -381,6 +381,34 @@ EN = {
     "Ya existe una cuenta con ese mail. Probá iniciar sesión.":
         "There is already an account with that email. Try signing in.",
     "Mail o clave incorrectos.": "Wrong email or password.",
+
+    # ── Cuando algo sale mal con el pedido (sin internet / sesión cerrada) ──
+    "Se cerró tu sesión. Actualizá la página para volver a entrar.":
+        "Your session ended. Refresh the page to sign in again.",
+    "No pudimos conectarnos con la app. Fijate que tengas internet y volvé a probar.":
+        "We could not reach the app. Check your internet connection and try again.",
+    "No pudimos guardar el cambio. Probá de nuevo.":
+        "We could not save the change. Please try again.",
+    "Se guardó. Refrescando la pantalla…": "Saved. Refreshing the screen…",
+
+    # ── Cuánto tomó el bebé (modal de confirmación) ────────────────────────
+    "¿Cuántos ml tomó {bebe}?": "How many ml did {bebe} drink?",
+    "Es opcional, pero con este dato la app calcula la bolsita que te conviene y para cuántos días te alcanza.":
+        "It is optional, but with it the app works out your best bag size and how many days your stock lasts.",
+    "Tomó todo ({vol})": "Drank it all ({vol})",
+
+    # ── Descarga de la tabla día a día ─────────────────────────────────────
+    "Descargar tabla día a día": "Download day-by-day table",
+    "Un renglón por cada día de vida de tu bebé: fecha, día y mes de vida, ml extraídos y ml tomados. Se abre con Excel.":
+        "One row per day of your baby's life: date, day and month of life, ml pumped and ml drunk. Opens in Excel.",
+    "Fecha": "Date",
+    "Día de vida": "Day of life",
+    "Mes de vida": "Month of life",
+    "ml extraídos": "ml pumped",
+    "ml tomados": "ml drunk",
+    "ml descartados": "ml discarded",
+    "Totales": "Totals",
+    "lactancia-dia-a-dia": "breastfeeding-day-by-day",
 }
 
 

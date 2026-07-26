@@ -228,6 +228,99 @@ def _lac_payload():
             'recordatorio': recordatorio, 'bebe': _lac_bebe(ahora=ahora)}
 
 
+# ── Tabla día a día (la que se descarga) ─────────────────────────────────────
+def _lac_dia_de_vida(nac, dia):
+    """(día de vida, mes de vida) de una fecha, o (None, None) sin nacimiento.
+
+    El día del parto es el DÍA 1 y el MES 1 (así se cuenta en pediatría), y el
+    mes cambia el mismo número de día de cada mes (14/05 → 14/06 = mes 2)."""
+    if nac is None or dia < nac:
+        return None, None
+    meses = (dia.year - nac.year) * 12 + (dia.month - nac.month)
+    if dia.day < nac.day:
+        meses -= 1
+    return (dia - nac).days + 1, max(meses, 0) + 1
+
+
+def _lac_dia_a_dia(hoy=None):
+    """Un renglón por cada día de vida del bebé: qué se extrajo y qué tomó.
+
+    Es la base de la descarga. Cada renglón mira el día completo:
+      - ml extraídos: lo que se sacó ESE día. Solo cuenta la leche FRESCA: una
+        bolsa combinada (freezada) o una bajada a descongelar es la MISMA leche
+        cambiando de lugar, contarla otra vez la duplicaría.
+      - ml tomados: lo de las bolsitas marcadas "usada" ese día. Si se anotó
+        cuánto tomó de verdad, va ese número; si no, lo que tenía la bolsita
+        (mismo criterio que la tarjeta "Consumida por" del Resumen).
+      - ml descartados: lo de las bolsitas tiradas ese día.
+
+    Sin fecha de nacimiento cargada la tabla igual sale: arranca en el primer
+    movimiento y las columnas de día/mes de vida quedan vacías.
+    """
+    if hoy is None:
+        hoy = date.today()
+    partidas = [dict(f) for f in database.obtener_partidas_lactancia()]
+    bebe = _lac_bebe()
+    try:
+        nac = datetime.strptime(bebe['fecha_nacimiento'], '%Y-%m-%d').date()
+    except ValueError:
+        nac = None
+
+    def _fecha(valor):
+        try:
+            return datetime.strptime(str(valor), '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            return None
+
+    extraido, tomado, descartado = {}, {}, {}
+    movimientos = []
+    for p in partidas:
+        f_ex = _fecha(p['fecha_extraccion'])
+        if f_ex:
+            movimientos.append(f_ex)
+            if (p.get('tipo') or 'fresca') == 'fresca':
+                extraido[f_ex] = extraido.get(f_ex, 0) + p['volumen_ml']
+        f_ci = _fecha(p.get('fecha_cierre'))
+        if f_ci:
+            movimientos.append(f_ci)
+            if p.get('motivo_cierre') == 'usada':
+                ml = (p['consumido_ml'] if p.get('consumido_ml') is not None
+                      else p['volumen_ml'])
+                tomado[f_ci] = tomado.get(f_ci, 0) + ml
+            elif p.get('motivo_cierre') == 'descartada':
+                descartado[f_ci] = descartado.get(f_ci, 0) + p['volumen_ml']
+
+    candidatas = [d for d in [nac] + movimientos if d is not None]
+    desde = min(candidatas) if candidatas else hoy
+    hasta = max([hoy] + movimientos) if movimientos else hoy
+
+    filas = []
+    dia = desde
+    while dia <= hasta:
+        dia_vida, mes_vida = _lac_dia_de_vida(nac, dia)
+        filas.append({
+            'fecha': dia.isoformat(),
+            'dia_vida': dia_vida,
+            'mes_vida': mes_vida,
+            'extraido_ml': extraido.get(dia, 0),
+            'tomado_ml': tomado.get(dia, 0),
+            'descartado_ml': descartado.get(dia, 0),
+        })
+        dia += timedelta(days=1)
+
+    return {
+        'filas': filas,
+        'bebe': bebe,
+        'desde': desde.isoformat(),
+        'hasta': hasta.isoformat(),
+        'totales': {
+            'extraido_ml': sum(f['extraido_ml'] for f in filas),
+            'tomado_ml': sum(f['tomado_ml'] for f in filas),
+            'descartado_ml': sum(f['descartado_ml'] for f in filas),
+        },
+    }
+
+
 # ── Validación de formularios ────────────────────────────────────────────────
 def _lac_parsear_volumen(valor, params=None):
     """Valida el volumen en ml. Si la mamá activó la capacidad de sus bolsitas

@@ -467,6 +467,58 @@ def api_lactancia_eliminar(id):
 
 
 # =============================================================================
+# DESCARGA — la tabla día a día, para abrir en Excel
+# =============================================================================
+# Un renglón por cada día de vida del bebé (aunque ese día no haya pasado nada),
+# así se puede mirar la evolución completa y hacer gráficos aparte.
+#
+# Detalles que hacen que Excel la abra bien de una:
+#   - Empieza con la marca invisible (BOM): sin eso Excel rompe los acentos.
+#   - En español el separador es ';' (es lo que espera el Excel en castellano) y
+#     en inglés ','.
+#   - Las fechas en día/mes/año, como en toda la app.
+def _csv_campo(valor, sep):
+    """Un valor listo para el CSV: se entrecomilla solo si hace falta."""
+    texto = '' if valor is None else str(valor)
+    if any(c in texto for c in (sep, '"', '\n', '\r')):
+        return '"' + texto.replace('"', '""') + '"'
+    return texto
+
+
+@app.route('/descargar/dia-a-dia.csv')
+def descargar_dia_a_dia():
+    tabla = logica._lac_dia_a_dia()
+    sep = ';' if i18n.idioma_actual() == 'es' else ','
+
+    def dmy(iso):
+        d = datetime.strptime(iso, '%Y-%m-%d').date()
+        return f"{d.day:02d}/{d.month:02d}/{d.year}"
+
+    encabezados = [
+        i18n.t('Fecha'), i18n.t('Día de vida'), i18n.t('Mes de vida'),
+        i18n.t('ml extraídos'), i18n.t('ml tomados'), i18n.t('ml descartados'),
+    ]
+    lineas = [sep.join(_csv_campo(h, sep) for h in encabezados)]
+    for f in tabla['filas']:
+        lineas.append(sep.join(_csv_campo(v, sep) for v in (
+            dmy(f['fecha']), f['dia_vida'], f['mes_vida'],
+            f['extraido_ml'], f['tomado_ml'], f['descartado_ml'],
+        )))
+    t = tabla['totales']
+    lineas.append(sep.join(_csv_campo(v, sep) for v in (
+        i18n.t('Totales'), '', '',
+        t['extraido_ml'], t['tomado_ml'], t['descartado_ml'],
+    )))
+
+    csv = '\ufeff' + '\r\n'.join(lineas) + '\r\n'
+    nombre = f"{i18n.t('lactancia-dia-a-dia')}-{datetime.now().date().isoformat()}.csv"
+    return Response(csv, mimetype='text/csv', headers={
+        'Content-Disposition': f'attachment; filename="{nombre}"',
+        'Cache-Control': 'no-store',
+    })
+
+
+# =============================================================================
 # PWA — app instalable (manifest + service worker públicos)
 # =============================================================================
 @app.route('/manifest.webmanifest')

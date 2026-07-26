@@ -197,20 +197,58 @@ opciones" (⋯) de cada partida.
     // ── AJAX ─────────────────────────────────────────────────────────────────
     // Toda mutación responde {ok:true, ...payload} (fresco) o {ok:false, error}.
     // onOk corre DESPUÉS de reemplazar DATOS y re-renderizar.
+    // Tres cosas pueden salir mal y cada una necesita su mensaje (antes todas
+    // terminaban en un "HTTP 200" incomprensible y la acción no se hacía):
+    //   1. No se llega al servidor (sin internet, o la app no está corriendo).
+    //   2. La sesión se cerró: el servidor contesta la pantalla de entrada o un
+    //      aviso `sesion_cerrada` → hay que recargar para volver a entrar.
+    //   3. El servidor rechazó la acción con un motivo (ej. partida vencida).
+    function errorRed() {
+        var e = new Error(T('No pudimos conectarnos con la app. Fijate que tengas internet y volvé a probar.'));
+        e.recargar = false;
+        return e;
+    }
+
+    function errorSesion() {
+        var e = new Error(T('Se cerró tu sesión. Actualizá la página para volver a entrar.'));
+        e.recargar = true;
+        return e;
+    }
+
+    // Un pedido que nunca contesta (pasa en el celular cuando se corta el wifi
+    // en medio) dejaría el botón como si no hubiera pasado nada: se corta solo
+    // a los 15 segundos y ahí sí avisa.
+    var ESPERA_MAX_MS = 15000;
+
     function postAccion(url, params, onOk, onFin) {
+        var corte = ('AbortController' in window) ? new AbortController() : null;
+        var reloj = corte && setTimeout(function () { corte.abort(); }, ESPERA_MAX_MS);
+
         fetch(url, {
             method: 'POST',
             body: params,   // URLSearchParams → content-type urlencoded automático
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: corte ? corte.signal : undefined
         })
+        .catch(function () { throw errorRed(); })
         .then(function (res) {
-            return res.json().then(
-                function (data) { return data; },
-                function () { throw new Error('HTTP ' + res.status); }
-            );
+            return res.text().then(function (texto) {
+                var data;
+                try {
+                    data = JSON.parse(texto);
+                } catch (e) {
+                    // Llegó una página HTML donde esperábamos datos.
+                    throw errorSesion();
+                }
+                return data;
+            });
         })
         .then(function (data) {
-            if (!data.ok) throw new Error(data.error || 'Error del servidor');
+            if (!data.ok) {
+                if (data.sesion_cerrada) throw errorSesion();
+                if (data.offline) throw errorRed();
+                throw new Error(data.error || T('No pudimos guardar el cambio. Probá de nuevo.'));
+            }
             DATOS = {
                 freezer: data.freezer || [],
                 heladera: data.heladera || [],
@@ -223,14 +261,28 @@ opciones" (⋯) de cada partida.
                 bebe: data.bebe || DATOS.bebe ||
                     { nombre: 'León', fecha_nacimiento: '', edad_texto: '', mes_de_vida: null }
             };
-            renderTodo();
+            // El cambio YA quedó guardado. Si fallara el repintado de la
+            // pantalla no hay que decirle que falló la acción (sería mentira):
+            // se avisa y se recarga, que muestra el estado real.
+            try {
+                renderTodo();
+            } catch (e) {
+                console.error('Error al repintar lactancia:', e);
+                toast('✓ ' + T('Se guardó. Refrescando la pantalla…'), 'info');
+                setTimeout(function () { location.reload(); }, 1500);
+                return;
+            }
             if (onOk) onOk(data);
         })
         .catch(function (err) {
             console.error('Error AJAX lactancia:', err);
             toast('⚠ ' + err.message, 'error');
+            if (err && err.recargar) {
+                setTimeout(function () { location.reload(); }, 3000);
+            }
         })
         .finally(function () {
+            if (reloj) clearTimeout(reloj);
             if (onFin) onFin();
         });
     }
@@ -509,9 +561,6 @@ opciones" (⋯) de cada partida.
         renderConfig();
         renderTablero();
         renderListas();
-        // Estándar de notificaciones: refrescar la campana del header tras
-        // mutar datos (DATOS.badge sigue en el payload por compat, ya no se usa).
-        if (window.Notif) window.Notif.refrescar();
         // Hint del form de alta con el parámetro vigente
         var hint = $('lac-ex-hint');
         if (hint && DATOS.params.heladera_horas) {
@@ -771,14 +820,26 @@ opciones" (⋯) de cada partida.
             btn.disabled = false;
         }
 
-        // Input numérico OPCIONAL (ej. ml que tomó León). Dejarlo vacío es
-        // válido — no toca el estado del botón. opts.input = {label, max}.
+        // Input numérico OPCIONAL (ej. ml que tomó el bebé). Dejarlo vacío es
+        // válido — no toca el estado del botón.
+        // opts.input = {label, hint, max}: con `max` aparece además el botón
+        // "Tomó todo (N ml)", que es el caso más común de un toque.
         var inWrap = $('lac-confirm-input-wrap');
         var inEl = $('lac-confirm-input');
+        var btnTodo = $('lac-confirm-input-todo');
         inEl.value = '';
         if (opts.input) {
             $('lac-confirm-input-label').textContent = opts.input.label || '';
-            if (opts.input.max != null) inEl.max = opts.input.max; else inEl.removeAttribute('max');
+            $('lac-confirm-input-hint').textContent = opts.input.hint || '';
+            if (opts.input.max != null) {
+                inEl.max = opts.input.max;
+                btnTodo.textContent = '✓ ' + T('Tomó todo ({vol})',
+                                               { vol: fmtMl(opts.input.max) });
+                btnTodo.hidden = false;
+            } else {
+                inEl.removeAttribute('max');
+                btnTodo.hidden = true;
+            }
             inWrap.hidden = false;
         } else {
             inWrap.hidden = true;
@@ -806,8 +867,8 @@ opciones" (⋯) de cada partida.
                 emoji: '✓', titulo: T('Marcar como usada'), peligro: false, boton: T('Sí, usada'),
                 msg: T('Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.',
                        { bebe: nombreBebe(), det: det }),
-                input: { label: T('¿Cuántos ml tomó {bebe}? (opcional — ej. dato de la maestra)',
-                                  { bebe: nombreBebe() }),
+                input: { label: T('¿Cuántos ml tomó {bebe}?', { bebe: nombreBebe() }),
+                         hint: T('Es opcional, pero con este dato la app calcula la bolsita que te conviene y para cuántos días te alcanza.'),
                          max: p.volumen_ml },
                 accion: function () {
                     cerrarDirecto(id, 'usada', $('lac-confirm-input').value.trim());
@@ -1112,6 +1173,11 @@ opciones" (⋯) de cada partida.
         // Checkbox obligatorio del modal: habilita/inhabilita el botón confirmar
         $('lac-confirm-check').addEventListener('change', function () {
             $('lac-confirm-si').disabled = !this.checked;
+        });
+        // "Tomó todo": completa el consumo con lo que tenía la bolsita
+        $('lac-confirm-input-todo').addEventListener('click', function () {
+            var inEl = $('lac-confirm-input');
+            inEl.value = inEl.max || '';
         });
         $('lac-btn-freezar').addEventListener('click', freezarSeleccionadas);
         $('lac-rec-guardar').addEventListener('click', guardarRecordatorio);

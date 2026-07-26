@@ -35,6 +35,13 @@ RUTAS_PUBLICAS = {
 _EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 
+def _pide_datos():
+    """True si el pedido lo hace el JavaScript de la app (botones) y no el
+    navegador cargando una pantalla."""
+    return (request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            or request.path.startswith('/api/'))
+
+
 def init_auth(app):
     app.register_blueprint(auth_bp)
 
@@ -45,6 +52,18 @@ def init_auth(app):
         uid = session.get('uid')
         if not uid or database.obtener_usuario(uid) is None:
             session.clear()
+            # A los botones de la app (JavaScript) NO se les puede contestar con
+            # la pantalla de bienvenida: el navegador la sigue calladito y el JS
+            # recibe una página donde esperaba datos. Resultado: la acción no se
+            # hace y solo aparece un aviso raro de error. Se contesta un mensaje
+            # claro y el JS recarga para que pueda volver a entrar.
+            if _pide_datos():
+                return jsonify({
+                    'ok': False,
+                    'sesion_cerrada': True,
+                    'error': i18n.t("Se cerró tu sesión. Actualizá la página "
+                                    "para volver a entrar."),
+                }), 401
             return redirect(url_for('auth.bienvenida'))
         # Fija la usuaria activa para toda la capa de datos de este request.
         database.set_usuario_actual(uid)

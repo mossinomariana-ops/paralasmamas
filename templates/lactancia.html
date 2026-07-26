@@ -104,6 +104,17 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg> {{ t('Resumen') }}</div>
         </div>
         <div class="lac-tablero" id="lac-tablero"></div>
+
+        {# Descarga de la tabla día a día: un <a> de verdad (no JavaScript), así
+           funciona igual si el JS falla y el navegador la baja como archivo. #}
+        <div class="lac-descarga">
+          <a class="lac-btn-descarga" href="{{ url_for('descargar_dia_a_dia') }}" download>
+            <svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10"/><path d="M8.2 10.4 12 14.2l3.8-3.8"/><path d="M4.8 16.4v2.2a1.4 1.4 0 0 0 1.4 1.4h11.6a1.4 1.4 0 0 0 1.4-1.4v-2.2"/></svg>
+            {{ t('Descargar tabla día a día') }}
+          </a>
+          <p class="lac-descarga-hint">{{ t('Un renglón por cada día de vida de tu bebé: fecha, día y mes de vida, ml extraídos y ml tomados. Se abre con Excel.') }}</p>
+        </div>
+
         <p class="lac-disclaimer">🩺 {{ t('Ajustá los tiempos de conservación según la recomendación de tu profesional de confianza. Los avisos de la app son orientativos y nunca te bloquean.') }}</p>
       </section>
 
@@ -374,15 +385,20 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         <input type="checkbox" id="lac-confirm-check">
         <span id="lac-confirm-check-txt"></span>
       </label>
-      {# Input numérico OPCIONAL (ej. cuántos ml tomó León al marcar Usada).
-         Dejarlo vacío es válido: no bloquea el botón de confirmar. #}
-      <label class="lac-confirm-input-wrap" id="lac-confirm-input-wrap" hidden>
-        <span id="lac-confirm-input-label"></span>
-        <span class="lac-confirm-input-row">
+      {# Cuántos ml tomó el bebé (al marcar Usada). Es OPCIONAL —dejarlo vacío
+         no bloquea el botón— pero va destacado en su propia tarjeta porque es
+         el dato que alimenta "Bolsita sugerida", "Alcanza para" y la tabla que
+         se descarga. El botón "Tomó todo" lo completa de un toque. #}
+      <div class="lac-confirm-input-wrap" id="lac-confirm-input-wrap" hidden>
+        <label class="lac-confirm-input-label" id="lac-confirm-input-label"
+               for="lac-confirm-input"></label>
+        <div class="lac-confirm-input-row">
           <input type="number" id="lac-confirm-input" min="0" step="1" inputmode="numeric" placeholder="—">
           <span class="lac-confirm-input-suf">ml</span>
-        </span>
-      </label>
+          <button type="button" class="lac-confirm-input-todo" id="lac-confirm-input-todo" hidden></button>
+        </div>
+        <p class="lac-confirm-input-hint" id="lac-confirm-input-hint"></p>
+      </div>
     </div>
     <div class="lac-modal-foot">
       <button type="button" class="btn btn-secundario" data-lac-cerrar-modal>{{ t('Volver') }}</button>
