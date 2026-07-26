@@ -8746,3 +8746,54 @@ body:has(.lac-wrap) .header-icon-btn:hover{
   background:transparent;
   border-color:var(--color-acento);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Barras de scroll con la paleta de la app
+   ═══════════════════════════════════════════════════════════════════════
+   Sin esto, Windows dibuja su barra de siempre: un rectángulo BLANCO con un
+   pulgar gris, que sobre el crema canta y sobre el cacao de la noche es un
+   tajo de luz. Acá la barra pasa a ser una cajita redondeada más, del mismo
+   lenguaje que los paneles: pista apenas translúcida y pulgar coral.
+
+   Los colores van como variables propias y no reusan --color-acento a secas
+   porque el pulgar necesita transparencia (tiene que dejar ver el panel de
+   atrás) y las variables de la paleta son colores planos.
+
+   Van en :root / html[data-theme="dark"] —y no en body.lac-body— porque la
+   barra de la ventana la dibuja el <html>, que está por FUERA del <body>.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{
+  --lac-scroll-pulgar:       rgba(219, 106, 84, 0.45);
+  --lac-scroll-pulgar-hover: #DB6A54;
+  --lac-scroll-pista:        rgba(255, 253, 249, 0.45);
+}
+html[data-theme="dark"]{
+  --lac-scroll-pulgar:       rgba(242, 144, 124, 0.45);
+  --lac-scroll-pulgar-hover: #F2907C;
+  --lac-scroll-pista:        rgba(255, 253, 249, 0.08);
+}
+
+*::-webkit-scrollbar{ width: 10px; height: 10px; }
+
+*::-webkit-scrollbar-track{
+  background: var(--lac-scroll-pista);
+  border-radius: 999px;
+}
+
+/* El borde transparente + background-clip deja un airecito alrededor del
+   pulgar: sin eso toca los bordes de la pista y se ve como una barra maciza. */
+*::-webkit-scrollbar-thumb{
+  background: var(--lac-scroll-pulgar);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover{ background: var(--lac-scroll-pulgar-hover); background-clip: content-box; }
+*::-webkit-scrollbar-corner{ background: transparent; }
+
+/* Las flechitas de arriba y abajo: Windows las dibuja como dos cuadraditos que
+   rompen la forma redondeada. Fuera. */
+*::-webkit-scrollbar-button{ display: none; }
+
+/* Firefox no entiende lo de arriba y usa estas dos propiedades */
+*{ scrollbar-width: thin; scrollbar-color: var(--lac-scroll-pulgar) var(--lac-scroll-pista); }
