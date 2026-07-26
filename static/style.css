@@ -5636,6 +5636,9 @@ body.has-dev-banner .settings-aside {
   font-weight: 700;
   text-align: center;
 }
+/* Solo achica el botón: el aspecto (fondo, borde, tipografía) lo pone
+   .lac-btn-block, el mismo de todos los "Guardar" de la app. OJO: si se le saca
+   esa clase vuelve el borde gris que Windows le pone a los <button> pelados. */
 .lac-rec-guardar {
   margin-left: auto;
   padding: 0.4rem 0.85rem;
@@ -5669,6 +5672,7 @@ body.has-dev-banner .settings-aside {
 .lac-bebe-row { display: flex; align-items: center; gap: 0.5rem; }
 .lac-bebe-label { font-size: 0.82rem; color: var(--color-texto-muted); white-space: nowrap; }
 .lac-bebe-nac { flex: 1 1 auto; min-width: 0; }
+/* Igual que .lac-rec-guardar: acá solo el tamaño, el aspecto lo da .lac-btn-block */
 .lac-bebe-guardar { padding: 0.42rem 0.8rem; font-size: 0.82rem; border-radius: var(--radio-borde); }
 .lac-bebe-edad { font-size: 0.78rem; font-weight: 600; color: var(--color-texto-muted); }
 

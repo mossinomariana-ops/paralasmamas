@@ -25,7 +25,10 @@ APP_NOMBRE = "Lactancia"
 #
 # MIENTRAS ESTÉ VACÍO, el botón "Entrar con Google" no aparece en ningún lado y
 # la app funciona exactamente como antes (invitada / mail + clave).
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+GOOGLE_CLIENT_ID = os.environ.get(
+    'GOOGLE_CLIENT_ID',
+    '392877368068-js3nd6ftlh091ae5a3gsb5iueobhahgf.apps.googleusercontent.com'
+).strip()
 
 
 def google_activo():
