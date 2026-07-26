@@ -112,6 +112,18 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
   </div>
   {% endif %}
 
+  {# Mensaje de una sola vez (ej: al entrar con Google por primera vez, para
+     contarle qué pasó con lo que tenía cargado). El servidor ya lo sacó de la
+     sesión al armar esta página: si recarga, no vuelve a aparecer.
+     Se llama `lac-flash` y NO `lac-aviso` a propósito: ese nombre ya lo usan
+     los avisos de bolsitas vencidas adentro de la app. #}
+  {% if aviso %}
+  <div class="lac-flash" role="status">
+    <p class="lac-flash__texto">{{ aviso }}</p>
+    <button type="button" class="lac-flash__cerrar" aria-label="{{ t('Cerrar') }}">×</button>
+  </div>
+  {% endif %}
+
   <main class="contenido-principal">
     {% block contenido %}{% endblock %}
   </main>
@@ -130,6 +142,17 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
         var nuevo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = nuevo;
         localStorage.setItem('tema', nuevo);
+      });
+    })();
+  </script>
+
+  {# Cerrar el mensaje de una sola vez #}
+  <script>
+    (function () {
+      var caja = document.querySelector('.lac-flash');
+      if (!caja) return;
+      caja.querySelector('.lac-flash__cerrar').addEventListener('click', function () {
+        caja.remove();
       });
     })();
   </script>

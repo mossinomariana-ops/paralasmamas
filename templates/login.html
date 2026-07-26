@@ -16,6 +16,14 @@
 
     {% if error %}<div class="lac-auth-error">{{ error }}</div>{% endif %}
 
+    {# Entrar con Google, arriba del formulario: es el camino más corto y el que
+       casi todo el mundo elige. Si no está configurado no se dibuja nada y la
+       pantalla queda igual que siempre. #}
+    {% include "_google_btn.html" %}
+    {% if cfg.google_client_id %}
+    <div class="lac-auth-sep"><span>{{ t('o') }}</span></div>
+    {% endif %}
+
     <form method="post"
           action="{{ url_for('auth.registro') if es_registro else url_for('auth.login') }}"
           class="lac-auth-form">

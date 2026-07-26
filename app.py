@@ -67,7 +67,7 @@ def _static_version():
     """mtime más reciente de los estáticos principales → cache-busting."""
     try:
         paths = [os.path.join(app.static_folder, n)
-                 for n in ('style.css', 'lactancia.js', 'pwa.js')]
+                 for n in ('style.css', 'lactancia.js', 'pwa.js', 'google.js')]
         return str(int(max(os.path.getmtime(p) for p in paths if os.path.exists(p))))
     except Exception:
         return '0'
@@ -83,7 +83,12 @@ def inject_config():
             'paleta_light': config.PALETA_LIGHT,
             'paleta_dark': config.PALETA_DARK,
             'marca': config.MARCA,
+            # Vacío = no hay Entrar con Google configurado y el botón no se dibuja.
+            'google_client_id': config.GOOGLE_CLIENT_ID,
         },
+        # Mensaje de una sola vez (ej: "tus datos quedaron en la cuenta"). Se
+        # saca de la sesión al mostrarlo, así no vuelve a aparecer al recargar.
+        'aviso': session.pop('aviso', None),
         # Traducción: `t` para los textos de las plantillas, `idioma` para saber
         # qué ofrece la tarjeta del header, y el diccionario que se le pasa al
         # JavaScript para los textos que arma él.

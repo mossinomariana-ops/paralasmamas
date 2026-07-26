@@ -7,8 +7,30 @@
 # propios de cada mamá (bebé, recordatorio, partidas) viven en SU base de datos.
 # =============================================================================
 
+import os
+
 # Nombre visible de la app (marca).
 APP_NOMBRE = "Lactancia"
+
+# =============================================================================
+# Entrar con Google
+# =============================================================================
+# El "ID de cliente" que Google entrega al registrar la app en Google Cloud.
+# NO es un secreto: viaja en el HTML de la pantalla de acceso, cualquiera puede
+# verlo. Lo que lo protege es la lista de dominios autorizados que se carga en
+# Google (solo desde ellos funciona), por eso puede vivir acá en el código.
+#
+# Se puede pisar con la variable de entorno GOOGLE_CLIENT_ID (útil para probar
+# con un cliente distinto sin tocar el archivo).
+#
+# MIENTRAS ESTÉ VACÍO, el botón "Entrar con Google" no aparece en ningún lado y
+# la app funciona exactamente como antes (invitada / mail + clave).
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '').strip()
+
+
+def google_activo():
+    """True si hay ID de cliente cargado (o sea: se puede entrar con Google)."""
+    return bool(GOOGLE_CLIENT_ID)
 
 # Parámetros de conservación y de aviso (horas/días/meses). Base del cálculo de
 # vencimiento y de los estados (disponible / vence pronto / vencida).

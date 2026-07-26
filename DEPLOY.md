@@ -58,6 +58,11 @@ Botón verde **Reload** (arriba en la pestaña Web). Listo:
 La carpeta `data/` (bases de las usuarias + clave de sesión) se crea sola en el
 primer arranque y es privada (no está en el repo).
 
+## 8. (Opcional) Entrar con Google
+
+El botón "Entrar con Google" viene apagado. Para encenderlo hay que crear un ID
+de cliente en Google Cloud: los pasos están en **GOOGLE.md**.
+
 ---
 
 ## Actualizar la app cuando cambiemos algo

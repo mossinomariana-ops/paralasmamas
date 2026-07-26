@@ -40,6 +40,10 @@
       <div class="lac-auth-sep"><span>{{ t('o') }}</span></div>
 
       {# ── Cuenta ── #}
+      {# Google primero: es un toque y ya, contra escribir mail y clave. Si no
+         está configurado, este include no dibuja nada. #}
+      {% include "_google_btn.html" %}
+
       <a href="{{ url_for('auth.registro') }}" class="lac-btn-block lac-auth-btn-secundario">
         {{ t('Crear una cuenta') }}
       </a>

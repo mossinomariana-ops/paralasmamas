@@ -186,18 +186,36 @@ def init_usuarios():
             creado        TEXT NOT NULL
         )
     ''')
+    # Entrar con Google. Van como columnas agregadas (y no dentro del CREATE de
+    # arriba) porque la tabla de una app que ya está publicada NO se vuelve a
+    # crear: si se tocara el CREATE, las cuentas que ya existen se quedarían sin
+    # estas columnas y la app rompería al primer login.
+    #   google_sub → identificador que Google le da a la persona. Es el que vale
+    #                para reconocerla: el mail se puede cambiar, este número no.
+    #   nombre/foto → lo que Google devuelve, para saludarla en la barra de arriba.
+    columnas = {fila[1] for fila in conn.execute('PRAGMA table_info(usuarios)')}
+    for nombre, tipo in (('google_sub', 'TEXT'), ('nombre', 'TEXT'), ('foto', 'TEXT')):
+        if nombre not in columnas:
+            conn.execute(f'ALTER TABLE usuarios ADD COLUMN {nombre} {tipo}')
+    # Una cuenta de Google = una sola usuaria. El índice va aparte porque SQLite
+    # no deja agregar una columna UNIQUE con ALTER TABLE.
+    conn.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_google '
+                 'ON usuarios (google_sub) WHERE google_sub IS NOT NULL')
     conn.commit()
     conn.close()
 
 
-def crear_usuario(tipo, email=None, password_hash=None):
+def crear_usuario(tipo, email=None, password_hash=None,
+                  google_sub=None, nombre=None, foto=None):
     """Inserta una usuaria (invitada o cuenta), le crea su base propia y
     devuelve su id."""
     conn = conectar_usuarios()
     cur = conn.cursor()
     cur.execute(
-        'INSERT INTO usuarios (tipo, email, password_hash, creado) VALUES (?, ?, ?, ?)',
-        (tipo, email, password_hash, _ahora_iso())
+        'INSERT INTO usuarios (tipo, email, password_hash, creado, '
+        '                      google_sub, nombre, foto) '
+        'VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (tipo, email, password_hash, _ahora_iso(), google_sub, nombre, foto)
     )
     conn.commit()
     uid = cur.lastrowid
@@ -218,6 +236,59 @@ def obtener_usuario(uid):
     fila = conn.execute('SELECT * FROM usuarios WHERE id = ?', (uid,)).fetchone()
     conn.close()
     return dict(fila) if fila else None
+
+
+# ── Entrar con Google ────────────────────────────────────────────────────────
+def obtener_usuario_por_google(google_sub):
+    conn = conectar_usuarios()
+    fila = conn.execute('SELECT * FROM usuarios WHERE google_sub = ?',
+                        (google_sub,)).fetchone()
+    conn.close()
+    return dict(fila) if fila else None
+
+
+def vincular_google(uid, google_sub, email=None, nombre=None, foto=None):
+    """Deja una usuaria que ya existe atada a una cuenta de Google (y le
+    actualiza nombre y foto). Sirve para dos casos:
+      - la mamá ya tenía cuenta con mail y clave, y ahora entra con Google;
+      - una invitada que se pasa a tener cuenta (ahí también cambia el tipo).
+    Su base de datos no se toca: se lleva todo lo que había cargado."""
+    conn = conectar_usuarios()
+    conn.execute(
+        "UPDATE usuarios SET tipo = 'cuenta', google_sub = ?, "
+        "       email = COALESCE(email, ?), nombre = ?, foto = ? "
+        "WHERE id = ?",
+        (google_sub, email, nombre, foto, uid)
+    )
+    conn.commit()
+    conn.close()
+
+
+def tiene_datos(uid):
+    """¿Esta usuaria llegó a cargar alguna bolsita? Se usa para avisarle a una
+    invitada que lo suyo queda aparte cuando entra a una cuenta que ya existía;
+    si nunca cargó nada, no hay nada que avisar."""
+    if not os.path.exists(_ruta_db_usuaria(uid)):
+        return False
+    conn = conectar(uid)
+    try:
+        fila = conn.execute(
+            'SELECT 1 FROM lactancia_partidas LIMIT 1').fetchone()
+    except sqlite3.Error:
+        return False
+    finally:
+        conn.close()
+    return fila is not None
+
+
+def actualizar_datos_google(uid, nombre=None, foto=None):
+    """Refresca nombre y foto en cada entrada (la mamá puede haberlos cambiado
+    en su cuenta de Google)."""
+    conn = conectar_usuarios()
+    conn.execute('UPDATE usuarios SET nombre = ?, foto = ? WHERE id = ?',
+                 (nombre, foto, uid))
+    conn.commit()
+    conn.close()
 
 
 # =============================================================================

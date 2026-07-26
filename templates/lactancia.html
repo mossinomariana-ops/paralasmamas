@@ -119,6 +119,20 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         </summary>
         <div class="lac-config">
 
+          {# ── Pasar de "sin cuenta" a cuenta, SIN salir de la app ───────────
+             Es la única puerta que tiene una invitada para no perder lo suyo:
+             desde afuera no la ve (la pantalla de bienvenida la manda derecho a
+             la app si ya hay sesión), y si toca "Salir" pierde el acceso a su
+             base para siempre. Al entrar con Google desde acá, su base se
+             convierte en la cuenta y se lleva todo. #}
+          {% if es_invitada and cfg.google_client_id %}
+          <div class="lac-config-grupo">
+            <h4 class="lac-config-titulo">{{ t('Tu cuenta') }}</h4>
+            <p class="lac-config-hint">{{ t('Estás usando la app sin cuenta: lo que cargás vive solo en este teléfono. Si entrás con Google se guarda en tu cuenta y lo podés ver desde cualquier teléfono. No se pierde nada de lo que ya cargaste.') }}</p>
+            {% include "_google_btn.html" %}
+          </div>
+          {% endif %}
+
           <p class="lac-config-intro">{{ t('Estos son los tiempos con los que la app calcula los vencimientos y te avisa. Ajustalos según lo que te indique tu profesional.') }}</p>
 
           <div class="lac-config-grupo">

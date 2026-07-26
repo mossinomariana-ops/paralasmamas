@@ -8638,3 +8638,37 @@ html[data-theme="dark"] body.lac-body--auth::before{
     radial-gradient(900px 500px at 82% -6%, rgba(240,151,123,.16), transparent 62%),
     url('img/fondo-lactancia.jpg') center / cover no-repeat;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Entrar con Google (portada y login) + mensaje de una sola vez
+   ═══════════════════════════════════════════════════════════════════════ */
+/* El botón lo dibuja Google adentro de .lac-google__btn y NO se le puede
+   cambiar el aspecto (lo prohíben sus condiciones). Lo único nuestro es el
+   espacio de alrededor y que quede centrado. */
+.lac-google{margin:0 0 .85rem;}
+.lac-google__btn{display:flex;justify-content:center;min-height:44px;}
+.lac-google__error{
+  font-size:.85rem;line-height:1.45;text-align:left;
+  background:var(--color-peligro-suave);color:var(--color-peligro);
+  border-radius:10px;padding:.55rem .7rem;margin:.6rem 0 0;
+}
+.lac-google__error[hidden]{display:none;}
+
+/* Mensaje de una sola vez, arriba de todo. Ocupa el ancho de la pantalla y se
+   cierra con la ×. `flex:none` para que el body (que es una columna flexible)
+   no lo achique. */
+.lac-flash{
+  flex:none;
+  display:flex;align-items:flex-start;gap:.75rem;
+  margin:.6rem 1rem 0;padding:.7rem .85rem;
+  background:var(--color-exito-suave);
+  border-left:4px solid var(--color-exito);
+  border-radius:var(--radio-borde);
+  color:var(--color-texto);font-size:.9rem;line-height:1.5;
+}
+.lac-flash__texto{margin:0;flex:1;}
+.lac-flash__cerrar{
+  flex:none;background:none;border:none;cursor:pointer;
+  font-size:1.35rem;line-height:1;padding:0 .15rem;
+  color:var(--color-texto-muted);
+}

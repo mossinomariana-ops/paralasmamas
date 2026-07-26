@@ -50,6 +50,38 @@ EN = {
     "Entrar": "Sign in",
     "← Volver": "← Back",
 
+    # ── Entrar con Google ──────────────────────────────────────────────────
+    # El texto del botón lo pone Google (traducido solo según el idioma que le
+    # pasamos); acá van los mensajes nuestros de alrededor.
+    "No pudimos conectarnos. Fijate que tengas internet y probá de nuevo.":
+        "We could not connect. Check your internet connection and try again.",
+    "No pudimos verificar tu cuenta de Google.":
+        "We could not verify your Google account.",
+    "No pudimos verificar tu cuenta de Google. Fijate que tengas internet y probá de nuevo.":
+        "We could not verify your Google account. Check your internet connection and try again.",
+    "No llegó bien la respuesta de Google. Probá de nuevo.":
+        "Google's reply did not arrive properly. Please try again.",
+    "La respuesta de Google venció. Probá de nuevo.":
+        "Google's reply expired. Please try again.",
+    "Esa cuenta no se puede usar acá. Probá de nuevo.":
+        "That account cannot be used here. Please try again.",
+    "Entrar con Google no está configurado en esta app.":
+        "Sign in with Google is not set up in this app.",
+    "No pudimos entrar. Probá de nuevo.": "We could not sign you in. Please try again.",
+    "Pedido inválido.": "Invalid request.",
+    "Tu cuenta": "Your account",
+    "Estás usando la app sin cuenta: lo que cargás vive solo en este teléfono. Si entrás con Google se guarda en tu cuenta y lo podés ver desde cualquier teléfono. No se pierde nada de lo que ya cargaste.":
+        "You are using the app without an account: what you save lives only on this "
+        "phone. Sign in with Google and it is kept in your account, so you can see it "
+        "from any phone. Nothing you have already saved is lost.",
+    "¡Listo! Tu cuenta quedó creada y todo lo que habías cargado ya está guardado en ella. Ahora podés entrar desde cualquier teléfono.":
+        "All set! Your account is created and everything you had saved is now in it. "
+        "You can sign in from any phone.",
+    "Entraste a tu cuenta de Google. Lo que habías cargado sin cuenta quedó guardado aparte en este teléfono: para verlo, cerrá sesión y volvé a entrar sin cuenta.":
+        "You are now in your Google account. What you had saved without an account is "
+        "still stored separately on this phone: to see it, log out and continue "
+        "without an account again.",
+
     # ── Barra superior ─────────────────────────────────────────────────────
     "Salir": "Log out",
     "Cerrar sesión": "Log out",

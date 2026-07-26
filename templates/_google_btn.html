@@ -1,0 +1,22 @@
+{# ─────────────────────────────────────────────────────────────────────────────
+   Botón "Entrar con Google" — se usa en la portada y en login/registro.
+
+   Si todavía no hay ID de cliente cargado (config.GOOGLE_CLIENT_ID vacío) NO se
+   dibuja nada: la app queda igual que antes, con invitada y mail + clave.
+
+   El botón NO lo dibujamos nosotros: lo dibuja Google con su propio script, y
+   así tiene que ser (Google exige su botón oficial). Nosotros solo ponemos el
+   lugar donde va y recibimos la respuesta. Ver static/google.js.
+   ───────────────────────────────────────────────────────────────────────────#}
+{% if cfg.google_client_id %}
+<div class="lac-google"
+     data-client-id="{{ cfg.google_client_id }}"
+     data-locale="{{ 'en' if idioma == 'en' else 'es-419' }}"
+     data-error-red="{{ t('No pudimos conectarnos. Fijate que tengas internet y probá de nuevo.') }}">
+  <div class="lac-google__btn"></div>
+  <p class="lac-google__error" role="alert" hidden></p>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="{{ url_for('static', filename='google.js') }}?v={{ static_version }}" defer></script>
+{% endif %}
