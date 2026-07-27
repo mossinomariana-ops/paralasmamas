@@ -1,0 +1,4 @@
+# Dependencias SOLO para desarrollo y pruebas. NO se instalan en PythonAnywhere:
+# allá alcanza con requirements.txt (Flask). Se instalan con:
+#   venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+pytest>=8.0

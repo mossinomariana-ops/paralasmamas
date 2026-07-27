@@ -55,7 +55,7 @@ def _es_ajax():
 
 
 def _horas_texto(horas):
-    """Horas (float) → texto corto para un mensaje: '40 min', '2 h', '2 h 20'."""
+    """Horas (float) → texto corto para un mensaje: '40 min', '2 h', '2 h 20 min'."""
     minutos = max(1, int(round(horas * 60)))
     h, m = divmod(minutos, 60)
     if not h:
