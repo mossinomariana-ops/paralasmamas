@@ -105,8 +105,6 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           </a>
           <p class="lac-descarga-hint">{{ t('Un renglón por cada día de vida de tu bebé: fecha, día y mes de vida, ml extraídos y ml tomados. Se abre con Excel.') }}</p>
         </div>
-
-        <p class="lac-disclaimer">🩺 {{ t('Ajustá los tiempos de conservación según la recomendación de tu profesional de confianza. Los avisos de la app son orientativos y nunca te bloquean.') }}</p>
       </section>
 
       <!-- ══ Configuraciones ═══════════════════════════════════════════════
@@ -135,7 +133,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           </div>
           {% endif %}
 
-          <p class="lac-config-intro">{{ t('Estos son los tiempos con los que la app calcula los vencimientos y te avisa. Ajustalos según lo que te indique tu profesional.') }}</p>
+          <p class="lac-config-intro">🩺 {{ t('Estos son los tiempos con los que calculo los vencimientos y te aviso. Ajustalos según la recomendación de tu profesional de confianza. Mis avisos son orientativos, no bloquean las acciones.') }}</p>
 
           <div class="lac-config-grupo">
             <h4 class="lac-config-titulo">{{ t('¿Cuánto dura la leche?') }}</h4>
@@ -175,7 +173,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
               <span class="lac-config-label">{{ t('Tienen que llevar al menos') }}</span>
               <span class="lac-config-num"><input type="number" id="cfg-combinar_min_horas" min="0" max="24" inputmode="numeric"><em>{{ t('horas en la heladera') }}</em></span>
             </label>
-            <p class="lac-config-hint">{{ t('Para juntar dos extracciones en una misma bolsa las dos tienen que estar a la misma temperatura. Poné 0 si no querés que la app te lo controle.') }}</p>
+            <p class="lac-config-hint">{{ t('Para juntar dos extracciones en una misma bolsita las dos tienen que estar a la misma temperatura. Colocá 0 si no querés que lo verifique.') }}</p>
             <label class="lac-config-fila">
               <span class="lac-config-label">{{ t('Vienen tildadas si llevan menos de') }}</span>
               <span class="lac-config-num"><input type="number" id="cfg-freezar_hasta_horas" min="1" max="72" inputmode="numeric"><em>{{ t('horas') }}</em></span>
@@ -192,7 +190,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
               <span class="lac-config-label">{{ t('Capacidad') }}</span>
               <span class="lac-config-num"><input type="number" id="cfg-bolsa_capacidad_ml" min="10" max="2000" inputmode="numeric"><em>{{ t('ml') }}</em></span>
             </label>
-            <p class="lac-config-hint">{{ t('Con esto activado, la app no te deja cargar ni combinar más de esa cantidad en una bolsita.') }}</p>
+            <p class="lac-config-hint">{{ t('Con esto activado, no te dejo cargar ni combinar más de esa cantidad en una bolsita.') }}</p>
           </div>
 
           <div class="lac-config-grupo">
@@ -201,10 +199,10 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
               <input type="checkbox" id="cfg-pedir_confirmacion">
               <span>{{ t('Pedirme') }} <strong>{{ t('confirmación') }}</strong> {{ t('antes de cada acción') }}</span>
             </label>
-            <p class="lac-config-hint">{{ t('Si lo desactivás, las acciones se hacen al toque, sin el cartel de confirmación.') }}</p>
+            <p class="lac-config-hint">{{ t('Si lo desactivás, las acciones se hacen al instante, sin pedirte confirmación.') }}</p>
           </div>
 
-          <button type="button" class="lac-btn-block lac-btn-auto" id="lac-config-guardar">{{ t('Guardar configuraciones') }}</button>
+          <button type="button" class="lac-btn-block lac-btn-auto" id="lac-config-guardar">{{ t('Guardar ajustes') }}</button>
 
           <!-- ── Datos del bebé (habilita la edad y los cortes por mes) ────── -->
           <details class="lac-subpanel">
@@ -281,7 +279,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
       <section class="lac-panel lac-panel--freezer lac-door lac-door--freezer">
         <div class="lac-panel-header">
           <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.5 10 4.7M12 6.5l2-1.8M12 17.5l-2 1.8M12 17.5l2 1.8"/><path d="M5.6 8.2 5.2 5.7M5.6 8.2 3.1 8.6M18.4 8.2l2.5.4M18.4 8.2l.4-2.5M5.6 15.8l-2.5.4M5.6 15.8l-.4 2.5M18.4 15.8l.4 2.5M18.4 15.8l2.5-.4"/></svg> {{ t('Freezer') }} <span class="lac-count" id="lac-freezer-count"></span></div>
-          <span class="lac-fifo-hint" title="{{ t('Lo primero que entra, primero que sale') }}">{{ t('FIFO: usar la primera') }}</span>
+          <span class="lac-fifo-hint" title="{{ t('Lo primero que entra, lo primero que sale') }}">{{ t('FIFO: usar la primera') }}</span>
         </div>
         <div class="lac-lista-scroll" id="lac-lista-freezer"></div>
       </section>
@@ -292,7 +290,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         <div class="lac-panel-header">
           <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M8 12.5h8l-.7 6.4a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L8 12.5Z"/><path d="M7.4 6h9.2l-1.3 12.9a1 1 0 0 1-1 .9H9.7a1 1 0 0 1-1-.9L7.4 6Z"/><path d="M7.7 9h8.6"/></svg> {{ t('Heladera') }} <span class="lac-count" id="lac-heladera-count"></span></div>
           <button type="button" class="lac-btn-freezar" id="lac-btn-freezar"
-                  title="{{ t('Freezar las tildadas: combina las partidas seleccionadas en una sola partida de freezer (volumen sumado, extracción más vieja)') }}">⬆</button>
+                  title="{{ t('Freezar las tildadas: combina las bolsitas seleccionadas en una sola bolsita de freezer (volumen sumado, extracción más vieja)') }}">⬆</button>
         </div>
         <div class="lac-lista-scroll" id="lac-lista-heladera"></div>
       </section>
@@ -339,13 +337,13 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-mas" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span>⋯</span><span>{{ t('Partida') }} <span class="lac-modal-sub" id="lac-mas-sub"></span></span></h3>
+      <h3><span>⋯</span><span>{{ t('Bolsita') }} <span class="lac-modal-sub" id="lac-mas-sub"></span></span></h3>
       <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body lac-menu">
       <button type="button" class="lac-menu-btn" id="lac-mas-usada">✓ {{ t('Marcar usada con otra fecha…') }}</button>
       <button type="button" class="lac-menu-btn" id="lac-mas-descartada">🗑 {{ t('Marcar descartada con otra fecha…') }}</button>
-      <button type="button" class="lac-menu-btn" id="lac-mas-editar">✎ {{ t('Editar partida…') }}</button>
+      <button type="button" class="lac-menu-btn" id="lac-mas-editar">✎ {{ t('Editar bolsita…') }}</button>
       <button type="button" class="lac-menu-btn lac-menu-btn-peligro" id="lac-mas-eliminar">✕ {{ t('Eliminar definitivamente…') }}</button>
     </div>
   </div>
@@ -355,7 +353,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-editor" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span>✎</span><span>{{ t('Editar partida') }} <span class="lac-modal-sub" id="lac-ed-sub"></span></span></h3>
+      <h3><span>✎</span><span>{{ t('Editar bolsita') }} <span class="lac-modal-sub" id="lac-ed-sub"></span></span></h3>
       <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body">
@@ -389,7 +387,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
 <div class="lac-overlay" id="lac-modal-confirm" role="dialog" aria-modal="true" hidden>
   <div class="lac-modal">
     <div class="lac-modal-head">
-      <h3><span id="lac-confirm-emoji">⚠️</span><span id="lac-confirm-titulo">{{ t('Eliminar partida') }}</span></h3>
+      <h3><span id="lac-confirm-emoji">⚠️</span><span id="lac-confirm-titulo">{{ t('Eliminar bolsita') }}</span></h3>
       <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body">

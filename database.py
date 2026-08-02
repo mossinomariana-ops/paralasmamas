@@ -408,11 +408,11 @@ def bajar_partida_lactancia(freezer_id, fecha_cierre):
             'volumen_ml, notas FROM lactancia_partidas WHERE id = ?', (freezer_id,)
         ).fetchone()
         if f is None:
-            raise ValueError('La partida no existe.')
+            raise ValueError('La bolsita no existe.')
         if f['ubicacion'] != 'freezer':
-            raise ValueError('Solo se pueden bajar bolsas del freezer.')
+            raise ValueError('Solo se pueden bajar bolsitas del freezer.')
         if f['motivo_cierre'] is not None:
-            raise ValueError('Esa bolsa ya no está en el freezer.')
+            raise ValueError('Esa bolsita ya no está en el freezer.')
         ahora = _ahora_iso()
         cursor.execute('''
             INSERT INTO lactancia_partidas (
@@ -446,7 +446,7 @@ def reabrir_partida_lactancia(partida_id):
             (partida_id,)
         ).fetchone()
         if fila is None:
-            raise ValueError('La partida no existe.')
+            raise ValueError('La bolsita no existe.')
         ahora = _ahora_iso()
 
         if fila['motivo_cierre'] == 'trasladada' and fila['origen_id']:
@@ -456,7 +456,7 @@ def reabrir_partida_lactancia(partida_id):
             ).fetchone()
             if hija is not None:
                 if hija['motivo_cierre'] is not None:
-                    raise ValueError('No se puede reabrir: la partida freezada con esta leche ya se cerró.')
+                    raise ValueError('No se puede reabrir: la bolsita freezada con esta leche ya se cerró.')
                 cursor.execute('DELETE FROM lactancia_partidas WHERE id = ?', (hija['id'],))
                 cursor.execute('''
                     UPDATE lactancia_partidas

@@ -46,7 +46,7 @@ EN = {
     "Repetir clave": "Repeat password",
     "tucorreo@ejemplo.com": "you@example.com",
     "Al menos 6 caracteres": "At least 6 characters",
-    "Recordar en este dispositivo (no cerrar sesión)": "Stay signed in on this device",
+    "Recordar en este teléfono (no cerrar sesión)": "Stay signed in on this device",
     "Entrar": "Sign in",
     "← Volver": "← Back",
 
@@ -98,9 +98,8 @@ EN = {
     "Heladera": "Fridge",
     "Resumen": "Summary",
     "Historial": "History",
-    "Configuraciones": "Settings",
-    # "Ajustes" es el rótulo visible nuevo de esa hoja (pestaña y título); la
-    # clave interna de la sección sigue siendo config.
+    # "Ajustes" es el rótulo visible de esa hoja (pestaña y título); la clave
+    # interna de la sección sigue siendo config.
     "Ajustes": "Settings",
     "Freezer": "Freezer",
     "Bebé": "Baby",
@@ -142,13 +141,9 @@ EN = {
     "hace 1 mes": "1 month ago",
     "hace {n} meses": "{n} months ago",
     "FIFO: usar la primera": "FIFO: use the oldest",
-    "Lo primero que entra, primero que sale": "First in, first out",
-    "Freezar las tildadas: combina las partidas seleccionadas en una sola partida de freezer (volumen sumado, extracción más vieja)":
+    "Lo primero que entra, lo primero que sale": "First in, first out",
+    "Freezar las tildadas: combina las bolsitas seleccionadas en una sola bolsita de freezer (volumen sumado, extracción más vieja)":
         "Freeze the selected ones: combines them into a single freezer bag (amounts added up, oldest pumping time)",
-
-    # ── Resumen ────────────────────────────────────────────────────────────
-    "Ajustá los tiempos de conservación según la recomendación de tu profesional de confianza. Los avisos de la app son orientativos y nunca te bloquean.":
-        "Adjust the storage times to match your own provider's advice. The app's reminders are a guide only and never block you.",
 
     # ── Sugerencias ────────────────────────────────────────────────────────
     "Sugerencias": "Suggestions",
@@ -161,11 +156,11 @@ EN = {
     "Enviar sugerencia": "Send suggestion",
     "¡Gracias! Tu sugerencia salió.": "Thank you! Your suggestion is on its way.",
     "Escribí tu sugerencia antes de enviarla.": "Write your suggestion before sending it.",
-    "No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un ratito.":
-        "We could not send your suggestion. What you wrote is still here: please try again in a bit.",
+    "No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un momento.":
+        "We could not send your suggestion. What you wrote is still here: please try again in a moment.",
     "Ese correo no parece válido. Revisalo o dejalo vacío.":
         "That email does not look valid. Check it or leave it empty.",
-    "Esperá un minutito antes de mandar otra sugerencia.":
+    "Esperá un minuto antes de enviar otra sugerencia.":
         "Please wait a minute before sending another suggestion.",
     "Las sugerencias todavía no están disponibles.": "Suggestions are not available yet.",
     "El envío de correo todavía no está configurado.": "Email sending is not set up yet.",
@@ -175,8 +170,9 @@ EN = {
         "We could not reach the mail server.",
 
     # ── Configuraciones ────────────────────────────────────────────────────
-    "Estos son los tiempos con los que la app calcula los vencimientos y te avisa. Ajustalos según lo que te indique tu profesional.":
-        "These are the times the app uses to work out expiry dates and remind you. Adjust them to match your provider's advice.",
+    "Estos son los tiempos con los que calculo los vencimientos y te aviso. Ajustalos según la recomendación de tu profesional de confianza. Mis avisos son orientativos, no bloquean las acciones.":
+        "These are the times I use to work out expiry dates and remind you. Adjust them to match "
+        "your own provider's advice. My reminders are a guide only, they do not block any action.",
     "¿Cuánto dura la leche?": "How long does milk last?",
     "En el freezer": "In the freezer",
     "En la heladera": "In the fridge",
@@ -193,22 +189,22 @@ EN = {
     "Al juntar extracciones": "When combining sessions",
     "Tienen que llevar al menos": "They must have been chilling for at least",
     "horas en la heladera": "hours in the fridge",
-    "Para juntar dos extracciones en una misma bolsa las dos tienen que estar a la misma temperatura. Poné 0 si no querés que la app te lo controle.":
-        "To combine two sessions in the same bag they both need to be at the same temperature. Set 0 if you do not want the app to check this.",
+    "Para juntar dos extracciones en una misma bolsita las dos tienen que estar a la misma temperatura. Colocá 0 si no querés que lo verifique.":
+        "To combine two sessions in the same bag they both need to be at the same temperature. Set 0 if you do not want me to check this.",
     "Vienen tildadas si llevan menos de": "Pre-selected if they are under",
     "Tus bolsitas": "Your bags",
     "Mis bolsitas tienen una": "My bags have a",
     "capacidad máxima": "maximum capacity",
     "Capacidad": "Capacity",
-    "Con esto activado, la app no te deja cargar ni combinar más de esa cantidad en una bolsita.":
-        "With this on, the app will not let you add or combine more than that amount in one bag.",
+    "Con esto activado, no te dejo cargar ni combinar más de esa cantidad en una bolsita.":
+        "With this on, I will not let you add or combine more than that amount in one bag.",
     "Confirmaciones": "Confirmations",
     "Pedirme": "Ask me for",
     "confirmación": "confirmation",
     "antes de cada acción": "before every action",
-    "Si lo desactivás, las acciones se hacen al toque, sin el cartel de confirmación.":
+    "Si lo desactivás, las acciones se hacen al instante, sin pedirte confirmación.":
         "If you turn this off, actions happen right away, with no confirmation dialog.",
-    "Guardar configuraciones": "Save settings",
+    "Guardar ajustes": "Save settings",
 
     # ── Bebé y recordatorio ────────────────────────────────────────────────
     "Nombre del bebé": "Baby's name",
@@ -220,15 +216,15 @@ EN = {
 
     # ── Modales ────────────────────────────────────────────────────────────
     "Marcar usada": "Mark as used",
-    "Partida": "Bag",
+    "Bolsita": "Bag",
     "¿Cuándo se usó?": "When was it used?",
     "Confirmar": "Confirm",
     "Marcar usada con otra fecha…": "Mark as used with another date…",
     "Marcar descartada con otra fecha…": "Mark as discarded with another date…",
-    "Editar partida…": "Edit bag…",
+    "Editar bolsita…": "Edit bag…",
     "Eliminar definitivamente…": "Delete permanently…",
-    "Editar partida": "Edit bag",
-    "Eliminar partida": "Delete bag",
+    "Editar bolsita": "Edit bag",
+    "Eliminar bolsita": "Delete bag",
     "Sí, eliminar": "Yes, delete",
     "Cerrar": "Close",
 
@@ -252,13 +248,13 @@ EN = {
     "Usada": "Used",
     "Descartada": "Discarded",
     "Freezada": "Frozen",
-    "1 partida vencida": "1 expired bag",
-    "{n} partidas vencidas": "{n} expired bags",
+    "1 bolsita vencida": "1 expired bag",
+    "{n} bolsitas vencidas": "{n} expired bags",
     "1 por vencer": "1 expiring soon",
     "{n} por vencer": "{n} expiring soon",
     " y ": " and ",
     ". Revisá el stock.": ". Check your stock.",
-    "Bolsas disponibles": "Bags available",
+    "Bolsitas disponibles": "Bags available",
     "Stock freezer": "Freezer stock",
     "Vencen pronto": "Expiring soon",
     "Vencidas": "Expired",
@@ -266,8 +262,8 @@ EN = {
     "Usadas": "Used",
     "Descartadas": "Discarded",
     "En heladera:": "In the fridge:",
-    "partida": "bag",
-    "partidas": "bags",
+    "bolsita": "bag",
+    "bolsitas": "bags",
     "la próxima": "the next one",
     "Heladera vacía": "Fridge empty",
     "día": "day",
@@ -302,17 +298,17 @@ EN = {
     "Cerrada el": "Closed on",
     "Reabrir (deshacer el cierre)": "Reopen (undo)",
     "Eliminar definitivamente": "Delete permanently",
-    "Sin partidas en el freezer.": "Nothing in the freezer.",
+    "Sin bolsitas en el freezer.": "Nothing in the freezer.",
     "Nada en la heladera. Lo que sobre al final del día, se freeza.":
         "Nothing in the fridge. Whatever is left at the end of the day goes to the freezer.",
-    "Todavía no se cerró ninguna partida.": "Nothing has been closed yet.",
-    "Todavía no hay partidas cargadas": "Nothing added yet",
-    "Freezá la primera desde el panel Cargar": "Add your first one from the Add panel",
+    "Todavía no se cerró ninguna bolsita.": "Nothing has been closed yet.",
+    "Todavía no hay bolsitas cargadas": "Nothing added yet",
+    "Cargá la primera desde el panel Cargar": "Add your first one from the Add panel",
     "Va a la heladera y vence a las {h} h de la extracción. Lo que juntes lo freezás con el botón ⬆️ de Heladera.":
         "It goes in the fridge and expires {h} h after pumping. Whatever you gather, freeze it with the ⬆️ button in Fridge.",
     "freezer": "freezer",
     "heladera": "fridge",
-    "Deshecho: la partida volvió al stock.": "Undone: the bag went back to your stock.",
+    "Deshecho: la bolsita volvió al stock.": "Undone: the bag went back to your stock.",
     "Deshecho: volvieron a la heladera.": "Undone: they went back to the fridge.",
     "Deshecho: volvió al freezer.": "Undone: it went back to the freezer.",
     "{vol} marcada como usada.": "{vol} marked as used.",
@@ -320,24 +316,24 @@ EN = {
     "Marcar descartada": "Mark as discarded",
     "¿Cuándo se descartó?": "When was it discarded?",
     "Elegí la fecha de cierre.": "Choose the date.",
-    "Partida marcada como usada.": "Bag marked as used.",
-    "Partida descartada.": "Bag discarded.",
-    "Tildá al menos una partida de heladera.": "Tick at least one bag from the fridge.",
-    "Freezar partidas vencidas": "Freeze expired bags",
+    "Bolsita marcada como usada.": "Bag marked as used.",
+    "Bolsita descartada.": "Bag discarded.",
+    "Tildá al menos una bolsita de heladera.": "Tick at least one bag from the fridge.",
+    "Freezar bolsitas vencidas": "Freeze expired bags",
     "Freezar": "Freeze",
-    "Una de las partidas tildadas figura vencida en la app.":
-        "One of the ticked bags shows as expired in the app.",
-    "{n} de las partidas tildadas figuran vencidas en la app.":
-        "{n} of the ticked bags show as expired in the app.",
-    "Confirmo que se pasó al freezer ANTES de vencerse (se cargó tarde en la app).":
-        "I confirm it went into the freezer BEFORE expiring (it was just added late to the app).",
-    "Freezar al freezer": "Move to the freezer",
+    "Una de las bolsitas tildadas figura vencida.":
+        "One of the ticked bags shows as expired.",
+    "{n} de las bolsitas tildadas figuran vencidas.":
+        "{n} of the ticked bags show as expired.",
+    "Confirmo que se pasó al freezer antes de vencerse (se cargó tarde en la app).":
+        "I confirm it went into the freezer before expiring (it was just added late to the app).",
+    "Mandar al freezer": "Move to the freezer",
     "Sí, freezar": "Yes, freeze",
-    "Se combinan {n} {cuales}{vol} en UNA sola partida de freezer, con la fecha de extracción más vieja.":
-        "{n} {cuales}{vol} will be combined into ONE freezer bag, dated with the oldest pumping time.",
+    "Se combinan {n} {cuales}{vol} en una sola bolsita de freezer, con la fecha de extracción más vieja.":
+        "{n} {cuales}{vol} will be combined into one freezer bag, dated with the oldest pumping time.",
     "{n} {cuales}{detalle}": "{n} {cuales}{detalle}",
-    "partida freezada": "bag frozen",
-    "partidas freezadas": "bags frozen",
+    "bolsita freezada": "bag frozen",
+    "bolsitas freezadas": "bags frozen",
     ": {vol} al freezer.": ": {vol} into the freezer.",
     "Bajar a descongelar": "Move down to thaw",
     "Sí, bajar": "Yes, move it",
@@ -348,28 +344,28 @@ EN = {
     "La bolsita": "The bag",
     "{vol} a la heladera para descongelar.": "{vol} moved to the fridge to thaw.",
     "La fecha de extracción es obligatoria.": "The pumping date is required.",
-    "Partida actualizada.": "Bag updated.",
+    "Bolsita actualizada.": "Bag updated.",
     "{vol} (extraída el {fecha})": "{vol} (pumped on {fecha})",
     "Marcar como usada": "Mark as used",
     "Sí, usada": "Yes, used",
     "Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.":
         "Given to {bebe}: {det}. It will be closed with today's date.",
-    "¿Cuántos ml tomó {bebe}? (opcional — ej. dato de la maestra)":
+    "¿Cuántos ml tomó {bebe}? (opcional — ej: dato de la maestra)":
         "How many ml did {bebe} drink? (optional — e.g. what daycare told you)",
-    "Descartar partida": "Discard bag",
+    "Descartar bolsita": "Discard bag",
     "Sí, descartar": "Yes, discard",
     "Se descarta {det}. Se cierra con fecha de hoy.":
         "{det} will be discarded, closed with today's date.",
-    "Se elimina definitivamente la partida de {vol} (extraída el {fecha}). Esta acción no se puede deshacer.":
+    "Se elimina definitivamente la bolsita de {vol} (extraída el {fecha}). Esta acción no se puede deshacer.":
         "The {vol} bag (pumped on {fecha}) will be deleted for good. This cannot be undone.",
-    "Partida eliminada.": "Bag deleted.",
-    "Reabrir partida": "Reopen bag",
+    "Bolsita eliminada.": "Bag deleted.",
+    "Reabrir bolsita": "Reopen bag",
     "Sí, reabrir": "Yes, reopen",
     "Vuelve al stock {vol} (extraída el {fecha}){extra}":
         "{vol} (pumped on {fecha}) goes back to your stock{extra}",
-    ". Al ser una freezada, se deshace la combinación COMPLETA.":
-        ". As it is a frozen combination, the WHOLE combination will be undone.",
-    "Partida reabierta: volvió al stock.": "Bag reopened: back in your stock.",
+    ". Al ser una freezada, se deshace la combinación completa.":
+        ". As it is a frozen combination, the whole combination will be undone.",
+    "Bolsita reabierta: volvió al stock.": "Bag reopened: back in your stock.",
     "Cargá el volumen en ml.": "Enter the amount in ml.",
     "{vol} a la heladera.": "{vol} into the fridge.",
     "{vol} al freezer.": "{vol} to the freezer.",
@@ -378,32 +374,32 @@ EN = {
     "para mañana.": "for tomorrow.",
     "Recordatorio guardado.": "Reminder saved.",
     "Datos del bebé guardados.": "Baby's details saved.",
-    "Configuraciones guardadas.": "Settings saved.",
+    "Ajustes guardadas.": "Settings saved.",
 
     # ── Mensajes de error del servidor ─────────────────────────────────────
-    "La partida ya está cerrada.": "This bag is already closed.",
-    "La partida no está cerrada.": "This bag is not closed.",
-    "La partida no existe.": "That bag does not exist.",
+    "La bolsita ya está cerrada.": "This bag is already closed.",
+    "La bolsita no está cerrada.": "This bag is not closed.",
+    "La bolsita no existe.": "That bag does not exist.",
     "El consumo (ml) debe ser un número entero.": "The amount taken (ml) must be a whole number.",
-    "Tildá al menos una partida de heladera para freezar.":
+    "Tildá al menos una bolsita de heladera para freezar.":
         "Tick at least one fridge bag to freeze.",
-    "Solo se freezan partidas de heladera.": "Only fridge bags can be frozen.",
-    "Una de las partidas tildadas ya está cerrada.": "One of the ticked bags is already closed.",
-    "Hay partidas vencidas entre las tildadas: confirmá que se pasaron al freezer antes de vencerse para poder freezarlas.":
+    "Solo se freezan bolsitas de heladera.": "Only fridge bags can be frozen.",
+    "Una de las bolsitas tildadas ya está cerrada.": "One of the ticked bags is already closed.",
+    "Hay bolsitas vencidas entre las tildadas: confirmá que se pasaron al freezer antes de vencerse para poder freezarlas.":
         "Some ticked bags are expired: confirm they went into the freezer before expiring in order to freeze them.",
     "El volumen combinado supera los 2000 ml; freezá en tandas.":
         "The combined amount is over 2000 ml; freeze it in batches.",
     "El volumen (ml) debe ser un número entero.": "The amount (ml) must be a whole number.",
     "El volumen debe estar entre 1 y 2000 ml.": "The amount must be between 1 and 2000 ml.",
-    "Tus bolsitas son de {tope} ml. Si querés cargar más, subí la capacidad en Configuraciones o cargalo en dos bolsitas.":
+    "Tus bolsitas son de {tope} ml. Si querés cargar más, subí la capacidad en Ajustes o cargalo en dos bolsitas.":
         "Your bags hold {tope} ml. To add more, raise the capacity in Settings or split it into two bags.",
-    "Lo tildado suma {suma} ml y tus bolsitas son de {tope} ml. Tildá menos partidas, o subí la capacidad en Configuraciones.":
+    "Lo tildado suma {suma} ml y tus bolsitas son de {tope} ml. Tildá menos bolsitas, o subí la capacidad en Ajustes.":
         "What you ticked adds up to {suma} ml and your bags hold {tope} ml. Tick fewer bags, or raise the capacity in Settings.",
-    "Una de las partidas tildadas": "One of the ticked bags",
-    "{n} de las partidas tildadas": "{n} of the ticked bags",
+    "Una de las bolsitas tildadas": "One of the ticked bags",
+    "{n} de las bolsitas tildadas": "{n} of the ticked bags",
     "{cuantas} todavía no llegó a las {minimo} h en la heladera. Para combinarlas las dos tienen que estar a la misma temperatura: esperá {falta} y volvé a probar.":
         "{cuantas} has not reached {minimo} h in the fridge yet. To combine them they both need to be at the same temperature: wait {falta} and try again.",
-    "La hora del recordatorio debe ser HH:MM (ej. 21:00).":
+    "La hora del recordatorio debe ser HH:MM (ej: 21:00).":
         "The reminder time must be HH:MM (e.g. 21:00).",
     "No llegó ninguna configuración para guardar.": "No settings were received to save.",
     "El aviso de la heladera no puede ser mayor que el tiempo de vencimiento en la heladera.":
@@ -415,9 +411,9 @@ EN = {
     "La fecha de nacimiento debe ser una fecha válida (día/mes/año).":
         "The date of birth must be a valid date (day/month/year).",
     "La fecha de nacimiento no puede ser futura.": "The date of birth cannot be in the future.",
-    "Solo se pueden bajar bolsas del freezer.": "Only freezer bags can be moved down.",
-    "Esa bolsa ya no está en el freezer.": "That bag is no longer in the freezer.",
-    "No se puede reabrir: la partida freezada con esta leche ya se cerró.":
+    "Solo se pueden bajar bolsitas del freezer.": "Only freezer bags can be moved down.",
+    "Esa bolsita ya no está en el freezer.": "That bag is no longer in the freezer.",
+    "No se puede reabrir: la bolsita freezada con esta leche ya se cerró.":
         "Cannot reopen: the frozen bag made with this milk has already been closed.",
 
     # ── Errores de acceso ──────────────────────────────────────────────────
@@ -440,8 +436,8 @@ EN = {
 
     # ── Cuánto tomó el bebé (modal de confirmación) ────────────────────────
     "¿Cuántos ml tomó {bebe}?": "How many ml did {bebe} drink?",
-    "Es opcional, pero con este dato la app calcula la bolsita que te conviene y para cuántos días te alcanza.":
-        "It is optional, but with it the app works out your best bag size and how many days your stock lasts.",
+    "Es opcional, pero con este dato calculo la bolsita que te conviene y para cuántos días te alcanza.":
+        "It is optional, but with it I work out your best bag size and how many days your stock lasts.",
     "Tomó todo ({vol})": "Drank it all ({vol})",
 
     # ── Descarga de la tabla día a día ─────────────────────────────────────

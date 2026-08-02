@@ -336,7 +336,7 @@ def _lac_parsear_volumen(valor, params=None):
         if volumen > tope:
             raise ValueError(i18n.t(
                 "Tus bolsitas son de {tope} ml. Si querés cargar más, subí la "
-                "capacidad en Configuraciones o cargalo en dos bolsitas.", tope=tope))
+                "capacidad en Ajustes o cargalo en dos bolsitas.", tope=tope))
     return volumen
 
 

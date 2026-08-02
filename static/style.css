@@ -5749,16 +5749,6 @@ html[data-theme="dark"] .lac-destino-card { color: var(--color-texto-muted); }
 }
 .lac-kpi--amor .lac-kpi-num { color: var(--color-acento); }
 
-/* Cartel fijo: los tiempos son orientativos, ajustar con el profesional */
-.lac-disclaimer {
-  margin: 0.7rem 0 0;
-  padding: 0.5rem 0.1rem 0;
-  border-top: 1px dashed var(--color-borde);
-  font-size: 0.72rem;
-  line-height: 1.35;
-  color: var(--color-texto-muted);
-}
-
 /* ── Descarga de la tabla día a día (al pie del Resumen) ──────────────────── */
 .lac-descarga {
   margin-top: 0.9rem;

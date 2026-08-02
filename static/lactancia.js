@@ -36,7 +36,7 @@ opciones" (⋯) de cada partida.
     var DATOS = window.LAC_DATOS ||
         { freezer: [], heladera: [], historial: [], tablero: {}, params: {}, badge: 0,
           recordatorio: { activo: false, hora: '21:00', pendiente: false },
-          bebe: { nombre: 'León', fecha_nacimiento: '', edad_texto: '', mes_de_vida: null } };
+          bebe: { nombre: '', fecha_nacimiento: '', edad_texto: '', mes_de_vida: null } };
 
     var cfPartidaId = null;      // id en el modal Cerrar con fecha
     var cfMotivo = 'usada';      // 'usada' | 'descartada' en ese modal
@@ -53,8 +53,8 @@ opciones" (⋯) de cada partida.
     var fpRecHora = null;  // hora del recordatorio nocturno (24h)
     var fpBebeNac = null;  // fecha de nacimiento del bebé
 
-    // Nombre del bebé (configurable): reemplaza el "León" que antes estaba fijo
-    // en el código, para que la app sirva para cualquier bebé.
+    // Nombre del bebé: lo carga cada mamá en Ajustes. Si todavía no lo puso,
+    // la app dice "el bebé" — nunca un nombre de ejemplo.
     function nombreBebe() {
         return (DATOS.bebe && DATOS.bebe.nombre) || 'el bebé';
     }
@@ -260,7 +260,7 @@ opciones" (⋯) de cada partida.
                 recordatorio: data.recordatorio || DATOS.recordatorio ||
                     { activo: false, hora: '21:00', pendiente: false },
                 bebe: data.bebe || DATOS.bebe ||
-                    { nombre: 'León', fecha_nacimiento: '', edad_texto: '', mes_de_vida: null }
+                    { nombre: '', fecha_nacimiento: '', edad_texto: '', mes_de_vida: null }
             };
             // El cambio YA quedó guardado. Si fallara el repintado de la
             // pantalla no hay que decirle que falló la acción (sería mentira):
@@ -341,8 +341,8 @@ opciones" (⋯) de cada partida.
             return;
         }
         var partes = [];
-        if (vencidas) partes.push(vencidas === 1 ? T('1 partida vencida')
-                                                 : T('{n} partidas vencidas', { n: vencidas }));
+        if (vencidas) partes.push(vencidas === 1 ? T('1 bolsita vencida')
+                                                 : T('{n} bolsitas vencidas', { n: vencidas }));
         if (pronto) partes.push(pronto === 1 ? T('1 por vencer')
                                              : T('{n} por vencer', { n: pronto }));
         el.className = 'lac-aviso ' + (vencidas ? 'is-peligro' : 'is-alerta');
@@ -377,14 +377,14 @@ opciones" (⋯) de cada partida.
         if (vacio) {
             cont.innerHTML = '<div class="lac-vacia">' +
                 '<span class="lac-vacia-em">🍼</span>' +
-                '<span class="lac-vacia-t">' + T('Todavía no hay partidas cargadas') + '</span>' +
-                '<span>' + T('Freezá la primera desde el panel Cargar') + ' 💪</span>' +
+                '<span class="lac-vacia-t">' + T('Todavía no hay bolsitas cargadas') + '</span>' +
+                '<span>' + T('Cargá la primera desde el panel Cargar') + ' 💪</span>' +
             '</div>';
             return;
         }
 
         var html = '<div class="lac-stats">' +
-            stat(t.freezer_bolsas || 0, T('Bolsas disponibles')) +
+            stat(t.freezer_bolsas || 0, T('Bolsitas disponibles')) +
             stat(fmtMl(t.freezer_ml), T('Stock freezer') + ' (' + fmtLitros(t.freezer_ml) + ')') +
             stat(t.freezer_vence_pronto || 0, T('Vencen pronto'), t.freezer_vence_pronto ? 'is-alerta' : '') +
             stat(t.freezer_vencidas || 0, T('Vencidas'), t.freezer_vencidas ? 'is-peligro' : '') +
@@ -403,7 +403,7 @@ opciones" (⋯) de cada partida.
                 }
             });
             hel = '🥛 ' + T('En heladera:') + ' <strong>' + t.heladera_bolsas + ' ' +
-                (t.heladera_bolsas === 1 ? T('partida') : T('partidas')) +
+                (t.heladera_bolsas === 1 ? T('bolsita') : T('bolsitas')) +
                 ' · ' + fmtMl(t.heladera_ml) + '</strong>' +
                 (proxima !== null ? ' <span class="lac-sep">·</span> ' + T('la próxima') + ' ' +
                     textoVencHeladera(proxima).toLowerCase() : '');
@@ -582,11 +582,11 @@ opciones" (⋯) de cada partida.
 
     function renderListas() {
         renderLista('lac-lista-freezer', 'lac-freezer-count', DATOS.freezer, itemFreezer,
-            T('Sin partidas en el freezer.'));
+            T('Sin bolsitas en el freezer.'));
         renderLista('lac-lista-heladera', 'lac-heladera-count', DATOS.heladera, itemHeladera,
             T('Nada en la heladera. Lo que sobre al final del día, se freeza.'));
         renderLista('lac-lista-historial', 'lac-historial-count', DATOS.historial, itemHistorial,
-            T('Todavía no se cerró ninguna partida.'));
+            T('Todavía no se cerró ninguna bolsita.'));
     }
 
     function renderTodo() {
@@ -615,7 +615,7 @@ opciones" (⋯) de cada partida.
     // ── Cierres one-click (fecha = hoy) con Deshacer ─────────────────────────
     function deshacerCierre(id, textoOk) {
         postAccion('/api/lactancia/' + id + '/reabrir', new URLSearchParams(), function () {
-            toast(textoOk || ('↩ ' + T('Deshecho: la partida volvió al stock.')), 'info');
+            toast(textoOk || ('↩ ' + T('Deshecho: la bolsita volvió al stock.')), 'info');
         });
     }
 
@@ -628,7 +628,7 @@ opciones" (⋯) de cada partida.
             params.append('consumido_ml', consumido);
         }
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
-            var vol = p ? fmtMl(p.volumen_ml) : T('Partida');
+            var vol = p ? fmtMl(p.volumen_ml) : T('Bolsita');
             var texto = (motivo === 'usada')
                 ? '✓ ' + T('{vol} marcada como usada.', { vol: vol })
                 : '🗑 ' + T('{vol} descartada.', { vol: vol });
@@ -668,8 +668,8 @@ opciones" (⋯) de cada partida.
         btn.disabled = true;
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
             $('lac-modal-cerrar').hidden = true;
-            toast(cfMotivo === 'usada' ? '✓ ' + T('Partida marcada como usada.')
-                                       : '🗑 ' + T('Partida descartada.'),
+            toast(cfMotivo === 'usada' ? '✓ ' + T('Bolsita marcada como usada.')
+                                       : '🗑 ' + T('Bolsita descartada.'),
                 'ok', function () { deshacerCierre(id); });
         }, function () { btn.disabled = false; });
     }
@@ -682,7 +682,7 @@ opciones" (⋯) de cada partida.
         var checks = document.querySelectorAll('#lac-lista-heladera .lac-check-input:checked');
         var ids = [].map.call(checks, function (c) { return c.value; });
         if (!ids.length) {
-            toast('⚠ ' + T('Tildá al menos una partida de heladera.'), 'error');
+            toast('⚠ ' + T('Tildá al menos una bolsita de heladera.'), 'error');
             return;
         }
         // Si hay vencidas entre las tildadas, hay que declarar que se pasaron
@@ -690,11 +690,11 @@ opciones" (⋯) de cada partida.
         var vencidas = [].filter.call(checks, function (c) { return c.dataset.venc === '1'; }).length;
         if (vencidas) {
             abrirConfirm({
-                emoji: '❄️', titulo: T('Freezar partidas vencidas'), peligro: false, boton: T('Freezar'),
+                emoji: '❄️', titulo: T('Freezar bolsitas vencidas'), peligro: false, boton: T('Freezar'),
                 msg: vencidas === 1
-                    ? T('Una de las partidas tildadas figura vencida en la app.')
-                    : T('{n} de las partidas tildadas figuran vencidas en la app.', { n: vencidas }),
-                check: T('Confirmo que se pasó al freezer ANTES de vencerse (se cargó tarde en la app).'),
+                    ? T('Una de las bolsitas tildadas figura vencida.')
+                    : T('{n} de las bolsitas tildadas figuran vencidas.', { n: vencidas }),
+                check: T('Confirmo que se pasó al freezer antes de vencerse (se cargó tarde en la app).'),
                 accion: function () { freezarPost(ids, true); }
             });
             return;
@@ -707,10 +707,10 @@ opciones" (⋯) de cada partida.
             if (p) vol += p.volumen_ml;
         });
         abrirConfirm({
-            emoji: '❄️', titulo: T('Freezar al freezer'), peligro: false, boton: T('Sí, freezar'),
-            msg: T('Se combinan {n} {cuales}{vol} en UNA sola partida de freezer, con la fecha de extracción más vieja.', {
+            emoji: '❄️', titulo: T('Mandar al freezer'), peligro: false, boton: T('Sí, freezar'),
+            msg: T('Se combinan {n} {cuales}{vol} en una sola bolsita de freezer, con la fecha de extracción más vieja.', {
                 n: ids.length,
-                cuales: ids.length === 1 ? T('partida') : T('partidas'),
+                cuales: ids.length === 1 ? T('bolsita') : T('bolsitas'),
                 vol: vol ? ' (' + fmtMl(vol) + ')' : ''
             }),
             accion: function () { freezarPost(ids, false); }
@@ -731,7 +731,7 @@ opciones" (⋯) de cada partida.
             });
             toast('❄️ ' + T('{n} {cuales}{detalle}', {
                     n: ids.length,
-                    cuales: ids.length === 1 ? T('partida freezada') : T('partidas freezadas'),
+                    cuales: ids.length === 1 ? T('bolsita freezada') : T('bolsitas freezadas'),
                     detalle: vol ? T(': {vol} al freezer.', { vol: fmtMl(vol) }) : '.'
                 }),
                 'ok', function () { deshacerCierre(primero, '↩ ' + T('Deshecho: volvieron a la heladera.')); });
@@ -803,7 +803,7 @@ opciones" (⋯) de cada partida.
         btn.disabled = true;
         postAccion('/api/lactancia/' + edPartidaId + '/editar', params, function () {
             $('lac-modal-editor').hidden = true;
-            toast('✎ ' + T('Partida actualizada.'));
+            toast('✎ ' + T('Bolsita actualizada.'));
         }, function () { btn.disabled = false; });
     }
 
@@ -900,7 +900,7 @@ opciones" (⋯) de cada partida.
                 msg: T('Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.',
                        { bebe: nombreBebe(), det: det }),
                 input: { label: T('¿Cuántos ml tomó {bebe}?', { bebe: nombreBebe() }),
-                         hint: T('Es opcional, pero con este dato la app calcula la bolsita que te conviene y para cuántos días te alcanza.'),
+                         hint: T('Es opcional, pero con este dato calculo la bolsita que te conviene y para cuántos días te alcanza.'),
                          max: p.volumen_ml },
                 accion: function () {
                     cerrarDirecto(id, 'usada', $('lac-confirm-input').value.trim());
@@ -908,7 +908,7 @@ opciones" (⋯) de cada partida.
             });
         } else {
             abrirConfirm({
-                emoji: '🗑', titulo: T('Descartar partida'), peligro: true, boton: T('Sí, descartar'),
+                emoji: '🗑', titulo: T('Descartar bolsita'), peligro: true, boton: T('Sí, descartar'),
                 msg: T('Se descarta {det}. Se cierra con fecha de hoy.', { det: det }),
                 accion: function () { cerrarDirecto(id, 'descartada'); }
             });
@@ -919,12 +919,12 @@ opciones" (⋯) de cada partida.
         var p = buscarPartida(id);
         if (!p) return;
         abrirConfirm({
-            emoji: '⚠️', titulo: T('Eliminar partida'), peligro: true, boton: T('Sí, eliminar'),
-            msg: T('Se elimina definitivamente la partida de {vol} (extraída el {fecha}). Esta acción no se puede deshacer.',
+            emoji: '⚠️', titulo: T('Eliminar bolsita'), peligro: true, boton: T('Sí, eliminar'),
+            msg: T('Se elimina definitivamente la bolsita de {vol} (extraída el {fecha}). Esta acción no se puede deshacer.',
                    { vol: fmtMl(p.volumen_ml), fecha: fmtFecha(p.fecha_extraccion) }),
             accion: function () {
                 postAccion('/api/lactancia/' + id + '/eliminar', new URLSearchParams(), function () {
-                    toast('✕ ' + T('Partida eliminada.'), 'info');
+                    toast('✕ ' + T('Bolsita eliminada.'), 'info');
                 });
             }
         });
@@ -939,11 +939,11 @@ opciones" (⋯) de cada partida.
         if (!p) return;
         var esFreezada = p.motivo_cierre === 'trasladada';
         abrirConfirm({
-            emoji: '↩', titulo: T('Reabrir partida'), peligro: false, boton: T('Sí, reabrir'),
+            emoji: '↩', titulo: T('Reabrir bolsita'), peligro: false, boton: T('Sí, reabrir'),
             msg: T('Vuelve al stock {vol} (extraída el {fecha}){extra}', {
                 vol: fmtMl(p.volumen_ml),
                 fecha: fmtFecha(p.fecha_extraccion),
-                extra: esFreezada ? T('. Al ser una freezada, se deshace la combinación COMPLETA.') : '.'
+                extra: esFreezada ? T('. Al ser una freezada, se deshace la combinación completa.') : '.'
             }),
             accion: function () { reabrir(id); }
         });
@@ -951,7 +951,7 @@ opciones" (⋯) de cada partida.
 
     function reabrir(id) {
         postAccion('/api/lactancia/' + id + '/reabrir', new URLSearchParams(), function () {
-            toast('↩ ' + T('Partida reabierta: volvió al stock.'), 'info');
+            toast('↩ ' + T('Bolsita reabierta: volvió al stock.'), 'info');
         });
     }
 
@@ -1205,7 +1205,7 @@ opciones" (⋯) de cada partida.
         .then(function (data) {
             if (!data.ok) {
                 throw new Error(data.error ||
-                    T('No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un ratito.'));
+                    T('No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un momento.'));
             }
             // Recién con el mail confirmado se limpia la caja.
             caja.value = '';
@@ -1284,7 +1284,7 @@ opciones" (⋯) de cada partida.
         var btn = $('lac-config-guardar');
         btn.disabled = true;
         postAccion('/api/lactancia/config', params, function () {
-            toast('⚙️ ' + T('Configuraciones guardadas.'));
+            toast('⚙️ ' + T('Ajustes guardadas.'));
         }, function () { btn.disabled = false; });
     }
 

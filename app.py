@@ -146,9 +146,9 @@ def api_lactancia_cerrar(id):
     try:
         partida = database.obtener_partida_lactancia(id)
         if partida is None:
-            raise ValueError(f"No existe la partida {id}.")
+            raise ValueError(f"No existe la bolsita {id}.")
         if partida['motivo_cierre']:
-            raise ValueError("La partida ya está cerrada.")
+            raise ValueError("La bolsita ya está cerrada.")
 
         motivo = request.form.get('motivo', '')
         if motivo not in ('usada', 'descartada'):
@@ -168,7 +168,7 @@ def api_lactancia_cerrar(id):
                 if not 0 <= consumido_ml <= partida['volumen_ml']:
                     raise ValueError(
                         f"El consumo debe estar entre 0 y {partida['volumen_ml']} ml "
-                        "(lo que tenía la bolsa).")
+                        "(lo que tenía la bolsita).")
 
         database.cerrar_partida_lactancia(id, motivo, fecha_cierre, notas, consumido_ml)
         if _es_ajax():
@@ -196,7 +196,7 @@ def api_lactancia_freezar():
         except ValueError:
             raise ValueError(f"Ids inválidos: {crudo}")
         if not ids:
-            raise ValueError("Tildá al menos una partida de heladera para freezar.")
+            raise ValueError("Tildá al menos una bolsita de heladera para freezar.")
 
         confirmar_vencidas = request.form.get('confirmar_vencidas') == '1'
         partidas = []
@@ -204,19 +204,19 @@ def api_lactancia_freezar():
         for pid in ids:
             row = database.obtener_partida_lactancia(pid)
             if row is None:
-                raise ValueError(f"No existe la partida {pid}.")
+                raise ValueError(f"No existe la bolsita {pid}.")
             p = dict(row)
             if p['ubicacion'] != 'heladera':
-                raise ValueError("Solo se freezan partidas de heladera.")
+                raise ValueError("Solo se freezan bolsitas de heladera.")
             if p['motivo_cierre']:
-                raise ValueError("Una de las partidas tildadas ya está cerrada.")
+                raise ValueError("Una de las bolsitas tildadas ya está cerrada.")
             if not logica._lac_freezable(p, params, ahora):
                 vencidas += 1
             partidas.append(p)
 
         if vencidas and not confirmar_vencidas:
             raise ValueError(
-                "Hay partidas vencidas entre las tildadas: confirmá que se pasaron "
+                "Hay bolsitas vencidas entre las tildadas: confirmá que se pasaron "
                 "al freezer antes de vencerse para poder freezarlas.")
 
         # Para juntar DOS o más extracciones en una sola bolsa, todas tienen que
@@ -230,8 +230,8 @@ def api_lactancia_freezar():
             if tibias:
                 falta = max(minimo - logica._lac_horas_en_heladera(p, ahora)
                             for p in tibias)
-                cuantas = (i18n.t('Una de las partidas tildadas') if len(tibias) == 1
-                           else i18n.t('{n} de las partidas tildadas', n=len(tibias)))
+                cuantas = (i18n.t('Una de las bolsitas tildadas') if len(tibias) == 1
+                           else i18n.t('{n} de las bolsitas tildadas', n=len(tibias)))
                 raise ValueError(i18n.t(
                     "{cuantas} todavía no llegó a las {minimo} h en la heladera. "
                     "Para combinarlas las dos tienen que estar a la misma "
@@ -244,7 +244,7 @@ def api_lactancia_freezar():
         if params['bolsa_capacidad_activa'] and volumen_ml > params['bolsa_capacidad_ml']:
             raise ValueError(i18n.t(
                 "Lo tildado suma {suma} ml y tus bolsitas son de {tope} ml. "
-                "Tildá menos partidas, o subí la capacidad en Configuraciones.",
+                "Tildá menos bolsitas, o subí la capacidad en Ajustes.",
                 suma=volumen_ml, tope=params['bolsa_capacidad_ml']))
 
         mas_vieja = min(partidas,
@@ -291,7 +291,7 @@ def api_lactancia_recordatorio():
         try:
             datetime.strptime(hora, '%H:%M')
         except ValueError:
-            raise ValueError("La hora del recordatorio debe ser HH:MM (ej. 21:00).")
+            raise ValueError("La hora del recordatorio debe ser HH:MM (ej: 21:00).")
         database.guardar_perfil(recordatorio_activo=1 if activo else 0,
                                 recordatorio_hora=hora)
         if _es_ajax():
@@ -393,7 +393,7 @@ def api_lactancia_sugerencia():
             except (TypeError, ValueError):
                 pasados = None   # valor viejo o roto: no frena a nadie
             if pasados is not None and pasados < 60:
-                raise ValueError("Esperá un minutito antes de mandar otra sugerencia.")
+                raise ValueError("Esperá un minuto antes de enviar otra sugerencia.")
 
         uid = session.get('uid')
         usuario = database.obtener_usuario(uid) if uid else None
@@ -483,9 +483,9 @@ def api_lactancia_reabrir(id):
     try:
         partida = database.obtener_partida_lactancia(id)
         if partida is None:
-            raise ValueError(f"No existe la partida {id}.")
+            raise ValueError(f"No existe la bolsita {id}.")
         if not partida['motivo_cierre']:
-            raise ValueError("La partida no está cerrada.")
+            raise ValueError("La bolsita no está cerrada.")
         database.reabrir_partida_lactancia(id)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
@@ -505,7 +505,7 @@ def api_lactancia_editar(id):
     try:
         partida = database.obtener_partida_lactancia(id)
         if partida is None:
-            raise ValueError(f"No existe la partida {id}.")
+            raise ValueError(f"No existe la bolsita {id}.")
         volumen_ml = logica._lac_parsear_volumen(request.form.get('volumen_ml'),
                                                  logica._lac_params())
         notas = (request.form.get('notas') or '').strip()[:200]
@@ -528,7 +528,7 @@ def api_lactancia_editar(id):
 def api_lactancia_eliminar(id):
     try:
         if database.obtener_partida_lactancia(id) is None:
-            raise ValueError(f"No existe la partida {id}.")
+            raise ValueError(f"No existe la bolsita {id}.")
         database.eliminar_partida_lactancia(id)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
