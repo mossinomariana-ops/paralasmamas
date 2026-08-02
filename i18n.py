@@ -213,12 +213,10 @@ EN = {
     # ── Bebé y recordatorio ────────────────────────────────────────────────
     "Nombre del bebé": "Baby's name",
     "Nació el": "Born on",
-    "Recordarme de noche": "Remind me at night to",
+    "Recordarme": "Remind me to",
     "bajar bolsitas": "take bags down",
     "del freezer a la heladera (para el jardín)": "from the freezer to the fridge (for daycare)",
     "A las": "At",
-    "Es un aviso dentro de la app (la 🔔). El aviso al celular con la app cerrada va a llegar cuando la hagamos app instalable.":
-        "This is a reminder inside the app (the 🔔). Phone notifications with the app closed will come once we make it installable.",
 
     # ── Modales ────────────────────────────────────────────────────────────
     "Marcar usada": "Mark as used",

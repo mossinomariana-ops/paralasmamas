@@ -5987,12 +5987,6 @@ html[data-theme="dark"] .lac-destino-card { color: var(--color-texto-muted); }
   font-size: 0.82rem;
   border-radius: var(--radio-borde);
 }
-.lac-rec-hint {
-  margin: 0;
-  font-size: 0.7rem;
-  line-height: 1.35;
-  color: var(--color-texto-muted);
-}
 
 /* ── Perfil del bebé (nombre + fecha de nacimiento) ───────────────────────── */
 .lac-bebe {
