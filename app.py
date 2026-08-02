@@ -8,6 +8,7 @@
 
 import os
 import json
+import re
 import secrets
 from datetime import datetime, timedelta
 
@@ -17,12 +18,17 @@ from flask import (
 )
 
 import config
+import correo
 import database
 import i18n
 import logica
 from auth import init_auth
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Validación mínima del correo de contacto (opcional) de las sugerencias: solo
+# chequea la forma "algo@algo.algo". El que manda de verdad es Gmail.
+_EMAIL_SIMPLE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 app = Flask(__name__,
             template_folder=os.path.join(BASE_DIR, 'templates'),
@@ -85,6 +91,9 @@ def inject_config():
             'marca': config.MARCA,
             # Vacío = no hay Entrar con Google configurado y el botón no se dibuja.
             'google_client_id': config.GOOGLE_CLIENT_ID,
+            # False = todavía no hay casilla de correo configurada, así que la
+            # tarjeta de Sugerencias no se dibuja (nadie escribe al vacío).
+            'sugerencias': correo.activo(),
         },
         # Mensaje de una sola vez (ej: "tus datos quedaron en la cuenta"). Se
         # saca de la sesión al mostrarlo, así no vuelve a aparecer al recargar.
@@ -345,6 +354,74 @@ def api_lactancia_config():
     except ValueError as e:
         if _es_ajax():
             return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        return redirect(url_for('inicio'))
+
+
+@app.route('/api/lactancia/sugerencia', methods=['POST'])
+def api_lactancia_sugerencia():
+    """Sugerencia de una mamá → mail a la casilla de la app.
+
+    Es ANÓNIMA: no se guarda nada ni se manda quién la escribió. Lo único
+    opcional es el correo de contacto que ella misma tipee, que viaja como
+    "responder a". Se adjunta el idioma y si entró como invitada o con cuenta,
+    que no identifican a nadie pero ayudan a entender la sugerencia.
+
+    Como NO se guarda copia (decisión de Mari), si el envío falla hay que
+    avisarle en pantalla para que no se pierda lo que escribió."""
+    try:
+        if not correo.activo():
+            raise ValueError("Las sugerencias todavía no están disponibles.")
+
+        texto = (request.form.get('texto') or '').strip()[:1000]
+        if not texto:
+            raise ValueError("Escribí tu sugerencia antes de enviarla.")
+
+        contacto = (request.form.get('email') or '').strip()[:120]
+        if contacto and not _EMAIL_SIMPLE.match(contacto):
+            raise ValueError("Ese correo no parece válido. Revisalo o dejalo vacío.")
+
+        # Freno simple contra el doble toque y el spam de una misma sesión.
+        ahora = datetime.now()
+        ultimo = session.get('sug_ultimo')
+        if ultimo:
+            try:
+                pasados = (ahora - datetime.fromisoformat(ultimo)).total_seconds()
+            except (TypeError, ValueError):
+                pasados = None   # valor viejo o roto: no frena a nadie
+            if pasados is not None and pasados < 60:
+                raise ValueError("Esperá un minutito antes de mandar otra sugerencia.")
+
+        uid = session.get('uid')
+        usuario = database.obtener_usuario(uid) if uid else None
+        tipo = (usuario or {}).get('tipo') or 'desconocida'
+        cuerpo = (
+            f"{texto}\n\n"
+            f"---\n"
+            f"Enviada desde la app Lactancia el {ahora.strftime('%d/%m/%Y %H:%M')}\n"
+            f"Idioma: {i18n.idioma_actual()} · Entró como: {tipo}\n"
+            f"Correo de contacto: {contacto or '(no dejó)'}\n"
+        )
+        correo.enviar('Sugerencia — app Lactancia', cuerpo, responder_a=contacto or None)
+        # Recién acá se marca la marca de tiempo: si el envío falló, la mamá
+        # puede reintentar en el momento sin esperar el minuto.
+        session['sug_ultimo'] = ahora.isoformat()
+
+        if _es_ajax():
+            return jsonify({'ok': True})
+        return redirect(url_for('inicio'))
+    except ValueError as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
+        return redirect(url_for('inicio'))
+    except RuntimeError as e:
+        # El correo no salió. Se avisa con el texto de correo.py, que ya está
+        # escrito para que se entienda sin saber de tecnología.
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 502
         return redirect(url_for('inicio'))
     except Exception as e:
         if _es_ajax():

@@ -5,13 +5,14 @@ ARCHIVO: templates/lactancia.html
 Módulo Lactancia — banco de leche materna de León (reemplaza al Excel
 Banco_de_leche_Leon.xlsx). Una sola vista con panelitos + modales.
 
-Camino estándar de la leche (decisión de Elías, 2026-07-06): toda extracción
-entra por HELADERA (un solo form de alta, con fecha/hora de extracción), y al
-freezer se pasa SIEMPRE una combinación de partidas de heladera tildadas
-(botón ⬆ del panel Heladera: suma los volúmenes y usa la fecha/hora de
-extracción más vieja). No hay alta directa a freezer ni traspaso individual.
+Camino de la leche: en el alta la mamá ELIGE el destino (heladera o freezer;
+por defecto heladera) y el vencimiento se calcula según ese destino
+(rediseño 2026-07, pedido de Mari — reemplaza la regla anterior de "toda
+extracción entra por heladera"). Además sigue existiendo el paso de heladera
+a freezer por combinación de partidas tildadas (botón ⬆ del panel Heladera:
+suma los volúmenes y usa la fecha/hora de extracción más vieja).
 
-- Alta rápida SIEMPRE visible (un solo form → heladera).
+- Alta rápida SIEMPRE visible (un solo form, con destino elegible).
 - Tablero de stock (freezer y heladera SEPARADOS, igual que el Excel).
 - Dos listas FIFO (vencimiento ascendente): Freezer y Heladera (con checkbox
   por partida, tildado por defecto, para elegir qué se freeza).
@@ -50,31 +51,22 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
   <!-- Recordatorio nocturno de bajar bolsitas (lo muestra el JS si está vigente) -->
   <div class="lac-rec-banner" id="lac-rec-banner" hidden></div>
 
-  {# Selector de sección — SOLO mobile (en escritorio se ven las 3 columnas).
+  {# Navegación de secciones — SOLO mobile (en escritorio se ven las 3 columnas).
      Abre por defecto en "Cargar" (lo más usado). El JS cambia data-lac-sec de
-     .lac-wrap y el CSS muestra solo la sección elegida. #}
-  <div class="lac-nav-mobile">
-    <span class="lac-nav-label">{{ t('Ver') }}</span>
-    <div class="lac-nav-menu">
-      {# Menú PROPIO (no <select> nativo): el nativo solo admite texto, así que
-         no podía mostrar nuestros íconos dibujados. El JS abre/cierra la lista
-         y copia el ícono+nombre de la opción activa al botón. #}
-      <button type="button" class="lac-nav-trigger" id="lac-nav-trigger"
-              aria-haspopup="listbox" aria-expanded="false">
-        <span class="lac-nav-actual" id="lac-nav-actual"></span>
-        <span class="lac-nav-chevron" aria-hidden="true">▾</span>
-      </button>
-      <ul class="lac-nav-lista" id="lac-nav-lista" role="listbox" hidden>
-        <li><button type="button" class="lac-nav-opt" data-sec="cargar" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg><span>{{ t('Cargar') }}</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="heladera" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M5 9.6h14"/><path d="M8.2 5.9v2.1M8.2 11.4v2.6"/></svg><span>{{ t('Heladera') }}</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="resumen" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg><span>{{ t('Resumen') }}</span></button></li>
-        <li><button type="button" class="lac-nav-opt" data-sec="historial" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg><span>{{ t('Historial') }}</span></button></li>
-        {# Bebé y Recordatorio ya no son hojas propias: viven dentro de
-           Configuraciones, junto con los tiempos y las preferencias. #}
-        <li><button type="button" class="lac-nav-opt" data-sec="config" role="option"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg><span>{{ t('Configuraciones') }}</span></button></li>
-      </ul>
-    </div>
-  </div>
+     .lac-wrap y el CSS muestra solo la sección elegida.
+     Barra FIJA abajo de la pantalla (estilo app), como tarjeta flotante: la
+     barra es la tarjeta grande y cada pestaña una tarjetita adentro. La activa
+     se distingue por su transparencia (casi opaca) además del color. #}
+  <nav class="lac-tabbar" aria-label="{{ t('Ver') }}">
+    <button type="button" class="lac-tab" data-sec="cargar"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg><span>{{ t('Cargar') }}</span></button>
+    <button type="button" class="lac-tab" data-sec="heladera"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M6.6 3.2h10.8a1.6 1.6 0 0 1 1.6 1.6v14.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 19.2V4.8a1.6 1.6 0 0 1 1.6-1.6Z"/><path d="M5 9.6h14"/><path d="M8.2 5.9v2.1M8.2 11.4v2.6"/></svg><span>{{ t('Heladera') }}</span></button>
+    <button type="button" class="lac-tab" data-sec="resumen"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><rect x="5.5" y="11" width="3.4" height="7" rx="1.5"/><rect x="10.3" y="7" width="3.4" height="11" rx="1.5"/><rect x="15.1" y="13.5" width="3.4" height="4.5" rx="1.5"/></svg><span>{{ t('Resumen') }}</span></button>
+    <button type="button" class="lac-tab" data-sec="historial"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8 12 4.8 20 8l-8 3.2L4 8Z"/><path d="M4 8v8l8 3.2 8-3.2V8"/><path d="M12 11.2V19.2"/></svg><span>{{ t('Historial') }}</span></button>
+    {# Bebé y Recordatorio ya no son hojas propias: viven dentro de Ajustes,
+       junto con los tiempos y las preferencias. El data-sec interno sigue
+       siendo "config" (solo cambió el rótulo visible). #}
+    <button type="button" class="lac-tab" data-sec="config"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg><span>{{ t('Ajustes') }}</span></button>
+  </nav>
 
   {# Flujo izquierda → derecha: se carga a la izquierda, el stock queda en el
      centro (freezer arriba / heladera abajo, como una heladera de casa) y el
@@ -85,14 +77,13 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
     <div class="lac-col lac-col--izq">
 
       <!-- ── Alta rápida (siempre a la vista, primero en mobile).
-           Un solo form: toda extracción entra por HELADERA. ────────────────── -->
+           Un solo form; el destino (heladera/freezer) se elige adentro. ────── -->
       <section class="lac-panel lac-panel--alta lac-sec lac-sec--cargar">
         <div class="lac-panel-header">
           <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M12 3.4c3.1 3.7 5.4 6.7 5.4 9.6a5.4 5.4 0 1 1-10.8 0C6.6 10.1 8.9 7.1 12 3.4Z"/><path d="M9.3 13.6a2.7 2.7 0 0 0 2 2.3"/></svg> {{ t('Cargar') }}</div>
         </div>
         <div class="lac-quickadd">
 
-          {# Form compartido con el Inicio (tarjeta Lactancia) #}
           {% include '_form_lactancia.html' %}
 
         </div>
@@ -126,7 +117,7 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
            defecto de config.DEFAULTS. -->
       <details class="lac-panel lac-panel--config lac-sec lac-sec--config">
         <summary class="lac-panel-summary">
-          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg> {{ t('Configuraciones') }}</div>
+          <div class="lac-panel-title"><svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 12h4M14 12h6M4 17h8M18 17h2"/><circle class="relleno" cx="16" cy="7" r="2.1"/><circle cx="16" cy="7" r="2.1"/><circle class="relleno" cx="11" cy="12" r="2.1"/><circle cx="11" cy="12" r="2.1"/><circle cx="15" cy="17" r="2.1"/><circle class="relleno" cx="15" cy="17" r="2.1"/></svg> {{ t('Ajustes') }}</div>
         </summary>
         <div class="lac-config">
 
@@ -250,6 +241,31 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
               <p class="lac-rec-hint">{{ t('Es un aviso dentro de la app (la 🔔). El aviso al celular con la app cerrada va a llegar cuando la hagamos app instalable.') }}</p>
             </div>
           </details>
+
+          {# ── Sugerencias ────────────────────────────────────────────────────
+             Va acá y no en la barra de abajo: la barra quedó medida justo para
+             5 pestañas y una sexta no entra en pantallas angostas.
+             Es ANÓNIMA: no se manda quién escribió. El correo es opcional y
+             sirve solo para poder responderle.
+             Sin casilla de correo configurada en el servidor, la tarjeta no se
+             dibuja: nadie escribe algo que no se iba a poder mandar. #}
+          {% if cfg.sugerencias %}
+          <p class="lac-sug-intro">{{ t('Tus ideas pueden sernos útiles a todas.') }}</p>
+          <details class="lac-subpanel">
+            <summary class="lac-subpanel-summary">
+              <svg class="lac-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="relleno" d="M4.6 5.4h14.8a1.4 1.4 0 0 1 1.4 1.4v8.6a1.4 1.4 0 0 1-1.4 1.4H9.2L5 19.8v-3H4.6a1.4 1.4 0 0 1-1.4-1.4V6.8a1.4 1.4 0 0 1 1.4-1.4Z"/><path d="M4.6 5.4h14.8a1.4 1.4 0 0 1 1.4 1.4v8.6a1.4 1.4 0 0 1-1.4 1.4H9.2L5 19.8v-3H4.6a1.4 1.4 0 0 1-1.4-1.4V6.8a1.4 1.4 0 0 1 1.4-1.4Z"/><path d="M8 9.2h8M8 12.4h5"/></svg>
+              {{ t('Sugerencias') }}
+            </summary>
+            <div class="lac-sugerencias">
+              <p class="lac-config-hint">{{ t('Se manda de forma anónima: no viaja tu nombre ni tus datos.') }}</p>
+              <textarea id="lac-sug-texto" class="lac-sug-texto" rows="4" maxlength="1000"
+                        placeholder="{{ t('Te leo…') }}"></textarea>
+              <input type="email" id="lac-sug-email" class="lac-sug-email" maxlength="120"
+                     autocomplete="off" placeholder="{{ t('Tu correo (opcional, si querés que te responda)') }}">
+              <button type="button" class="lac-btn-block lac-btn-auto" id="lac-sug-enviar">{{ t('Enviar sugerencia') }}</button>
+            </div>
+          </details>
+          {% endif %}
 
         </div>
       </details>

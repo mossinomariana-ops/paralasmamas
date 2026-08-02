@@ -41,6 +41,7 @@ def test_sin_sesion_los_botones_reciben_un_aviso_y_no_una_pantalla(flask_app, ca
     '/api/lactancia/1/eliminar', '/api/lactancia/1/reabrir',
     '/api/lactancia/1/bajar', '/api/lactancia/config',
     '/api/lactancia/bebe', '/api/lactancia/recordatorio',
+    '/api/lactancia/sugerencia',
 ])
 def test_sin_sesion_ninguna_accion_se_ejecuta(flask_app, url):
     r = flask_app.test_client().post(url, headers=AJAX)

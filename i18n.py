@@ -99,11 +99,26 @@ EN = {
     "Resumen": "Summary",
     "Historial": "History",
     "Configuraciones": "Settings",
+    # "Ajustes" es el rótulo visible nuevo de esa hoja (pestaña y título); la
+    # clave interna de la sección sigue siendo config.
+    "Ajustes": "Settings",
     "Freezer": "Freezer",
     "Bebé": "Baby",
     "Recordatorio": "Reminder",
 
     # ── Form de alta ───────────────────────────────────────────────────────
+    "¿Cuánto te extrajiste?": "How much did you pump?",
+    "Fecha y hora": "Date & time",
+    "Hoy": "Today",
+    "¿Dónde la guardás?": "Where are you storing it?",
+    "Agregar una nota…": "Add a note…",
+    "Guardar extracción": "Save session",
+    "Restar 10 ml": "Minus 10 ml",
+    "Sumar 10 ml": "Plus 10 ml",
+    "Vence el {fecha} a las {hora} ({h} h en heladera).":
+        "Expires {fecha} at {hora} ({h} h in the fridge).",
+    "Vence el {fecha} ({m} meses en freezer).":
+        "Expires {fecha} ({m} months in the freezer).",
     "Nueva extracción": "New session",
     "Volumen (ml)": "Amount (ml)",
     "Hora de extracción": "Time pumped",
@@ -117,6 +132,15 @@ EN = {
     "Volver": "Back",
 
     # ── Freezer / heladera / historial ─────────────────────────────────────
+    # Edad de la muestra: cuánto pasó desde la extracción (distinto del
+    # vencimiento, que dice cuánto le queda).
+    "Tiempo que pasó desde que te la extrajiste": "Time since you pumped it",
+    "hace menos de 1 h": "less than 1 h ago",
+    "hace {n} h": "{n} h ago",
+    "hace 1 día": "1 day ago",
+    "hace {n} días": "{n} days ago",
+    "hace 1 mes": "1 month ago",
+    "hace {n} meses": "{n} months ago",
     "FIFO: usar la primera": "FIFO: use the oldest",
     "Lo primero que entra, primero que sale": "First in, first out",
     "Freezar las tildadas: combina las partidas seleccionadas en una sola partida de freezer (volumen sumado, extracción más vieja)":
@@ -125,6 +149,30 @@ EN = {
     # ── Resumen ────────────────────────────────────────────────────────────
     "Ajustá los tiempos de conservación según la recomendación de tu profesional de confianza. Los avisos de la app son orientativos y nunca te bloquean.":
         "Adjust the storage times to match your own provider's advice. The app's reminders are a guide only and never block you.",
+
+    # ── Sugerencias ────────────────────────────────────────────────────────
+    "Sugerencias": "Suggestions",
+    "Tus ideas pueden sernos útiles a todas.": "Your ideas can help all of us.",
+    "Se manda de forma anónima: no viaja tu nombre ni tus datos.":
+        "It is sent anonymously: your name and your data do not travel with it.",
+    "Te leo…": "I am listening…",
+    "Tu correo (opcional, si querés que te responda)":
+        "Your email (optional, if you would like a reply)",
+    "Enviar sugerencia": "Send suggestion",
+    "¡Gracias! Tu sugerencia salió.": "Thank you! Your suggestion is on its way.",
+    "Escribí tu sugerencia antes de enviarla.": "Write your suggestion before sending it.",
+    "No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un ratito.":
+        "We could not send your suggestion. What you wrote is still here: please try again in a bit.",
+    "Ese correo no parece válido. Revisalo o dejalo vacío.":
+        "That email does not look valid. Check it or leave it empty.",
+    "Esperá un minutito antes de mandar otra sugerencia.":
+        "Please wait a minute before sending another suggestion.",
+    "Las sugerencias todavía no están disponibles.": "Suggestions are not available yet.",
+    "El envío de correo todavía no está configurado.": "Email sending is not set up yet.",
+    "Google rechazó la clave de la casilla de la app.":
+        "Google rejected the app mailbox password.",
+    "No pudimos conectarnos al servidor de correo.":
+        "We could not reach the mail server.",
 
     # ── Configuraciones ────────────────────────────────────────────────────
     "Estos son los tiempos con los que la app calcula los vencimientos y te avisa. Ajustalos según lo que te indique tu profesional.":
@@ -326,6 +374,7 @@ EN = {
     "Partida reabierta: volvió al stock.": "Bag reopened: back in your stock.",
     "Cargá el volumen en ml.": "Enter the amount in ml.",
     "{vol} a la heladera.": "{vol} into the fridge.",
+    "{vol} al freezer.": "{vol} to the freezer.",
     "Acordate de": "Remember to",
     "bajar bolsitas del freezer a la heladera": "move bags from the freezer to the fridge",
     "para mañana.": "for tomorrow.",

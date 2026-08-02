@@ -4936,6 +4936,264 @@ body.has-dev-banner .settings-aside {
 
 .lac-help[hidden] { display: none; }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   Tarjeta de carga rediseñada (mockup móvil aprobado por Mari, 2026-07)
+   Stepper ±10 ml · pastilla "Hoy · HH:MM" · tarjetas de destino · tarjeta de
+   vencimiento. Todo con las variables --color-* (el modo noche sale gratis).
+   Los sub-elementos son TRANSLÚCIDOS a propósito: el panel deja ver la
+   ilustración de fondo y estas piezas la dejan seguir viéndose, apenas más
+   opacas para que el texto se lea. Sin backdrop-filter acá (el blur sobre
+   esquinas redondeadas generaba halos de color).
+   ══════════════════════════════════════════════════════════════════════════ */
+.lac-form-alta {
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.lac-ex-titulo {
+  margin: 0 0 0.7rem;
+  text-align: center;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+/* ── Stepper de volumen ──────────────────────────────────────────────────── */
+.lac-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.62rem 0.7rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 14px;
+  background: var(--color-superficie);
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+}
+
+/* Misma pinta que el botón ⬆ de enviar al freezer (.lac-btn-freezar): coral
+   lleno, sin borde y SIN halo alrededor (el halo se veía como un segundo
+   círculo clarito debajo — lo marcó Mari).
+   Círculos PERFECTOS: sin aspect-ratio + place-items quedaban ovalados y el
+   −/+ descentrado en cuanto se achicaban. */
+.lac-stepper-btn {
+  flex-shrink: 0;
+  width: 33px;
+  aspect-ratio: 1;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-acento);
+  color: var(--color-texto-invertido);
+  font-family: var(--fuente-principal);
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.lac-stepper-btn:hover,
+.lac-stepper-btn:focus-visible {
+  background: var(--color-acento-oscuro);
+  outline: none;
+}
+
+.lac-stepper-btn:active { transform: scale(0.93); }
+
+.lac-stepper-valor {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+  cursor: text;
+}
+
+/* El input queda FUERA de .lac-campo a propósito: así no le pega la regla
+   global de inputs chicos. Sin spinners nativos (dejaban un recuadro feo). */
+.lac-stepper-valor input[type="number"] {
+  width: 4ch;
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  text-align: center;
+  font-family: var(--fuente-principal);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--color-acento);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.lac-stepper-valor input[type="number"]::-webkit-outer-spin-button,
+.lac-stepper-valor input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.lac-stepper-valor input[type="number"]:focus {
+  outline: none;
+  border-bottom-color: var(--color-acento);
+}
+
+.lac-stepper-unidad {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-texto-muted);
+}
+
+/* ── Pastilla fecha · hora ───────────────────────────────────────────────── */
+.lac-fechahora,
+.lac-destino { margin-top: 0.75rem; }
+
+.lac-fechahora-label {
+  display: block;
+  margin-bottom: 0.28rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  /* Un punto más oscuro que --color-texto-muted: sobre la ilustración de
+     fondo el muted de la paleta se lavaba (no se toca la variable global). */
+  color: #6B5145;
+}
+html[data-theme="dark"] .lac-fechahora-label { color: var(--color-texto-muted); }
+
+.lac-pill-fechahora {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.34rem 0.8rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-superficie);
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+}
+.lac-pill-fechahora:focus-within {
+  border-color: var(--color-acento);
+  box-shadow: var(--sombra-focus);
+}
+.lac-pill-fechahora .lac-ico { color: var(--color-acento); }
+
+/* Los dos inputs reales (flatpickr le pone el altInput a la fecha). Sin JS se
+   ven crudos pero funcionan igual. */
+.lac-pill-fechahora input[type="text"] {
+  width: 5.2ch;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--fuente-principal);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-texto);
+  cursor: pointer;
+}
+.lac-pill-fechahora input[type="text"]:focus { outline: none; }
+.lac-pill-fechahora .lac-pill-sep {
+  color: var(--color-texto-muted);
+  font-weight: 700;
+}
+
+/* ── Tarjetas de destino (heladera / freezer) ────────────────────────────── */
+.lac-destino-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.lac-destino-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.3rem;
+  border: 2px solid var(--color-borde);
+  border-radius: 13px;
+  background: var(--color-superficie);
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6B5145;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+html[data-theme="dark"] .lac-destino-card { color: var(--color-texto-muted); }
+
+/* El radio real sigue ahí (accesible y funcional sin JS), solo invisible */
+.lac-destino-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.lac-destino-card .lac-ico { width: 1.5em; height: 1.5em; }
+.lac-destino-card:hover { border-color: var(--color-acento); }
+.lac-destino-card:focus-within { box-shadow: var(--sombra-focus); }
+
+/* Dos vías para la misma pinta: :has() (funciona sin JS) y la clase is-activa
+   que pone lactancia.js (los navegadores que no repintan el :has al vuelo). */
+.lac-destino-card:has(input:checked),
+.lac-destino-card.is-activa {
+  border-color: var(--color-acento);
+  background: color-mix(in srgb, var(--color-acento) 12%, var(--color-superficie));
+  color: var(--color-acento);
+}
+
+/* ── Tarjeta de vencimiento (se recalcula sola) ──────────────────────────── */
+.lac-nota-venc {
+  margin-top: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: var(--color-exito-suave);
+  color: var(--color-exito);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+.lac-nota-venc:empty { display: none; }
+
+/* ── Notas: discretas, debajo de todo ────────────────────────────────────── */
+.lac-campo-notas { margin-top: 0.7rem; }
+.lac-campo-notas label { text-align: center; }
+.lac-campo-notas input[type="text"] {
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+}
+
+/* Autocompletado del navegador: Chrome/Safari pintan el campo con SU fondo
+   (blanco/celeste) y se comen los colores y la transparencia de la app. Esa
+   pintura la aplican como una animación, así que una transición eterna la deja
+   siempre en el valor nuestro. El color del texto va aparte porque el UA usa
+   -webkit-text-fill-color, no `color`. */
+.lac-form-alta input:-webkit-autofill,
+.lac-form-alta input:-webkit-autofill:hover,
+.lac-form-alta input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-texto);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+.lac-stepper-valor input:-webkit-autofill {
+  -webkit-text-fill-color: var(--color-acento);
+}
+
+.lac-btn-guardar {
+  margin-top: 0.85rem;
+  padding: 0.62rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+}
+
 /* ── Tablero de stock ─────────────────────────────────────────────────────── */
 .lac-tablero { padding: 0.7rem 0.9rem 0.85rem; }
 
@@ -5071,6 +5329,10 @@ body.has-dev-banner .settings-aside {
 .lac-venc.t-vence_pronto { color: var(--color-alerta); }
 
 .lac-venc-fecha { opacity: 0.85; }
+
+/* Edad de la muestra (cuánto pasó desde la extracción). Se lee como dato
+   secundario: no compite con el vencimiento, que es el que manda. */
+.lac-edad { font-weight: 600; opacity: 0.9; }
 
 .lac-item-notas {
   margin-top: 0.15rem;
@@ -5814,85 +6076,67 @@ details[open] > .lac-panel-summary { border-bottom: 1px solid var(--color-borde)
 /* El bebé gateando: un pelín más grande para que se lea el gesto */
 .lac-ico-bebe { width: 1.4em; height: 1.4em; }
 
-/* ── Selector de sección (SOLO mobile; en escritorio se ven las 3 columnas) ── */
-.lac-nav-mobile { display: none; }
+/* ── Barra de secciones (SOLO mobile; en escritorio se ven las 3 columnas) ───
+      Tarjeta flotante fija abajo, con una TARJETITA por pestaña adentro. La
+      activa se diferencia por su transparencia (casi opaca) además del color,
+      así se nota qué sección está abierta sin depender solo del tono.
+      Sin backdrop-filter ni box-shadow: el blur sobre las esquinas redondeadas
+      generaba halos de color. */
+.lac-tabbar { display: none; }
 
 @media (max-width: 899px) {
-  .lac-nav-mobile {
+  .lac-tabbar {
+    position: fixed;
+    z-index: 700;          /* sobre el contenido, bajo drawers (810)/modales */
+    left: 22px;
+    right: 22px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    max-width: 420px;
+    margin: 0 auto;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.2rem;
-  }
-  .lac-nav-label { font-size: 0.85rem; font-weight: 700; color: var(--color-texto-muted); }
-
-  /* Menú propio (el <select> nativo no admite nuestros íconos dibujados) */
-  .lac-nav-menu { position: relative; flex: 1 1 auto; min-width: 0; }
-  .lac-nav-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 0.7rem;
+    padding: 0 2px;
     border: 1px solid var(--color-borde);
-    border-radius: var(--radio-borde);
+    border-radius: 20px;
     background: var(--color-superficie);
-    color: var(--color-texto);
-    font: inherit;
-    font-size: 0.95rem;
-    font-weight: 700;
-    text-align: left;
-    cursor: pointer;
+    background: color-mix(in srgb, var(--color-superficie) 80%, transparent);
   }
-  .lac-nav-actual { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-  .lac-nav-actual span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .lac-nav-chevron {
-    margin-left: auto;
-    display: inline-block;
-    color: var(--color-texto-muted);
-    font-size: 0.8rem;
-    transition: transform 0.15s;
-  }
-  .lac-nav-trigger[aria-expanded="true"] .lac-nav-chevron { transform: rotate(180deg); }
 
-  .lac-nav-lista {
-    position: absolute;
-    z-index: 950;          /* sobre drawers (810), bajo modales (1000) */
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    margin: 0;
-    padding: 0.3rem;
-    list-style: none;
-    background: var(--color-superficie);
-    border: 1px solid var(--color-borde);
-    border-radius: var(--radio-borde);
-    box-shadow: var(--sombra-modal);
-  }
-  .lac-nav-lista[hidden] { display: none; }
-  .lac-nav-lista li { list-style: none; }
-  .lac-nav-opt {
-    width: 100%;
+  .lac-tab {
+    flex: 1 1 0;
+    min-width: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.6rem 0.65rem;
-    border: 0;
+    gap: 0.1rem;
+    margin: 4px 2px;
+    padding: 0.34rem 0.1rem;
+    border: 1px solid var(--color-borde);
     border-radius: 10px;
-    background: transparent;
-    color: var(--color-texto);
-    font: inherit;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-align: left;
+    background: color-mix(in srgb, var(--color-superficie) 45%, transparent);
+    /* Un punto más oscuro que --color-texto-muted: sobre la ilustración de
+       fondo el muted de la paleta se lavaba (no se toca la variable global). */
+    color: #6B5145;
+    font-family: var(--fuente-principal);
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
     cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
-  .lac-nav-opt:hover { background: var(--color-fondo); }
-  .lac-nav-opt.is-activa {
-    background: var(--color-fondo);
-    font-weight: 800;
-    box-shadow: inset 3px 0 0 var(--color-acento);
+  .lac-tab .lac-ico { width: 16px; height: 16px; vertical-align: 0; }
+  .lac-tab:hover { border-color: var(--color-acento); }
+  .lac-tab:focus-visible { outline: none; box-shadow: var(--sombra-focus); }
+
+  .lac-tab.is-activa {
+    background: color-mix(in srgb, var(--color-acento) 14%, var(--color-superficie));
+    border-color: var(--color-acento);
+    color: var(--color-acento);
   }
+  .lac-tab.is-activa .lac-ico { stroke-width: 2.1; }
+
+  /* Que la barra no tape el final del contenido al scrollear hasta abajo */
+  .lac-wrap { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 
   /* Columnas transparentes: los paneles fluyen directo en .lac-page y así
      mostramos SOLO la sección elegida (data-lac-sec en .lac-wrap). */
@@ -8481,6 +8725,53 @@ body.lac-body .lac-item { border-radius: 12px; }
   text-align: right;
 }
 .lac-config-num input:focus { outline: none; box-shadow: var(--sombra-focus); }
+
+/* ── Sugerencias (mail anónimo a la casilla de la app) ────────────────────── */
+/* Va ARRIBA de la tarjeta plegada, para que se lea sin tener que abrirla. */
+.lac-sug-intro {
+  margin: 0.9rem 0 0.3rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-acento);
+}
+
+.lac-sugerencias { padding: 0 0.9rem 0.9rem; }
+
+.lac-sug-texto,
+.lac-sug-email {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  background: var(--color-superficie);
+  background: color-mix(in srgb, var(--color-superficie) 72%, transparent);
+  color: var(--color-texto);
+  font-family: var(--fuente-principal);
+  font-size: 0.86rem;
+}
+.lac-sug-texto { resize: vertical; min-height: 4.5rem; line-height: 1.4; }
+.lac-sug-email { font-size: 0.8rem; }
+
+.lac-sug-texto:focus,
+.lac-sug-email:focus {
+  outline: none;
+  border-color: var(--color-acento);
+  box-shadow: var(--sombra-focus);
+}
+
+/* Mismo motivo que en el form de alta: el autocompletado del navegador pinta
+   el campo con SU fondo y se come los colores y la transparencia de la app. */
+.lac-sugerencias input:-webkit-autofill,
+.lac-sugerencias input:-webkit-autofill:hover,
+.lac-sugerencias input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-texto);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
+.lac-sugerencias .lac-btn-block { margin-top: 0.55rem; }
 .lac-config-num em {
   font-style: normal;
   font-size: 0.76rem;

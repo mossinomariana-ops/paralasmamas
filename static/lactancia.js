@@ -91,9 +91,10 @@ opciones" (⋯) de cada partida.
         return d.getFullYear() + '-' + m + '-' + dia;
     }
 
-    function horaAhora() {
-        var d = new Date();
-        return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    // 'HH:MM' de un Date
+    function fmtHoraDe(d) {
+        return String(d.getHours()).padStart(2, '0') + ':' +
+               String(d.getMinutes()).padStart(2, '0');
     }
 
     // Acepta 'YYYY-MM-DD' o ISO con hora ('YYYY-MM-DDTHH:MM:SS')
@@ -450,13 +451,47 @@ opciones" (⋯) de cada partida.
             (p.hora_extraccion ? ' · ' + p.hora_extraccion + ' h' : '');
     }
 
+    // Momento real de extracción (fecha + hora si la hay). Espeja
+    // _lac_extraccion_dt del backend: sin hora cargada vale 00:00.
+    function extraccionDt(p) {
+        var d = parseISO(p.fecha_extraccion);
+        if (!d) return null;
+        var hm = String(p.hora_extraccion || '').split(':');
+        if (hm.length >= 2) d.setHours(Number(hm[0]), Number(hm[1]), 0, 0);
+        return d;
+    }
+
+    // EDAD de la muestra: cuánto pasó desde que se extrajo (pedido de Mari
+    // 2026-07-30). Es distinto del vencimiento: una bolsita del freezer puede
+    // tener 5 meses de vida y todavía faltarle un mes para vencerse.
+    function edadTxt(p) {
+        var d = extraccionDt(p);
+        if (!d) return '';
+        var ms = Date.now() - d.getTime();
+        if (ms < 0) return '';
+        var horas = Math.floor(ms / 3600000);
+        if (horas < 1) return T('hace menos de 1 h');
+        if (horas < 24) return T('hace {n} h', { n: horas });
+        var dias = Math.floor(horas / 24);
+        if (dias < 60) return dias === 1 ? T('hace 1 día') : T('hace {n} días', { n: dias });
+        var meses = Math.floor(dias / 30);
+        return meses === 1 ? T('hace 1 mes') : T('hace {n} meses', { n: meses });
+    }
+
+    function edadHtml(p) {
+        var txt = edadTxt(p);
+        if (!txt) return '';
+        return ' <span class="lac-sep">·</span> <span class="lac-edad" title="' +
+            T('Tiempo que pasó desde que te la extrajiste') + '">' + txt + '</span>';
+    }
+
     function itemFreezer(p) {
         var venc = '<span class="lac-venc t-' + p.estado + '">' + textoVencFreezer(p.dias_restantes) + '</span>' +
                    ' <span class="lac-venc-fecha">(' + fmtFechaCorta(p.vencimiento) + ')</span>';
         return '<div class="lac-item is-' + p.estado + '">' +
             '<div class="lac-item-body">' +
                 '<div class="lac-item-top"><span class="lac-item-vol">' + fmtMl(p.volumen_ml) + '</span>' + pill(p.estado) + '</div>' +
-                '<div class="lac-item-meta">' + extraidaTxt(p) +
+                '<div class="lac-item-meta">' + extraidaTxt(p) + edadHtml(p) +
                     ' <span class="lac-sep">·</span> ' + venc +
                 '</div>' + notasHtml(p) +
             '</div>' +
@@ -501,7 +536,7 @@ opciones" (⋯) de cada partida.
             '<div class="lac-item-body">' +
                 '<div class="lac-item-top"><span class="lac-item-vol">' + fmtMl(p.volumen_ml) + '</span>' +
                     tipoTag(p) + pill(p.estado) + '</div>' +
-                '<div class="lac-item-meta">' + extraidaTxt(p) +
+                '<div class="lac-item-meta">' + extraidaTxt(p) + edadHtml(p) +
                     ' <span class="lac-sep">·</span> <span class="lac-venc t-' + p.estado + '">' +
                     textoVencHeladera(p.horas_restantes) + '</span>' +
                 '</div>' + notasHtml(p) +
@@ -561,12 +596,9 @@ opciones" (⋯) de cada partida.
         renderConfig();
         renderTablero();
         renderListas();
-        // Hint del form de alta con el parámetro vigente
-        var hint = $('lac-ex-hint');
-        if (hint && DATOS.params.heladera_horas) {
-            hint.textContent = T('Va a la heladera y vence a las {h} h de la extracción. Lo que juntes lo freezás con el botón ⬆️ de Heladera.',
-                                 { h: DATOS.params.heladera_horas });
-        }
+        // Tarjeta de vencimiento del form de alta: se repinta con los
+        // parámetros vigentes (si la mamá los cambió en Ajustes, se ve acá).
+        if ($('lac-ex-hint')) pintarVencimiento();
     }
 
     // ── Overlays ─────────────────────────────────────────────────────────────
@@ -923,11 +955,18 @@ opciones" (⋯) de cada partida.
         });
     }
 
-    // ── Form de alta (único: toda extracción entra por heladera) ────────────
+    // ── Form de alta (destino elegible: heladera o freezer) ─────────────────
+    // La extracción suele tomar ~30 min, así que se precarga la hora de INICIO
+    // estimada (ahora − 30 min). Fecha y hora salen del MISMO Date, así que si
+    // cruza medianoche la fecha pasa sola al día anterior. El backend acepta
+    // pasado; solo rechaza futuro.
     function resetFormAlta() {
-        $('lac-form-extraccion').reset();
-        fpExFecha.setDate(isoDate(hoy()), true);   // reset no repone el altInput
-        fpExHora.setDate(horaAhora(), true);
+        $('lac-form-extraccion').reset();   // reset devuelve el radio a heladera
+        var d = new Date(Date.now() - 30 * 60 * 1000);
+        fpExFecha.setDate(isoDate(d), true);   // reset no repone el altInput
+        fpExHora.setDate(fmtHoraDe(d), true);
+        pintarDestino();
+        pintarVencimiento();
     }
 
     function initForms() {
@@ -941,8 +980,9 @@ opciones" (⋯) de cada partida.
                 $('lac-ex-volumen').focus();
                 return;
             }
+            var ubi = ubicacionElegida();
             var params = new URLSearchParams();
-            params.append('ubicacion', 'heladera');
+            params.append('ubicacion', ubi);
             params.append('volumen_ml', vol);
             params.append('fecha_extraccion', $('lac-ex-fecha').value || '');
             params.append('hora_extraccion', $('lac-ex-hora').value || '');
@@ -951,11 +991,98 @@ opciones" (⋯) de cada partida.
             var btn = $('lac-ex-guardar');
             btn.disabled = true;
             postAccion('/api/lactancia/crear', params, function () {
-                toast('🥛 ' + T('{vol} a la heladera.', { vol: fmtMl(vol) }));
+                if (ubi === 'freezer') {
+                    toast('🧊 ' + T('{vol} al freezer.', { vol: fmtMl(vol) }));
+                } else {
+                    toast('🥛 ' + T('{vol} a la heladera.', { vol: fmtMl(vol) }));
+                }
                 resetFormAlta();
                 $('lac-ex-volumen').focus();
             }, function () { btn.disabled = false; });
         });
+    }
+
+    // ── Stepper ±10 ml ───────────────────────────────────────────────────────
+    // Sin focus() desde los botones: en el celular abriría el teclado en cada
+    // tap. El número igual se toca directo y se escribe a mano.
+    function initStepper() {
+        var inp = $('lac-ex-volumen');
+        if (!inp) return;
+        function paso(delta) {
+            var v = parseInt(inp.value, 10);
+            if (isNaN(v)) {
+                if (delta < 0) return;   // vacío y "−" → se queda vacío
+                v = 0;
+            }
+            inp.value = Math.min(2000, Math.max(1, v + delta));
+        }
+        $('lac-ex-menos').addEventListener('click', function () { paso(-10); });
+        $('lac-ex-mas').addEventListener('click', function () { paso(10); });
+    }
+
+    // ── Destino + vencimiento dinámico ───────────────────────────────────────
+    // Espeja _lac_vencimiento del backend (logica.py): heladera = extracción +
+    // heladera_horas; freezer = extracción + freezer_meses (al fin del día).
+    // Es SOLO informativo — el backend recalcula siempre por su cuenta.
+    function ubicacionElegida() {
+        var r = document.querySelector('#lac-form-extraccion input[name="ubicacion"]:checked');
+        return r ? r.value : 'heladera';
+    }
+
+    // Suma meses clampeando al último día del mes, igual que
+    // _act_sumar_intervalo en logica.py (31-ene + 1 mes → 28-feb, no 3-mar).
+    function sumarMeses(d, n) {
+        var total = d.getMonth() + n;
+        var anio = d.getFullYear() + Math.floor(total / 12);
+        var mes = ((total % 12) + 12) % 12;
+        var ultimoDia = new Date(anio, mes + 1, 0).getDate();
+        return new Date(anio, mes, Math.min(d.getDate(), ultimoDia));
+    }
+
+    function pintarVencimiento() {
+        var hint = $('lac-ex-hint');
+        if (!hint) return;
+        var f = $('lac-ex-fecha').value, h = $('lac-ex-hora').value;
+        if (!f || !h) { hint.textContent = ''; return; }
+        var p = String(f).split('-'), hm = String(h).split(':');
+        if (p.length !== 3 || hm.length < 2) { hint.textContent = ''; return; }
+        var base = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]),
+                            Number(hm[0]), Number(hm[1]));
+        if (isNaN(base.getTime())) { hint.textContent = ''; return; }
+
+        if (ubicacionElegida() === 'freezer') {
+            var m = DATOS.params.freezer_meses || 6;
+            hint.textContent = T('Vence el {fecha} ({m} meses en freezer).',
+                                 { fecha: fmtFechaCorta(sumarMeses(base, m)), m: m });
+        } else {
+            var hs = DATOS.params.heladera_horas || 48;
+            var v = new Date(base.getTime() + hs * 3600 * 1000);
+            hint.textContent = T('Vence el {fecha} a las {hora} ({h} h en heladera).',
+                                 { fecha: fmtFechaCorta(v), hora: fmtHoraDe(v), h: hs });
+        }
+    }
+
+    // La tarjeta elegida se pinta por CSS con :has(input:checked), pero algunos
+    // navegadores no la repintan al vuelo cuando cambia el radio (recién al
+    // recargar). Por eso el JS marca además la clase is-activa: mismo estilo,
+    // repintado seguro. Sin JS manda :has y funciona igual.
+    function pintarDestino() {
+        var cards = document.querySelectorAll('#lac-form-extraccion .lac-destino-card');
+        [].slice.call(cards).forEach(function (c) {
+            var r = c.querySelector('input[name="ubicacion"]');
+            c.classList.toggle('is-activa', !!(r && r.checked));
+        });
+    }
+
+    function initDestino() {
+        var radios = document.querySelectorAll('#lac-form-extraccion input[name="ubicacion"]');
+        [].slice.call(radios).forEach(function (r) {
+            r.addEventListener('change', function () {
+                pintarDestino();
+                pintarVencimiento();
+            });
+        });
+        pintarDestino();
     }
 
     // Calendarios: el formato de fecha es día/mes en los DOS idiomas (decisión
@@ -964,9 +1091,18 @@ opciones" (⋯) de cada partida.
     var LOCALE_FP = enIngles() ? 'default' : 'es';
 
     function initFlatpickrs() {
+        // Fecha del alta: en la pastilla se muestra corta ("Hoy" o "28/07").
+        // disableMobile es CLAVE acá (mismo motivo que en las horas): sin él,
+        // en celulares flatpickr se reemplaza por el <input type="date"> NATIVO
+        // y se pierden el altInput y el "Hoy".
         fpExFecha = flatpickr($('lac-ex-fecha'), {
-            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
-            allowInput: true, maxDate: 'today'
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m',
+            allowInput: true, maxDate: 'today', disableMobile: true,
+            formatDate: function (date, format, locale) {
+                if (format === 'd/m' && isoDate(date) === isoDate(hoy())) return T('Hoy');
+                return flatpickr.formatDate(date, format, locale);
+            },
+            onChange: function () { pintarVencimiento(); }
         });
         fpCfFecha = flatpickr($('lac-cf-fecha'), {
             locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
@@ -982,7 +1118,9 @@ opciones" (⋯) de cada partida.
         // que este picker vino a evitar.
         fpExHora = flatpickr($('lac-ex-hora'), {
             enableTime: true, noCalendar: true, dateFormat: 'H:i',
-            time_24hr: true, allowInput: true, disableMobile: true
+            time_24hr: true, allowInput: true, disableMobile: true,
+            onChange: function () { pintarVencimiento(); },
+            onClose: function () { pintarVencimiento(); }
         });
         fpEdHora = flatpickr($('lac-ed-hora'), {
             enableTime: true, noCalendar: true, dateFormat: 'H:i',
@@ -1032,6 +1170,53 @@ opciones" (⋯) de cada partida.
         postAccion('/api/lactancia/recordatorio', params, function () {
             toast('🌙 ' + T('Recordatorio guardado.'));
         }, function () { btn.disabled = false; });
+    }
+
+    // ── Sugerencias (mail anónimo a la casilla de la app) ────────────────────
+    // NO usa postAccion: esa función espera el payload completo del banco de
+    // leche en la respuesta y acá el servidor contesta solo {ok:true}, así que
+    // borraría las listas de la pantalla. Este pedido va aparte.
+    // Como el servidor NO guarda copia, si el envío falla hay que dejarle el
+    // texto escrito y decírselo: es su única copia.
+    function enviarSugerencia() {
+        var caja = $('lac-sug-texto');
+        var mail = $('lac-sug-email');
+        var btn = $('lac-sug-enviar');
+        if (!caja || !btn) return;
+
+        var texto = (caja.value || '').trim();
+        if (!texto) {
+            toast('⚠ ' + T('Escribí tu sugerencia antes de enviarla.'), 'error');
+            caja.focus();
+            return;
+        }
+
+        var params = new URLSearchParams();
+        params.append('texto', texto);
+        params.append('email', (mail && mail.value || '').trim());
+
+        btn.disabled = true;
+        fetch('/api/lactancia/sugerencia', {
+            method: 'POST',
+            body: params,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (res) { return res.json().catch(function () { return { ok: false }; }); })
+        .then(function (data) {
+            if (!data.ok) {
+                throw new Error(data.error ||
+                    T('No pudimos enviar tu sugerencia. Lo que escribiste sigue acá: probá de nuevo en un ratito.'));
+            }
+            // Recién con el mail confirmado se limpia la caja.
+            caja.value = '';
+            if (mail) mail.value = '';
+            toast('💌 ' + T('¡Gracias! Tu sugerencia salió.'));
+        })
+        .catch(function (err) {
+            console.error('Error al enviar la sugerencia:', err);
+            toast('⚠ ' + err.message, 'error');
+        })
+        .finally(function () { btn.disabled = false; });
     }
 
     // ── Perfil del bebé (nombre + fecha de nacimiento) ───────────────────────
@@ -1103,53 +1288,33 @@ opciones" (⋯) de cada partida.
         }, function () { btn.disabled = false; });
     }
 
-    // ── Selector de sección (SOLO mobile) ────────────────────────────────────
+    // ── Barra de secciones (SOLO mobile) ─────────────────────────────────────
     // Cambia data-lac-sec en .lac-wrap (el CSS muestra solo esa sección) y, si
     // la sección elegida es un <details> (bebé/recordatorio/historial), la abre.
-    // En escritorio el selector está oculto y no afecta nada.
-    // Menú PROPIO (no <select> nativo): el nativo solo admite texto y no podía
-    // mostrar nuestros íconos dibujados. Acá la lista la dibuja la app.
+    // En escritorio la barra está oculta y no afecta nada.
+    // Es una barra fija abajo (estilo app), no un desplegable: la pestaña
+    // activa se marca con .is-activa y el CSS le sube la opacidad.
     function initNavMobile() {
-        var trigger = $('lac-nav-trigger');
-        var lista   = $('lac-nav-lista');
-        var actual  = $('lac-nav-actual');
-        var wrap    = document.querySelector('.lac-wrap');
-        if (!trigger || !lista || !actual || !wrap) return;
-        var opciones = [].slice.call(lista.querySelectorAll('.lac-nav-opt'));
-
-        function abrir(si) {
-            lista.hidden = !si;
-            trigger.setAttribute('aria-expanded', si ? 'true' : 'false');
-        }
+        var barra = document.querySelector('.lac-tabbar');
+        var wrap  = document.querySelector('.lac-wrap');
+        if (!barra || !wrap) return;
+        var tabs = [].slice.call(barra.querySelectorAll('.lac-tab'));
 
         function activar(sec) {
             wrap.setAttribute('data-lac-sec', sec);
             var el = document.querySelector('.lac-sec--' + sec);
             if (el && el.tagName === 'DETAILS') el.open = true;
-            opciones.forEach(function (o) {
-                var esta = o.getAttribute('data-sec') === sec;
-                o.classList.toggle('is-activa', esta);
-                o.setAttribute('aria-selected', esta ? 'true' : 'false');
-                if (esta) actual.innerHTML = o.innerHTML;   // ícono + nombre
+            tabs.forEach(function (t) {
+                var esta = t.getAttribute('data-sec') === sec;
+                t.classList.toggle('is-activa', esta);
+                t.setAttribute('aria-current', esta ? 'page' : 'false');
             });
-            abrir(false);
         }
 
-        trigger.addEventListener('click', function (e) {
-            e.stopPropagation();
-            abrir(lista.hidden);
-        });
-        opciones.forEach(function (o) {
-            o.addEventListener('click', function () {
-                activar(o.getAttribute('data-sec'));
+        tabs.forEach(function (t) {
+            t.addEventListener('click', function () {
+                activar(t.getAttribute('data-sec'));
             });
-        });
-        // Cerrar tocando afuera o con Escape
-        document.addEventListener('click', function (e) {
-            if (!lista.hidden && !e.target.closest('.lac-nav-menu')) abrir(false);
-        });
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && !lista.hidden) abrir(false);
         });
 
         activar(wrap.getAttribute('data-lac-sec') || 'cargar');
@@ -1163,6 +1328,8 @@ opciones" (⋯) de cada partida.
         document.body.classList.add('lac-body');
 
         initFlatpickrs();
+        initStepper();
+        initDestino();
         initForms();
         initNavMobile();
 
@@ -1182,6 +1349,9 @@ opciones" (⋯) de cada partida.
         $('lac-btn-freezar').addEventListener('click', freezarSeleccionadas);
         $('lac-rec-guardar').addEventListener('click', guardarRecordatorio);
         $('lac-bebe-guardar').addEventListener('click', guardarBebe);
+        // La tarjeta de Sugerencias solo se dibuja si hay casilla configurada.
+        var sugBtn = $('lac-sug-enviar');
+        if (sugBtn) sugBtn.addEventListener('click', enviarSugerencia);
 
         $('lac-config-guardar').addEventListener('click', guardarConfig);
         var capTog = $('cfg-bolsa_capacidad_activa');
