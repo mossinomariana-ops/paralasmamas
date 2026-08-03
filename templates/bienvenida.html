@@ -51,6 +51,11 @@
         {{ t('¿Ya tenés cuenta?') }} <a href="{{ url_for('auth.login') }}">{{ t('Iniciá sesión') }}</a>
       </p>
 
+      {# Antes de entrar, no después: acá se decide si crear cuenta o no. #}
+      <p class="lac-auth-pie">
+        <a href="{{ url_for('privacidad') }}">{{ t('Qué datos guarda la app') }}</a>
+      </p>
+
     </div>
   </div>
 

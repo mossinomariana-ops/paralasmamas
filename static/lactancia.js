@@ -1219,6 +1219,66 @@ opciones" (⋯) de cada partida.
         .finally(function () { btn.disabled = false; });
     }
 
+    // ── Borrar la cuenta y todos los datos ──────────────────────────────────
+    // Va con un paso de escribir la palabra ELIMINAR: es irreversible y no hay
+    // copia de respaldo, así que un toque sin querer no puede alcanzar.
+    // El botón de confirmar arranca apagado y se enciende recién con la palabra
+    // bien escrita.
+    function abrirBorrarCuenta() {
+        var caja = $('lac-cuenta-borrar-caja');
+        if (!caja) return;
+        caja.hidden = false;
+        $('lac-cuenta-borrar-abrir').hidden = true;
+        $('lac-cuenta-borrar-palabra').focus();
+    }
+
+    function cerrarBorrarCuenta() {
+        var caja = $('lac-cuenta-borrar-caja');
+        if (!caja) return;
+        caja.hidden = true;
+        $('lac-cuenta-borrar-palabra').value = '';
+        pintarBotonBorrar();
+        $('lac-cuenta-borrar-abrir').hidden = false;
+    }
+
+    function palabraBorrarOk() {
+        var v = ($('lac-cuenta-borrar-palabra').value || '').trim().toUpperCase();
+        // Las dos, igual que el servidor: la app se usa en dos idiomas.
+        return v === 'ELIMINAR' || v === 'DELETE';
+    }
+
+    function pintarBotonBorrar() {
+        var btn = $('lac-cuenta-borrar-confirmar');
+        if (btn) btn.disabled = !palabraBorrarOk();
+    }
+
+    function borrarCuenta() {
+        if (!palabraBorrarOk()) return;
+
+        var params = new URLSearchParams();
+        params.append('confirmacion', $('lac-cuenta-borrar-palabra').value.trim());
+
+        var btn = $('lac-cuenta-borrar-confirmar');
+        btn.disabled = true;
+        fetch('/cuenta/eliminar', {
+            method: 'POST',
+            body: params,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (res) { return res.json().catch(function () { return { ok: false }; }); })
+        .then(function (data) {
+            if (!data.ok) throw new Error(data.error || T('No pudimos eliminar tu cuenta. Probá de nuevo.'));
+            // Ya no hay cuenta: se va a la portada. `replace` y no `href` para
+            // que el botón "atrás" no la traiga de vuelta a una app sin datos.
+            window.location.replace(data.redirigir || '/bienvenida');
+        })
+        .catch(function (err) {
+            console.error('Error al borrar la cuenta:', err);
+            toast('⚠ ' + err.message, 'error');
+            btn.disabled = false;
+        });
+    }
+
     // ── Perfil del bebé (nombre + fecha de nacimiento) ───────────────────────
     function renderBebe() {
         var b = DATOS.bebe || { nombre: '', fecha_nacimiento: '', edad_texto: '' };
@@ -1352,6 +1412,16 @@ opciones" (⋯) de cada partida.
         // La tarjeta de Sugerencias solo se dibuja si hay casilla configurada.
         var sugBtn = $('lac-sug-enviar');
         if (sugBtn) sugBtn.addEventListener('click', enviarSugerencia);
+
+        // Borrar la cuenta (puede no estar dibujado si cambia la pantalla).
+        var borAbrir = $('lac-cuenta-borrar-abrir');
+        if (borAbrir) {
+            borAbrir.addEventListener('click', abrirBorrarCuenta);
+            $('lac-cuenta-borrar-cancelar').addEventListener('click', cerrarBorrarCuenta);
+            $('lac-cuenta-borrar-confirmar').addEventListener('click', borrarCuenta);
+            $('lac-cuenta-borrar-palabra').addEventListener('input', pintarBotonBorrar);
+            pintarBotonBorrar();
+        }
 
         $('lac-config-guardar').addEventListener('click', guardarConfig);
         var capTog = $('cfg-bolsa_capacidad_activa');

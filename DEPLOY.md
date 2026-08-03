@@ -136,3 +136,28 @@ de cliente en Google Cloud: los pasos están en **GOOGLE.md**.
 2. Pestaña **Web** → **Reload**.
 
 Eso es todo. El código lo cambio yo y lo subo a GitHub; vos hacés estos 2 pasos.
+
+---
+
+## Mantener Flask al día
+
+`requirements.txt` fija la versión exacta de Flask (hoy `3.1.3`) en vez de decir
+"la más nueva". Así el servidor instala siempre lo mismo que se probó acá, y una
+versión nueva no puede romper la app sola, un día cualquiera, sin que nadie haya
+tocado nada.
+
+La contra es que hay que subirla a mano. Flask es la **única** dependencia de la
+app, así que alcanza con revisarla cada tanto (dos o tres veces al año, o si
+aparece un aviso de seguridad):
+
+1. Ver qué versión hay disponible: https://pypi.org/project/Flask/
+2. Si hay una más nueva, en la computadora de desarrollo:
+   ```bash
+   cd /c/Proyectos/lactancia && venv/Scripts/python.exe -m pip install --upgrade Flask
+   ```
+3. Anotar la versión nueva en `requirements.txt`.
+4. Correr las pruebas: `python calidad/registrar_pruebas.py --motivo "actualización de Flask"`.
+5. Recién si están en verde, subir el cambio y hacer `git pull` + **Reload** en el servidor.
+
+**Nunca al revés.** Actualizar directamente en el servidor deja el código de
+GitHub diciendo una cosa y el servidor corriendo otra.

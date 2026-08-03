@@ -1,1 +1,5 @@
-Flask>=3.0
+# Versión FIJA a propósito (no ">=").
+# El servidor instala lo que diga este archivo: con ">=" podía traer una versión
+# nueva que nadie probó y romper la app sin que se hubiera tocado una línea.
+# Cómo subirla, en DEPLOY.md.
+Flask==3.1.3

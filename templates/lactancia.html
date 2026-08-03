@@ -264,6 +264,38 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           </details>
           {% endif %}
 
+          {# ── Tu cuenta ──────────────────────────────────────────────────────
+             Último grupo del panel a propósito: acá vive lo definitivo (borrar
+             la cuenta), lejos de los ajustes de todos los días. #}
+          <div class="lac-config-grupo lac-config-grupo--cuenta">
+            <h4 class="lac-config-titulo">{{ t('Tu cuenta') }}</h4>
+            <p class="lac-config-hint">
+              <a href="{{ url_for('privacidad') }}">{{ t('Qué datos guarda la app') }}</a>
+            </p>
+
+            {# Borrar todo. El paso de escribir la palabra está a propósito: no
+               hay copia de respaldo, así que un toque sin querer no puede
+               alcanzar. Arranca cerrado para que no moleste a nadie. #}
+            <button type="button" class="lac-btn-peligro" id="lac-cuenta-borrar-abrir">
+              {{ t('Eliminar mi cuenta y mis datos') }}
+            </button>
+
+            <div class="lac-borrar-caja" id="lac-cuenta-borrar-caja" hidden>
+              <p class="lac-borrar-aviso">
+                ⚠️ {{ t('Se elimina TODO: la leche que cargaste, los datos del bebé y tus ajustes. Es inmediato y no se puede deshacer.') }}
+              </p>
+              <label class="lac-borrar-label" for="lac-cuenta-borrar-palabra">
+                {{ t('Escribí ELIMINAR para confirmar') }}
+              </label>
+              <input type="text" id="lac-cuenta-borrar-palabra" class="lac-borrar-input"
+                     autocomplete="off" autocapitalize="characters" maxlength="10">
+              <div class="lac-borrar-botones">
+                <button type="button" class="lac-btn-block lac-btn-auto" id="lac-cuenta-borrar-cancelar">{{ t('Cancelar') }}</button>
+                <button type="button" class="lac-btn-block lac-btn-auto lac-btn-peligro" id="lac-cuenta-borrar-confirmar">{{ t('Sí, eliminar todo') }}</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </details>
 

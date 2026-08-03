@@ -32,17 +32,23 @@
         <input type="email" id="au-email" name="email" value="{{ email or '' }}"
                autocomplete="email" required placeholder="{{ t('tucorreo@ejemplo.com') }}">
       </div>
+      {# El largo mínimo SOLO se exige al crear la cuenta. En el login no se pone
+         `minlength`: una mamá que ya tenía una clave más corta debe poder entrar
+         igual — si no, el navegador le frenaría el formulario y quedaría afuera
+         de sus propios datos. El que manda es el servidor (auth.py). #}
       <div class="lac-campo">
         <label for="au-pass">{{ t('Clave') }}</label>
         <input type="password" id="au-pass" name="password"
                autocomplete="{{ 'new-password' if es_registro else 'current-password' }}"
-               required minlength="6" placeholder="{{ t('Al menos 6 caracteres') }}">
+               required
+               {% if es_registro %}minlength="{{ clave_minima }}"
+               placeholder="{{ t('Al menos {minimo} caracteres', minimo=clave_minima) }}"{% endif %}>
       </div>
       {% if es_registro %}
       <div class="lac-campo">
         <label for="au-pass2">{{ t('Repetir clave') }}</label>
         <input type="password" id="au-pass2" name="password2"
-               autocomplete="new-password" required minlength="6">
+               autocomplete="new-password" required minlength="{{ clave_minima }}">
       </div>
       {% endif %}
 
@@ -65,6 +71,10 @@
     </p>
     <p class="lac-auth-login-link">
       <a href="{{ url_for('auth.bienvenida') }}">{{ t('← Volver') }}</a>
+    </p>
+
+    <p class="lac-auth-pie">
+      <a href="{{ url_for('privacidad') }}">{{ t('Qué datos guarda la app') }}</a>
     </p>
 
   </div>

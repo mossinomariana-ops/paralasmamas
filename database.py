@@ -291,6 +291,36 @@ def actualizar_datos_google(uid, nombre=None, foto=None):
     conn.close()
 
 
+def eliminar_usuaria(uid):
+    """Borra a una usuaria y TODO lo suyo. No hay vuelta atrás ni copia.
+
+    El orden importa. Primero se borra el archivo con sus datos y recién después
+    la fila de la cuenta: si se cortara la luz justo en el medio, queda una
+    cuenta sin datos (entra y ve la app vacía, molesto pero inofensivo). Al revés
+    quedaría un archivo con la leche de alguien que ya no existe en el sistema —
+    datos personales huérfanos, que es justo lo que esto viene a evitar.
+
+    Devuelve True si la usuaria existía.
+    """
+    uid = int(uid)                      # también valida: un uid raro revienta acá
+    existia = obtener_usuario(uid) is not None
+
+    ruta = _ruta_db_usuaria(uid)
+    if os.path.exists(ruta):
+        os.remove(ruta)
+
+    # Sacarla de la lista de bases ya revisadas. SQLite reutiliza los números de
+    # id, así que sin esto una usuaria NUEVA con el mismo id se daría por
+    # revisada y se quedaría sin tablas.
+    _al_dia.discard(uid)
+
+    conn = conectar_usuarios()
+    conn.execute('DELETE FROM usuarios WHERE id = ?', (uid,))
+    conn.commit()
+    conn.close()
+    return existia
+
+
 # =============================================================================
 # PARTIDAS DE LACTANCIA (capa de datos pura; opera sobre la base de la usuaria)
 # =============================================================================

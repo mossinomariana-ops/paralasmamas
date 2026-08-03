@@ -13,6 +13,8 @@
 
 import re
 import sqlite3
+import threading
+import time
 
 from flask import (
     Blueprint, session, redirect, url_for, request, render_template, jsonify
@@ -25,14 +27,83 @@ import i18n
 
 auth_bp = Blueprint('auth', __name__)
 
+# Largo mínimo de la clave al crear una cuenta. Solo aplica a las cuentas NUEVAS:
+# las mamás que ya tienen una clave más corta siguen entrando igual (obligarlas a
+# cambiarla las dejaría afuera de sus propios datos sin previo aviso).
+CLAVE_MINIMA = 8
+
 # Rutas que NO requieren sesión iniciada (endpoints).
+# `privacidad` va acá a propósito: se tiene que poder leer ANTES de entrar (y
+# Google la exige pública para habilitar el "Entrar con Google").
 RUTAS_PUBLICAS = {
     'auth.bienvenida', 'auth.invitada', 'auth.registro', 'auth.login',
-    'auth.entrar_google',
+    'auth.entrar_google', 'privacidad',
     'static', 'manifest', 'service_worker',
 }
 
 _EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+# =============================================================================
+# Freno a los intentos de adivinar la clave
+# =============================================================================
+# Sin esto, una máquina puede probar miles de claves por minuto contra /login
+# hasta acertar. Con el freno, después de unos pocos fallos hay que esperar, y
+# probar a lo bruto deja de ser viable.
+#
+# Se cuenta POR MAIL y no por dirección de internet: varias mamás pueden compartir
+# la misma conexión (un wifi de casa, los datos del celular), y frenar por
+# conexión dejaría afuera a una vecina que no hizo nada.
+#
+# Vive en la memoria del proceso, a propósito: PythonAnywhere gratis hace difícil
+# instalar cosas nuevas, y guardarlo en la base sería una escritura en cada
+# intento fallido. La contra: cuando el servidor recicla el proceso, los
+# contadores se borran. Es un freno contra la fuerza bruta, no una cerradura.
+_FALLOS_LIBRES = 5        # intentos sin espera; recién el 6º se frena
+_ESPERA_BASE = 60         # segundos de espera al pasarse
+_ESPERA_MAXIMA = 15 * 60  # tope: 15 minutos, para no dejar afuera a nadie de por vida
+
+_intentos = {}            # mail -> [cantidad de fallos, momento en que se libera]
+_intentos_lock = threading.Lock()
+
+
+def _espera_pendiente(email):
+    """Segundos que faltan para poder volver a probar. 0 = puede intentar."""
+    with _intentos_lock:
+        dato = _intentos.get(email)
+        if not dato:
+            return 0
+        faltan = dato[1] - time.time()
+        if faltan <= 0:
+            return 0
+        return int(faltan) + 1
+
+
+def _anotar_fallo(email):
+    """Suma un intento fallido y, si ya se pasó, fija hasta cuándo hay que esperar.
+    La espera se duplica con cada fallo nuevo (1, 2, 4, 8... minutos)."""
+    with _intentos_lock:
+        dato = _intentos.get(email) or [0, 0.0]
+        dato[0] += 1
+        if dato[0] >= _FALLOS_LIBRES:
+            # Al 5º fallo ya queda frenada, así que el 6º intento no se atiende.
+            castigo = _ESPERA_BASE * (2 ** (dato[0] - _FALLOS_LIBRES))
+            dato[1] = time.time() + min(castigo, _ESPERA_MAXIMA)
+        _intentos[email] = dato
+
+        # Higiene: si el diccionario creció mucho (muchos mails distintos), se
+        # limpian los que ya cumplieron su espera. Sin esto, un ataque con mails
+        # inventados podría llenar la memoria del servidor.
+        if len(_intentos) > 5000:
+            ahora = time.time()
+            for k in [k for k, v in _intentos.items() if v[1] <= ahora]:
+                del _intentos[k]
+
+
+def _limpiar_fallos(email):
+    """Entró bien: se le borra el contador."""
+    with _intentos_lock:
+        _intentos.pop(email, None)
 
 
 def _pide_datos():
@@ -48,6 +119,18 @@ def init_auth(app):
     @app.before_request
     def require_login():
         if request.endpoint in RUTAS_PUBLICAS:
+            # No hace falta cuenta, pero si YA hay sesión se fija igual quién es.
+            # Si no, una pantalla pública no puede leer el idioma que la mamá
+            # eligió (vive en SU base) y termina mostrándose en el del navegador:
+            # entraba con la app en español y la pantalla de privacidad le salía
+            # en inglés.
+            #
+            # `static` queda afuera a propósito: son decenas de pedidos por
+            # pantalla, no muestran texto, y no vale una consulta en cada uno.
+            uid = session.get('uid')
+            if uid and request.endpoint != 'static' \
+                    and database.obtener_usuario(uid) is not None:
+                database.set_usuario_actual(uid)
             return None
         uid = session.get('uid')
         if not uid or database.obtener_usuario(uid) is None:
@@ -108,8 +191,9 @@ def registro():
     error = None
     if not _EMAIL_RE.match(email):
         error = i18n.t("Escribí un mail válido.")
-    elif len(clave) < 6:
-        error = i18n.t("La clave tiene que tener al menos 6 caracteres.")
+    elif len(clave) < CLAVE_MINIMA:
+        error = i18n.t("La clave tiene que tener al menos {minimo} caracteres.",
+                       minimo=CLAVE_MINIMA)
     elif clave != clave2:
         error = i18n.t("Las dos claves no coinciden.")
     elif database.obtener_usuario_por_email(email):
@@ -135,12 +219,24 @@ def login():
     clave = request.form.get('password') or ''
     recordar = request.form.get('recordar') in ('1', 'on', 'true')
 
+    # Freno: si ya falló varias veces seguidas, ni se mira la clave. Se contesta
+    # sin decir si el mail existe o no, igual que el mensaje de más abajo.
+    faltan = _espera_pendiente(email)
+    if faltan:
+        minutos = max(1, round(faltan / 60))
+        return render_template(
+            'login.html', modo='login', email=email,
+            error=i18n.t("Hubo demasiados intentos con este mail. "
+                         "Probá de nuevo en {minutos} min.", minutos=minutos))
+
     usuario = database.obtener_usuario_por_email(email)
     if usuario is None or not usuario.get('password_hash') \
             or not check_password_hash(usuario['password_hash'], clave):
+        _anotar_fallo(email)
         return render_template('login.html', modo='login',
                                error=i18n.t("Mail o clave incorrectos."), email=email)
 
+    _limpiar_fallos(email)
     _iniciar_sesion(usuario['id'], recordar=recordar)
     return redirect(url_for('inicio'))
 
@@ -243,4 +339,40 @@ def _resolver_cuenta_google(info, uid_sesion):
 @auth_bp.route('/salir')
 def salir():
     session.clear()
+    return redirect(url_for('auth.bienvenida'))
+
+
+# ── Borrar la cuenta y todos los datos ───────────────────────────────────────
+# Es el otro lado de la política de privacidad: si se le promete a una mamá que
+# puede irse con todo lo suyo, tiene que haber una puerta de verdad.
+#
+# Se aceptan las dos palabras porque la app se usa en dos idiomas, y podría tener
+# la pantalla en uno y estar leyendo la ayuda en el otro.
+#
+# Si se cambian, hay que cambiarlas también en la pantalla (lactancia.html), en el
+# JavaScript que enciende el botón (lactancia.js) y en su traducción (i18n.py).
+PALABRAS_BORRAR = ('ELIMINAR', 'DELETE')
+
+
+@auth_bp.route('/cuenta/eliminar', methods=['POST'])
+def eliminar_cuenta():
+    # Esta ruta NO está en RUTAS_PUBLICAS, así que require_login ya garantizó que
+    # hay sesión válida. Se borra SIEMPRE la usuaria de la sesión y jamás un id
+    # que venga del formulario: si no, cualquiera podría mandar el id de otra.
+    uid = session.get('uid')
+
+    # Escribir la palabra no es un capricho: no hay copia de respaldo ni forma de
+    # deshacerlo, así que un toque sin querer no puede alcanzar.
+    escrito = (request.form.get('confirmacion') or '').strip().upper()
+    if escrito not in PALABRAS_BORRAR:
+        error = i18n.t("Para eliminar todo, escribí la palabra ELIMINAR.")
+        if _pide_datos():
+            return jsonify({'ok': False, 'error': error}), 400
+        return redirect(url_for('inicio'))
+
+    database.eliminar_usuaria(uid)
+    session.clear()
+
+    if _pide_datos():
+        return jsonify({'ok': True, 'redirigir': url_for('auth.bienvenida')})
     return redirect(url_for('auth.bienvenida'))

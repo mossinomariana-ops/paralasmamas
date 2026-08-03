@@ -56,6 +56,19 @@ import logica             # noqa: E402
 assert database.DATA_DIR == _TMP, "Las pruebas apuntan a los datos REALES"
 assert database.DATA_DIR != DATOS_REALES, "Las pruebas apuntan a los datos REALES"
 
+# ── La cookie de sesión, solo para las pruebas ───────────────────────────────
+# En el servidor la cookie está marcada como segura: el navegador la guarda solo
+# si la conexión es https. El cliente de pruebas de Flask habla http, así que con
+# la marca puesta NINGUNA prueba podría iniciar sesión y todas fallarían por el
+# motivo equivocado. Se apaga acá y solo acá.
+#
+# Antes de apagarla se guarda cómo venía de app.py: eso es lo que va a regir en
+# PythonAnywhere, y es lo que comprueba la prueba de test_seguridad.py. Sin esta
+# copia, la prueba leería el valor apagado de acá y no verificaría nada.
+COOKIE_SEGURA_EN_EL_SERVIDOR = app_modulo.app.config['SESSION_COOKIE_SECURE']
+
+app_modulo.app.config['SESSION_COOKIE_SECURE'] = False
+
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 @pytest.fixture(scope='session')

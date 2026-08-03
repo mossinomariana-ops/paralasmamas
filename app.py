@@ -17,6 +17,7 @@ from flask import (
     session, send_from_directory, Response
 )
 
+import auth
 import config
 import correo
 import database
@@ -52,6 +53,15 @@ app.config['SESSION_COOKIE_NAME'] = 'lactancia_session'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=90)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# La cookie de sesión SOLO viaja por conexión segura (https). Sin esto, si una
+# mamá abre la app por http —un enlace viejo, un QR mal hecho— su sesión viajaría
+# a la vista de cualquiera que comparta la red.
+#
+# Queda ENCENDIDO por defecto, que es como corre en PythonAnywhere (entra por
+# WSGI, no por el bloque de abajo). Se apaga en los dos únicos lugares donde no
+# hay https y encenderlo dejaría todo sin sesión: el arranque local del final de
+# este archivo y tests/conftest.py.
+app.config['SESSION_COOKIE_SECURE'] = True
 
 init_auth(app)
 
@@ -95,6 +105,9 @@ def inject_config():
             # tarjeta de Sugerencias no se dibuja (nadie escribe al vacío).
             'sugerencias': correo.activo(),
         },
+        # Largo mínimo de la clave al crear cuenta. Sale de auth.py para que la
+        # pantalla y el servidor no puedan decir cosas distintas.
+        'clave_minima': auth.CLAVE_MINIMA,
         # Mensaje de una sola vez (ej: "tus datos quedaron en la cuenta"). Se
         # saca de la sesión al mostrarlo, así no vuelve a aparecer al recargar.
         'aviso': session.pop('aviso', None),
@@ -116,6 +129,25 @@ def inject_config():
 @app.route('/')
 def inicio():
     return render_template('lactancia.html', datos=logica._lac_payload())
+
+
+# =============================================================================
+# PANTALLA DE PRIVACIDAD
+# =============================================================================
+# Se lee SIN cuenta a propósito (está en RUTAS_PUBLICAS, en auth.py). Dos motivos:
+#   - Una mamá tiene derecho a saber qué se va a guardar ANTES de entrar, no
+#     después.
+#   - Google pide una dirección pública de política de privacidad para sacar el
+#     "Entrar con Google" del modo de prueba. Si esta pantalla mandara a la de
+#     bienvenida, Google no la podría leer y el trámite no avanza.
+@app.route('/privacidad')
+def privacidad():
+    # Se muestra la casilla DE LA APP (`usuario`), nunca la personal de la
+    # responsable (`destino`): esta pantalla la puede leer cualquiera, incluidos
+    # los robots que juntan direcciones para spam. Si todavía no hay correo
+    # configurado no se muestra ninguna, y el texto ofrece el formulario de
+    # Sugerencias de adentro de la app.
+    return render_template('privacidad.html', contacto=correo.config()['usuario'])
 
 
 @app.route('/api/lactancia')
@@ -429,6 +461,24 @@ def api_lactancia_sugerencia():
         return redirect(url_for('inicio'))
 
 
+def _volver_a():
+    """A qué pantalla volver después de una acción hecha con un formulario común.
+
+    Es la pantalla desde la que se apretó el botón, o la principal si no se sabe.
+    Sin esto, cambiar el idioma desde cualquier pantalla que no sea la principal
+    te dejaba en la principal, perdiendo lo que estabas leyendo.
+
+    SOLO se aceptan direcciones de esta misma app: si se confiara en lo que manda
+    el navegador sin mirar, una web ajena podría usar este botón para llevar a la
+    mamá a una página falsa que le pida la clave.
+    """
+    destino = request.referrer or ''
+    raiz = request.host_url.rstrip('/')
+    if destino.startswith(raiz + '/'):
+        return destino
+    return url_for('inicio')
+
+
 @app.route('/api/lactancia/idioma', methods=['POST'])
 def api_lactancia_idioma():
     """Cambia el idioma de la app. Devuelve `recargar` porque los textos de las
@@ -441,15 +491,15 @@ def api_lactancia_idioma():
         database.guardar_perfil(idioma=elegido)
         if _es_ajax():
             return jsonify({'ok': True, 'recargar': True})
-        return redirect(url_for('inicio'))
+        return redirect(_volver_a())
     except ValueError as e:
         if _es_ajax():
             return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
-        return redirect(url_for('inicio'))
+        return redirect(_volver_a())
     except Exception as e:
         if _es_ajax():
             return jsonify({'ok': False, 'error': str(e)}), 500
-        return redirect(url_for('inicio'))
+        return redirect(_volver_a())
 
 
 @app.route('/api/lactancia/bebe', methods=['POST'])
@@ -633,6 +683,12 @@ def service_worker():
 
 
 if __name__ == '__main__':
+    # Acá abajo SOLO corre el desarrollo local. PythonAnywhere no pasa por este
+    # bloque: importa `app` por WSGI, así que allá queda todo como arriba.
+    #
+    # El servidor local habla http, y una cookie marcada como segura no se
+    # guarda en http: sin apagarla no se podría ni entrar para probar.
+    app.config['SESSION_COOKIE_SECURE'] = False
     # 5065 y no 5060: Chrome bloquea el 5060 (lo reserva para telefonía SIP) y
     # devuelve ERR_UNSAFE_PORT sin llegar a abrir la app. Solo aplica al
     # desarrollo local; en PythonAnywhere el puerto lo maneja el servidor.

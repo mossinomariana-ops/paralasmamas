@@ -45,7 +45,7 @@ EN = {
     "Clave": "Password",
     "Repetir clave": "Repeat password",
     "tucorreo@ejemplo.com": "you@example.com",
-    "Al menos 6 caracteres": "At least 6 characters",
+    "Al menos {minimo} caracteres": "At least {minimo} characters",
     "Recordar en este teléfono (no cerrar sesión)": "Stay signed in on this device",
     "Entrar": "Sign in",
     "← Volver": "← Back",
@@ -418,8 +418,12 @@ EN = {
 
     # ── Errores de acceso ──────────────────────────────────────────────────
     "Escribí un mail válido.": "Enter a valid email address.",
-    "La clave tiene que tener al menos 6 caracteres.":
-        "The password must be at least 6 characters long.",
+    # El número no va escrito: lo pone auth.CLAVE_MINIMA. Así, si algún día se
+    # sube, el mensaje no queda mintiendo.
+    "La clave tiene que tener al menos {minimo} caracteres.":
+        "The password must be at least {minimo} characters long.",
+    "Hubo demasiados intentos con este mail. Probá de nuevo en {minutos} min.":
+        "Too many attempts with this email. Please try again in {minutos} min.",
     "Las dos claves no coinciden.": "The two passwords do not match.",
     "Ya existe una cuenta con ese mail. Probá iniciar sesión.":
         "There is already an account with that email. Try signing in.",
@@ -452,6 +456,90 @@ EN = {
     "ml descartados": "ml discarded",
     "Totales": "Totals",
     "lactancia-dia-a-dia": "breastfeeding-day-by-day",
+
+    # ── Pantalla de privacidad ─────────────────────────────────────────────
+    "Privacidad": "Privacy",
+    "Qué datos guarda la app": "What data the app stores",
+    "Tus datos y tu privacidad": "Your data and your privacy",
+    "En criollo: qué guarda esta app, para qué, y cómo borrarlo cuando quieras.":
+        "In plain words: what this app stores, what for, and how to delete it "
+        "whenever you want.",
+    "Qué se guarda": "What is stored",
+    "Lo que cargás de la leche: fecha y hora de cada extracción, cantidad, dónde está guardada y las notas que escribas.":
+        "What you record about your milk: date and time of each session, amount, "
+        "where it is stored and any notes you write.",
+    "Los datos del bebé que quieras poner: el nombre y la fecha de nacimiento. Los dos son opcionales.":
+        "Whatever you choose to add about your baby: name and date of birth. Both "
+        "are optional.",
+    "Tus ajustes: los tiempos de conservación, los avisos y el idioma.":
+        "Your settings: storage times, reminders and language.",
+    "Si creaste una cuenta: tu mail y tu clave (la clave se guarda cifrada, nadie puede leerla, ni yo).":
+        "If you created an account: your email and your password (the password is "
+        "stored encrypted — nobody can read it, not even me).",
+    "Si entraste con Google: tu mail, tu nombre y tu foto de perfil, que es lo único que Google comparte.":
+        "If you signed in with Google: your email, your name and your profile "
+        "picture, which is all Google shares.",
+    "Para qué": "What for",
+    "Solo para que la app funcione: calcular los vencimientos, mostrarte el stock y avisarte a tiempo. Para nada más.":
+        "Only to make the app work: calculating expiry dates, showing your stock "
+        "and warning you in time. Nothing else.",
+    "Con quién se comparte": "Who it is shared with",
+    "Con nadie.": "With nobody.",
+    "Tus datos no se venden, no se ceden y no se usan para publicidad. No hay anuncios ni rastreadores de otras empresas dentro de la app.":
+        "Your data is not sold, not handed over and not used for advertising. There "
+        "are no ads and no third-party trackers inside the app.",
+    "Dónde viven": "Where it lives",
+    "En un servidor de PythonAnywhere, la empresa que aloja la app. Cada mamá tiene su propio archivo separado: los datos de una nunca se mezclan con los de otra.":
+        "On a PythonAnywhere server, the company that hosts the app. Each mother has "
+        "her own separate file: one mother's data never mixes with another's.",
+    "Si entrás SIN cuenta, tus datos quedan atados a ese teléfono: si borrás los datos del navegador o cambiás de celular, se pierden y no hay forma de recuperarlos.":
+        "If you use the app WITHOUT an account, your data is tied to that phone: if "
+        "you clear your browser data or switch phones, it is gone and there is no "
+        "way to get it back.",
+    "Cookies": "Cookies",
+    "Hay una sola, y sirve únicamente para mantenerte adentro de la app sin que tengas que escribir la clave cada vez. No sigue lo que hacés ni acá ni en ningún otro lado.":
+        "There is only one, and it exists solely to keep you signed in so you do not "
+        "have to type your password every time. It does not track what you do, here "
+        "or anywhere else.",
+    "Si mandás una sugerencia": "If you send a suggestion",
+    "El texto que escribas llega por mail a quien mantiene la app. Si dejás tu correo, llega también, y sirve solo para poder responderte. Si no lo dejás, la sugerencia llega igual y de forma anónima.":
+        "The text you write is emailed to whoever maintains the app. If you leave "
+        "your email address it is sent too, and is used only to be able to reply. If "
+        "you leave it blank, the suggestion still arrives, anonymously.",
+    "Eliminar todo": "Deleting everything",
+    "Podés eliminar tu cuenta y todo lo que cargaste cuando quieras, desde Ajustes → Tu cuenta, adentro de la app. Se elimina en el momento y es definitivo: no queda copia de respaldo ni forma de recuperarlo.":
+        "You can delete your account and everything you have recorded whenever you "
+        "want, from Settings → Your account inside the app. It is deleted right away "
+        "and for good: no backup is kept and there is no way to recover it.",
+    "Menores de edad": "Children",
+    "La app la usa la mamá, no el bebé. Del bebé solo se guarda el nombre y la fecha de nacimiento, y únicamente si vos los cargás.":
+        "The app is used by the mother, not the baby. The only things stored about "
+        "the baby are the name and date of birth, and only if you enter them.",
+    "Dudas": "Questions",
+    "Escribí a": "Write to",
+    ", o usá la tarjeta de Sugerencias adentro de la app.":
+        ", or use the Suggestions card inside the app.",
+    "Usá la tarjeta de Sugerencias adentro de la app.":
+        "Use the Suggestions card inside the app.",
+
+    # ── Eliminar la cuenta ─────────────────────────────────────────────────
+    # OJO con "ELIMINAR": es la palabra que hay que ESCRIBIR para confirmar, y su
+    # traducción tiene que coincidir con PALABRAS_BORRAR de auth.py (y con la
+    # comprobación de lactancia.js). Si se cambia una, se cambian las tres.
+    "Eliminar mi cuenta y mis datos": "Delete my account and my data",
+    "Se elimina TODO: la leche que cargaste, los datos del bebé y tus ajustes. Es inmediato y no se puede deshacer.":
+        "EVERYTHING is deleted: the milk you recorded, your baby's details and your "
+        "settings. It happens right away and cannot be undone.",
+    "Escribí ELIMINAR para confirmar": "Type DELETE to confirm",
+    # "Cancelar" ya está más arriba en el diccionario, no se repite acá.
+    # El botón dice "Sí, eliminar todo" y NO "Eliminar todo" a propósito: esa
+    # frase ya la usa el título de la pantalla de privacidad, con otra traducción.
+    # Dos entradas iguales acá se pisan en silencio y una de las dos queda mal.
+    "Sí, eliminar todo": "Yes, delete everything",
+    "Para eliminar todo, escribí la palabra ELIMINAR.":
+        "To delete everything, type the word DELETE.",
+    "No pudimos eliminar tu cuenta. Probá de nuevo.":
+        "We could not delete your account. Please try again.",
 }
 
 

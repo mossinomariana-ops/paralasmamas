@@ -44,7 +44,14 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
   </style>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ static_version }}">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  {# Calendario (flatpickr 4.6.13): los archivos viven ADENTRO de la app, no en
+     una web ajena. Dos motivos, los dos importantes:
+       - Seguridad: antes se bajaban de un CDN en TODAS las pantallas, incluida
+         la de la clave. Un problema en esa web ajena podía leer lo que se
+         escribía. Ahora solo depende de nosotras.
+       - Sin conexión: la app se instala en el teléfono; el calendario tiene que
+         abrir igual en modo avión (por eso también está en el sw.js). #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/flatpickr/flatpickr.min.css') }}?v={{ static_version }}">
 </head>
 
 {# La clase del body decide la paleta: las pantallas de acceso piden `lac-body`
@@ -128,8 +135,10 @@ El header solo aparece si hay sesión iniciada (en bienvenida/login no se ve).
     {% block contenido %}{% endblock %}
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  {# Calendario — ver la nota del <head>. El segundo archivo es el castellano
+     (nombres de los meses); el inglés ya viene adentro del primero. #}
+  <script src="{{ url_for('static', filename='vendor/flatpickr/flatpickr.min.js') }}?v={{ static_version }}"></script>
+  <script src="{{ url_for('static', filename='vendor/flatpickr/es.js') }}?v={{ static_version }}"></script>
 
   {# Cambio de tema (claro/oscuro) — mínimo, sin dependencias.
      Qué dibujo se ve (sol o luna) lo decide el CSS a partir de data-theme;

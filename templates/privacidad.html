@@ -1,0 +1,66 @@
+{#
+================================================================================
+privacidad.html — Qué datos guarda la app y qué se hace con ellos.
+
+Se lee SIN cuenta (la ruta está en RUTAS_PUBLICAS). Escrita en el mismo tono que
+el resto de la app: sin lenguaje legal, en segunda persona y contando lo que
+REALMENTE hace el código. Si algún día cambia lo que se guarda, esta pantalla se
+actualiza en el mismo cambio: una promesa que el código no cumple es peor que no
+tener pantalla.
+================================================================================#}
+{% extends "base.html" %}
+{% block titulo %}{{ t('Privacidad') }}{% endblock %}
+{% block body_clase %}lac-body lac-body--auth{% endblock %}
+
+{% block contenido %}
+<div class="lac-auth-wrap">
+  <div class="lac-auth-card lac-legal tarjeta">
+
+    <h2 class="lac-auth-titulo">{{ t('Tus datos y tu privacidad') }}</h2>
+    <p class="lac-auth-sub">{{ t('En criollo: qué guarda esta app, para qué, y cómo borrarlo cuando quieras.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Qué se guarda') }}</h3>
+    <ul class="lac-legal-lista">
+      <li>{{ t('Lo que cargás de la leche: fecha y hora de cada extracción, cantidad, dónde está guardada y las notas que escribas.') }}</li>
+      <li>{{ t('Los datos del bebé que quieras poner: el nombre y la fecha de nacimiento. Los dos son opcionales.') }}</li>
+      <li>{{ t('Tus ajustes: los tiempos de conservación, los avisos y el idioma.') }}</li>
+      <li>{{ t('Si creaste una cuenta: tu mail y tu clave (la clave se guarda cifrada, nadie puede leerla, ni yo).') }}</li>
+      <li>{{ t('Si entraste con Google: tu mail, tu nombre y tu foto de perfil, que es lo único que Google comparte.') }}</li>
+    </ul>
+
+    <h3 class="lac-legal-titulo">{{ t('Para qué') }}</h3>
+    <p class="lac-legal-p">{{ t('Solo para que la app funcione: calcular los vencimientos, mostrarte el stock y avisarte a tiempo. Para nada más.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Con quién se comparte') }}</h3>
+    <p class="lac-legal-p"><strong>{{ t('Con nadie.') }}</strong> {{ t('Tus datos no se venden, no se ceden y no se usan para publicidad. No hay anuncios ni rastreadores de otras empresas dentro de la app.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Dónde viven') }}</h3>
+    <p class="lac-legal-p">{{ t('En un servidor de PythonAnywhere, la empresa que aloja la app. Cada mamá tiene su propio archivo separado: los datos de una nunca se mezclan con los de otra.') }}</p>
+    <p class="lac-legal-p">{{ t('Si entrás SIN cuenta, tus datos quedan atados a ese teléfono: si borrás los datos del navegador o cambiás de celular, se pierden y no hay forma de recuperarlos.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Cookies') }}</h3>
+    <p class="lac-legal-p">{{ t('Hay una sola, y sirve únicamente para mantenerte adentro de la app sin que tengas que escribir la clave cada vez. No sigue lo que hacés ni acá ni en ningún otro lado.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Si mandás una sugerencia') }}</h3>
+    <p class="lac-legal-p">{{ t('El texto que escribas llega por mail a quien mantiene la app. Si dejás tu correo, llega también, y sirve solo para poder responderte. Si no lo dejás, la sugerencia llega igual y de forma anónima.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Eliminar todo') }}</h3>
+    <p class="lac-legal-p">{{ t('Podés eliminar tu cuenta y todo lo que cargaste cuando quieras, desde Ajustes → Tu cuenta, adentro de la app. Se elimina en el momento y es definitivo: no queda copia de respaldo ni forma de recuperarlo.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Menores de edad') }}</h3>
+    <p class="lac-legal-p">{{ t('La app la usa la mamá, no el bebé. Del bebé solo se guarda el nombre y la fecha de nacimiento, y únicamente si vos los cargás.') }}</p>
+
+    <h3 class="lac-legal-titulo">{{ t('Dudas') }}</h3>
+    {% if contacto %}
+    <p class="lac-legal-p">{{ t('Escribí a') }} <a href="mailto:{{ contacto }}">{{ contacto }}</a>{{ t(', o usá la tarjeta de Sugerencias adentro de la app.') }}</p>
+    {% else %}
+    <p class="lac-legal-p">{{ t('Usá la tarjeta de Sugerencias adentro de la app.') }}</p>
+    {% endif %}
+
+    <p class="lac-auth-login-link">
+      <a href="{{ url_for('inicio') if usuario else url_for('auth.bienvenida') }}">{{ t('← Volver') }}</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

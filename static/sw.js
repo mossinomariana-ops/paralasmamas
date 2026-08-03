@@ -7,10 +7,16 @@
                       archivos llevan ?v=<version>, así un cambio se re-baja).
    ========================================================================= */
 
-const VERSION = 'lac-v2';
+const VERSION = 'lac-v3';
 const SHELL_CACHE = 'lac-shell-' + VERSION;
 const RUNTIME_CACHE = 'lac-runtime-' + VERSION;
 
+// Acá van SOLO los archivos que se piden con la dirección pelada, sin el `?v=`
+// del final (los íconos, que los pide el manifiesto). El resto de los estáticos
+// —style.css, lactancia.js y ahora también el calendario— viajan con `?v=` y se
+// guardan solos en la caché de abajo la primera vez que la app abre con
+// internet. Poner acá una dirección sin `?v=` guardaría una copia que después
+// nadie encuentra, porque la búsqueda es por dirección exacta.
 const PRECACHE = [
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
@@ -40,7 +46,14 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; // dejar pasar CDNs (flatpickr)
+  // Todo lo que pide la app es nuestro. Si algún día vuelve a haber algo de
+  // afuera, esta línea lo deja pasar de largo sin tocarlo.
+  //
+  // Ojo al dato: ANTES el calendario venía de una web ajena y esta misma línea
+  // lo dejaba afuera de la caché, por eso no andaba sin conexión. Al mudarlo
+  // adentro de la app pasó a entrar por el camino de /static/ de más abajo y
+  // ahora sí queda guardado.
+  if (url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
