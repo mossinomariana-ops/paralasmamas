@@ -648,18 +648,50 @@ def descargar_dia_a_dia():
 # =============================================================================
 # PWA — app instalable (manifest + service worker públicos)
 # =============================================================================
+# Las capturas que muestra la pantalla de instalación de Android y la ficha de
+# Google Play. REGLA DURA: todas las de un mismo `form_factor` tienen que tener
+# la MISMA proporción, si no Chrome descarta la pantalla linda de instalación
+# entera. Y `sizes` tiene que coincidir exacto con los píxeles del archivo o la
+# captura se ignora en silencio.
+# Se regeneran con: venv\Scripts\python.exe herramientas\generar_capturas.py
+_CAPTURAS = [
+    ('celular-1-heladera.png', '1080x1920', 'narrow', 'Tu leche guardada, de un vistazo'),
+    ('celular-2-cargar.png', '1080x1920', 'narrow', 'Cargar una extracción en dos toques'),
+    ('celular-3-resumen.png', '1080x1920', 'narrow', 'Cuánto juntaste y cuánto tomó'),
+    ('escritorio-1-heladera.png', '1920x1080', 'wide', 'La heladera y el freezer al día'),
+    ('escritorio-2-resumen.png', '1920x1080', 'wide', 'El resumen en la computadora'),
+]
+
+
 @app.route('/manifest.webmanifest')
 def manifest():
     marca = config.MARCA
     data = {
+        # `id` es la IDENTIDAD de la app para Android y para Chrome. Vale "/" y
+        # NO otra cosa: ese es exactamente el valor que el navegador venía
+        # calculando solo a partir de start_url. Si se cambia, el sistema toma
+        # la app por una distinta y la que las mamás YA tienen instalada queda
+        # huérfana. En la práctica es irreversible. No tocar.
+        "id": "/",
         "name": "Lactancia — Banco de leche",
         "short_name": "Lactancia",
         "description": "Llevá el stock de tu leche materna: freezer, heladera y avisos de vencimiento.",
         "start_url": "/",
         "scope": "/",
         "display": "standalone",
+        # Escalera de respaldo: si un navegador no sabe abrir en ventana propia,
+        # prueba la barra mínima y recién después la pestaña normal. No cambia
+        # nada de lo que se ve hoy.
+        "display_override": ["standalone", "minimal-ui", "browser"],
         "orientation": "portrait",
         "lang": "es-AR",
+        "dir": "ltr",
+        # Vocabulario estándar del W3C, en minúscula (si no, se ignoran). A
+        # propósito SIN "medical": la app anota stock y avisa vencimientos, no
+        # diagnostica ni indica tratamientos, y etiquetarla como médica invita
+        # un escrutinio en Play que no corresponde. La categoría de la ficha de
+        # la tienda se elige aparte en Play Console.
+        "categories": ["health", "lifestyle", "utilities"],
         "background_color": marca['fondo_light'],
         "theme_color": marca['theme_light'],
         "icons": [
@@ -668,9 +700,17 @@ def manifest():
             {"src": "/static/icons/icon-512-maskable.png", "sizes": "512x512",
              "type": "image/png", "purpose": "maskable"},
         ],
+        "screenshots": [
+            {"src": f"/static/screenshots/{archivo}", "sizes": medidas,
+             "type": "image/png", "form_factor": formato, "label": texto}
+            for archivo, medidas, formato, texto in _CAPTURAS
+        ],
     }
+    # Sin esto, si hay que corregir una medida mal puesta el navegador puede
+    # seguir usando el manifiesto viejo justo cuando PWABuilder lo está leyendo.
     return Response(json.dumps(data, ensure_ascii=False),
-                    mimetype='application/manifest+json')
+                    mimetype='application/manifest+json',
+                    headers={'Cache-Control': 'no-cache'})
 
 
 @app.route('/sw.js')
@@ -678,6 +718,41 @@ def service_worker():
     resp = send_from_directory(app.static_folder, 'sw.js',
                                mimetype='application/javascript')
     resp.headers['Service-Worker-Allowed'] = '/'
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
+
+
+# =============================================================================
+# La app de Google Play (TWA) — prueba de que el sitio y la app son de la misma
+# =============================================================================
+# Android le pide esta dirección al servidor al abrir la app de la tienda, para
+# comprobar que la app y este sitio tienen la misma dueña. Si no la encuentra, o
+# la respuesta no es la que espera, la app abre igual pero CON LA BARRA DEL
+# NAVEGADOR ARRIBA, como una página cualquiera. No da ningún error: simplemente
+# se ve fea.
+#
+# El contenido lo entrega Google Play recién DESPUÉS de subir el archivo .aab
+# (Play vuelve a firmar la app con su propia clave), así que no puede vivir en
+# el código. Se pega tal cual en data/assetlinks.json, con copiar y pegar, igual
+# que data/correo.json. El paso a paso está en PLAY.md.
+#
+# Va en data/ y no en el repo por dos motivos: esa carpeta está en .gitignore,
+# así que editarla en el servidor nunca puede chocar con un `git pull`; y el
+# archivo se pega ENTERO desde Play Console, sin reescribir campos a mano.
+@app.route('/.well-known/assetlinks.json')
+def assetlinks():
+    # La carpeta se lee acá adentro y no arriba porque las pruebas la desvían a
+    # una temporal.
+    if not os.path.exists(os.path.join(database.DATA_DIR, 'assetlinks.json')):
+        # Todavía no se publicó en Play, o falta subir el archivo. Se contesta
+        # 404 A PROPÓSITO: inventar un contenido haría que Android fallara la
+        # verificación sin que nadie entienda por qué.
+        return Response('{"error": "sin configurar"}', status=404,
+                        mimetype='application/json')
+    resp = send_from_directory(database.DATA_DIR, 'assetlinks.json',
+                               mimetype='application/json')
+    # Sin esto, una huella mal pegada se queda guardada en el navegador y la
+    # corrección tarda en llegar.
     resp.headers['Cache-Control'] = 'no-cache'
     return resp
 

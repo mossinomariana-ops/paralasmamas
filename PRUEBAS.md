@@ -131,6 +131,23 @@ a producción. Tildá a medida que vayas probando.
 - [ ] Usar el botón "deshacer" del cartelito que aparece abajo después de cerrar
       una bolsita.
 
+### La app de Google Play
+
+Nada de esto se puede comprobar con las pruebas automáticas: hace falta un
+celular Android de verdad. Los pasos completos están en **PLAY.md**.
+
+- [ ] Con la app instalada desde Play: **no** se ve la barra de direcciones del
+      navegador arriba. Si se ve, falló la verificación del dominio (casi
+      siempre el `assetlinks.json` no llegó al servidor, o el nombre interno de
+      la app no coincide).
+- [ ] El ícono en la pantalla del celular se ve **completo**: se tienen que ver
+      las dos caras, sin que el borde redondo le coma el pelo ni al bebé.
+- [ ] La app abre directo en la pantalla de siempre, sin pedir volver a entrar.
+- [ ] Con el celular en modo avión: aparece la pantalla "Sin conexión" y no una
+      pantalla de error del navegador.
+- [ ] Después de tocar el ícono, el fondo de arranque es el crema de la app (no
+      blanco ni negro).
+
 ---
 
 ## 3. Si una prueba automática falla

@@ -18,6 +18,7 @@
 # =============================================================================
 
 import atexit
+import json
 import os
 import shutil
 import sys
@@ -106,6 +107,27 @@ def cliente_2(flask_app):
     c = flask_app.test_client()
     c.post('/invitada')
     return c
+
+
+@pytest.fixture
+def assetlinks_falso():
+    """El archivo que en el servidor pega Google Play, pero de mentira.
+
+    Se escribe en la carpeta TEMPORAL (database.DATA_DIR ya viene desviado ahí
+    arriba) y se borra al terminar, así la prueba del archivo ausente no depende
+    del orden en que corran las pruebas."""
+    ruta = os.path.join(database.DATA_DIR, 'assetlinks.json')
+    with open(ruta, 'w', encoding='utf-8') as f:
+        json.dump([{
+            'relation': ['delegate_permission/common.handle_all_urls'],
+            'target': {
+                'namespace': 'android_app',
+                'package_name': 'com.paralasmamas.lactancia',
+                'sha256_cert_fingerprints': ['AA:BB:CC'],
+            },
+        }], f)
+    yield ruta
+    os.remove(ruta)
 
 
 @pytest.fixture

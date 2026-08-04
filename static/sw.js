@@ -7,7 +7,11 @@
                       archivos llevan ?v=<version>, así un cambio se re-baja).
    ========================================================================= */
 
-const VERSION = 'lac-v3';
+// v4: se rehízo el ícono maskable para la app de Google Play. CONSERVA EL MISMO
+// NOMBRE de archivo, así que las mamás que ya usan la app lo tienen guardado en
+// la caché de abajo: sin subir este número seguirían viendo el ícono viejo, el
+// que Android recortaba mal.
+const VERSION = 'lac-v4';
 const SHELL_CACHE = 'lac-shell-' + VERSION;
 const RUNTIME_CACHE = 'lac-runtime-' + VERSION;
 
@@ -17,9 +21,14 @@ const RUNTIME_CACHE = 'lac-runtime-' + VERSION;
 // guardan solos en la caché de abajo la primera vez que la app abre con
 // internet. Poner acá una dirección sin `?v=` guardaría una copia que después
 // nadie encuentra, porque la búsqueda es por dirección exacta.
+//
+// Las capturas de pantalla de la tienda NO van acá: pesan más de un mega, solo
+// las mira la pantalla de instalación, y `addAll` es todo o nada (si una sola
+// fallara, no se instalaría el service worker entero).
 const PRECACHE = [
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
+  '/static/icons/icon-512-maskable.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -54,6 +63,13 @@ self.addEventListener('fetch', (event) => {
   // adentro de la app pasó a entrar por el camino de /static/ de más abajo y
   // ahora sí queda guardado.
   if (url.origin !== self.location.origin) return;
+
+  // Esta dirección la consulta ANDROID para verificar que la app de la tienda
+  // es nuestra. Nunca se guarda ni se toca: una respuesta vieja acá haría que la
+  // app abriera con la barra del navegador arriba. Hoy ya quedaría afuera de las
+  // tres ramas de abajo, pero conviene dejarlo escrito por si algún día alguien
+  // agrega un "guardemos todo".
+  if (url.pathname.startsWith('/.well-known/')) return;
 
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(

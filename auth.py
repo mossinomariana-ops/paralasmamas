@@ -35,10 +35,14 @@ CLAVE_MINIMA = 8
 # Rutas que NO requieren sesión iniciada (endpoints).
 # `privacidad` va acá a propósito: se tiene que poder leer ANTES de entrar (y
 # Google la exige pública para habilitar el "Entrar con Google").
+# `assetlinks` es ANDROID preguntando, no una mamá: no hay sesión ni la va a
+# haber nunca. Si faltara acá, el guardián contestaría un redirect a /bienvenida,
+# Android leería HTML donde espera un JSON, y la app de la tienda abriría con la
+# barra del navegador arriba sin ningún error visible.
 RUTAS_PUBLICAS = {
     'auth.bienvenida', 'auth.invitada', 'auth.registro', 'auth.login',
     'auth.entrar_google', 'privacidad',
-    'static', 'manifest', 'service_worker',
+    'static', 'manifest', 'service_worker', 'assetlinks',
 }
 
 _EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')

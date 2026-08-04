@@ -354,6 +354,26 @@ def test_la_pantalla_de_privacidad_no_publica_el_correo_personal(flask_app, monk
     assert 'personal@ejemplo.com' not in html
 
 
+# ── La app de Google Play (TWA) ──────────────────────────────────────────────
+def test_android_lee_los_assetlinks_sin_cuenta(flask_app, assetlinks_falso):
+    # Android pide esta dirección SIN sesión, para comprobar que la app de la
+    # tienda y este sitio son de la misma persona.
+    r = flask_app.test_client().get('/.well-known/assetlinks.json')
+    assert r.status_code == 200
+    assert r.mimetype == 'application/json'
+    datos = r.get_json()
+    assert datos[0]['target']['package_name'] == 'com.paralasmamas.lactancia'
+
+
+def test_si_falta_el_archivo_no_se_contesta_la_pantalla_de_bienvenida(flask_app):
+    # El caso que rompe la app de la tienda en silencio: si el guardián de sesión
+    # mandara el redirect de siempre, Android leería HTML donde espera un JSON y
+    # la app abriría con la barra del navegador arriba, sin ningún error visible.
+    r = flask_app.test_client().get('/.well-known/assetlinks.json')
+    assert r.status_code == 404
+    assert 'bienvenida' not in r.headers.get('Location', '')
+
+
 # ── Borrar la cuenta ─────────────────────────────────────────────────────────
 def test_sin_escribir_la_palabra_no_se_borra_nada(cliente):
     uid = uid_de(cliente)

@@ -319,6 +319,54 @@ def test_el_manifiesto_de_la_app_instalable_esta_completo(cliente):
     assert len(m['icons']) == 3
 
 
+def test_el_manifiesto_tiene_lo_que_pide_google_play(cliente):
+    m = cliente.get('/manifest.webmanifest').get_json()
+    # `id` es la identidad de la app. Si cambia, Android la toma por otra
+    # distinta y la que las mamás ya tienen instalada queda huérfana. "/" es el
+    # mismo valor que el navegador calculaba solo antes de que existiera este
+    # campo, así que ponerlo no rompe ninguna instalación.
+    assert m['id'] == '/'
+    assert m['dir'] == 'ltr'
+    assert 'standalone' in m['display_override']
+    assert m['categories']
+    assert {c['form_factor'] for c in m['screenshots']} >= {'narrow', 'wide'}
+
+
+def test_las_capturas_de_un_mismo_formato_tienen_la_misma_forma(cliente):
+    # Chrome descarta la pantalla linda de instalación ENTERA si dos capturas
+    # del mismo formato tienen proporciones distintas.
+    m = cliente.get('/manifest.webmanifest').get_json()
+    for formato in ('narrow', 'wide'):
+        medidas = {c['sizes'] for c in m['screenshots']
+                   if c['form_factor'] == formato}
+        assert len(medidas) == 1, (formato, medidas)
+
+
+def test_no_hay_ningun_icono_ni_captura_rota(cliente):
+    # Un archivo prometido en el manifiesto pero ausente hace fallar el
+    # empaquetado para la tienda, y es imposible de ver a ojo.
+    m = cliente.get('/manifest.webmanifest').get_json()
+    for item in m['icons'] + m['screenshots']:
+        assert cliente.get(item['src']).status_code == 200, item['src']
+
+
+def test_las_capturas_miden_lo_que_dice_el_manifiesto(cliente):
+    # Si `sizes` no coincide al píxel con el archivo, Chrome ignora la captura
+    # sin avisar. Se comprueba leyendo el encabezado del PNG: los 8 bytes de la
+    # firma, después el bloque IHDR con ancho y alto en 4 bytes cada uno.
+    import struct
+    m = cliente.get('/manifest.webmanifest').get_json()
+    for captura in m['screenshots']:
+        crudo = cliente.get(captura['src']).get_data()
+        ancho, alto = struct.unpack('>II', crudo[16:24])
+        assert f'{ancho}x{alto}' == captura['sizes'], captura['src']
+
+
+def test_el_manifiesto_se_sirve_con_su_propio_tipo(cliente):
+    r = cliente.get('/manifest.webmanifest')
+    assert r.mimetype == 'application/manifest+json'
+
+
 def test_el_service_worker_se_sirve_con_los_permisos_correctos(cliente):
     r = cliente.get('/sw.js')
     assert r.status_code == 200

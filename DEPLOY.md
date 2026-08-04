@@ -126,6 +126,20 @@ queda publicada. Después de crear el archivo, pestaña **Web** → **Reload**.
 El botón "Entrar con Google" viene apagado. Para encenderlo hay que crear un ID
 de cliente en Google Cloud: los pasos están en **GOOGLE.md**.
 
+## 10. (Opcional) Publicar la app en Google Play
+
+La app se puede subir a la tienda de Android sin reescribir nada: se la envuelve
+en un cascarón que por dentro abre esta misma web. Los pasos están en
+**PLAY.md**.
+
+Para eso hace falta un archivo más en el servidor, `data/assetlinks.json`, que
+se crea igual que el `correo.json` del paso 8c: **Files** → `paralasmamas/data/`
+→ **New file** → pegar lo que da Play Console → **Reload**. Es lo que le prueba
+a Android que la app y este sitio son de la misma persona; sin él, la app abre
+con la barra del navegador arriba. Mientras no exista, la dirección
+`/.well-known/assetlinks.json` contesta un 404 y la web funciona igual que
+siempre.
+
 ---
 
 ## Actualizar la app cuando cambiemos algo

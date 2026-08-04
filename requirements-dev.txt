@@ -2,3 +2,6 @@
 # allá alcanza con requirements.txt (Flask). Se instalan con:
 #   venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 pytest>=8.0
+# Solo para herramientas/generar_iconos.py, que fabrica los íconos de Google
+# Play. NUNCA a requirements.txt: el servidor sirve imágenes, no las genera.
+Pillow>=10.0

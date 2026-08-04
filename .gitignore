@@ -7,6 +7,16 @@ __pycache__/
 venv/
 .venv/
 
+# La app de Google Play: la LLAVE DE FIRMA y los paquetes que arma PWABuilder.
+# La llave es lo que le prueba a Google que las actualizaciones las mandamos
+# nosotras: si se sube acá, cualquiera que vea el repo puede publicar en nombre
+# de la app. Se guarda aparte, fuera del proyecto (ver PLAY.md).
+*.keystore
+*.jks
+*.aab
+*.apk
+signing-key-info.txt
+
 # Sistema
 .DS_Store
 Thumbs.db
