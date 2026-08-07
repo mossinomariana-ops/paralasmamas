@@ -83,7 +83,8 @@ def _static_version():
     """mtime más reciente de los estáticos principales → cache-busting."""
     try:
         paths = [os.path.join(app.static_folder, n)
-                 for n in ('style.css', 'lactancia.js', 'pwa.js', 'google.js')]
+                 for n in ('style.css', 'lactancia.js', 'grafico.js',
+                           'pwa.js', 'google.js')]
         return str(int(max(os.path.getmtime(p) for p in paths if os.path.exists(p))))
     except Exception:
         return '0'

@@ -457,6 +457,75 @@ EN = {
     "Totales": "Totals",
     "lactancia-dia-a-dia": "breastfeeding-day-by-day",
 
+    # ── Explorar mis datos: el gráfico del Resumen ─────────────────────────
+    "Explorar mis datos": "Explore my data",
+    "Elegí qué querés ver en cada eje y me encargo de armar el gráfico. Por ejemplo, la hora de extracción contra los ml que te extrajiste, esto te ayuda a visualizar los momentos del día con mayor producción.":
+        "Pick what goes on each axis and I will put the chart together. For example, pumping time against the ml you pumped: it helps you see which times of day you produce the most.",
+    "Eje horizontal": "Horizontal axis",
+    "Eje vertical": "Vertical axis",
+    "Para ver los ejes por edad del bebé, cargá su fecha de nacimiento en Ajustes.":
+        "To use the baby's age on an axis, add their date of birth in Settings.",
+    # Las variables de cada eje. "Hora de extracción" y "Fecha de extracción" ya
+    # están traducidas más arriba (las usa el editor de bolsitas): un mismo texto
+    # en castellano tiene UNA sola traducción, así que no se repiten acá.
+    "Momento del día": "Time of day",
+    "Día de la semana": "Day of the week",
+    "Día de vida del bebé": "Baby's day of life",
+    "Mes de vida del bebé": "Baby's month of life",
+    "Ml de cada extracción": "Ml per session",
+    "Ml extraídos (total)": "Ml pumped (total)",
+    "Ml por extracción (promedio)": "Ml per session (average)",
+    "Cantidad de extracciones": "Number of sessions",
+    "Madrugada": "Small hours",
+    "Mañana": "Morning",
+    "Tarde": "Afternoon",
+    "Noche": "Evening",
+    "lun": "Mon", "mar": "Tue", "mié": "Wed", "jue": "Thu",
+    "vie": "Fri", "sáb": "Sat", "dom": "Sun",
+    "día {n}": "day {n}",
+    "mes {n}": "month {n}",
+    "según": "by",
+    "extracciones": "sessions",
+    # La tabla y la lectura en palabras
+    "Extracciones": "Sessions",
+    "Total": "Total",
+    "Promedio": "Average",
+    "Todo": "All",
+    "Todavía no hay extracciones para graficar": "Nothing to chart yet",
+    "Cargá tus bolsitas y acá vas a poder cruzar tus datos.":
+        "Add your bags and you will be able to cross-check your data here.",
+    "Ninguna extracción tiene ese dato cargado": "No session has that information",
+    "Probá con otra variable en el eje horizontal.": "Try another variable on the horizontal axis.",
+    "Todavía son pocas extracciones para ver una relación. Seguí cargando y esto se va a ir afinando.":
+        "There are still too few sessions to show a pattern. Keep adding them and this will sharpen up.",
+    "Donde más sale: {grupo}, con {prom} por extracción, contra {resto} en el resto. ({n} de {total} extracciones)":
+        "You get the most in {grupo}, with {prom} per session, against {resto} in the rest. ({n} of {total} sessions)",
+    "Donde más te extraés: {grupo}, con {n} extracciones, contra {resto} en promedio en las demás.":
+        "You pump most in {grupo}, with {n} sessions, against {resto} on average in the rest.",
+    # Los mismos rótulos, pero como van adentro de una frase
+    "la madrugada": "the small hours",
+    "la mañana": "the morning",
+    "la tarde": "the afternoon",
+    "la noche": "the evening",
+    "los lunes": "Mondays", "los martes": "Tuesdays", "los miércoles": "Wednesdays",
+    "los jueves": "Thursdays", "los viernes": "Fridays", "los sábados": "Saturdays",
+    "los domingos": "Sundays",
+    "el mes {n}": "month {n}",
+    "Te extraés unas {a} veces por día, parejo de punta a punta.":
+        "You pump about {a} times a day, steady from end to end.",
+    "Ahora te extraés más seguido: {b} veces por día, contra {a} al principio.":
+        "You are pumping more often now: {b} times a day, against {a} at the start.",
+    "Ahora te extraés menos seguido: {b} veces por día, contra {a} al principio.":
+        "You are pumping less often now: {b} times a day, against {a} at the start.",
+    "Tu promedio se mantiene parejo: {a} al principio y {b} ahora.":
+        "Your average is holding steady: {a} at the start and {b} now.",
+    "Últimamente estás sacando más: {b} por extracción, contra {a} al principio.":
+        "Lately you are getting more: {b} per session, against {a} at the start.",
+    "Últimamente estás sacando menos: {b} por extracción, contra {a} al principio.":
+        "Lately you are getting less: {b} per session, against {a} at the start.",
+    "Es lo que muestran tus datos, no una regla: cada mamá y cada día son únicos.":
+        "This is what your own data shows, not a rule: every mum and every day is unique.",
+
     # ── Pantalla de privacidad ─────────────────────────────────────────────
     "Privacidad": "Privacy",
     "Qué datos guarda la app": "What data the app stores",

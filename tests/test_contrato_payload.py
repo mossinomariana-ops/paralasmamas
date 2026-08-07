@@ -15,6 +15,8 @@
 # allá y no acá (o al revés), estas pruebas avisan.
 # =============================================================================
 
+import inspect
+import os
 from datetime import date, timedelta
 
 import pytest
@@ -47,11 +49,16 @@ TABLERO = ['freezer_bolsas', 'freezer_ml', 'freezer_vence_pronto',
            'producido_ml', 'descongelada_ml', 'consumida_ml',
            'desperdicio_ml', 'dias_stock', 'bolsa_sugerida_ml']
 
+# Campos de cada muestra que lee el gráfico del Resumen (los ejes de
+# static/grafico.js: EJES_X y EJES_Y). Si falta uno, el desplegable queda con
+# una opción que dibuja un gráfico vacío y nadie se entera.
+MUESTRA = ['id', 'fecha', 'hora', 'ml', 'dia_vida', 'mes_vida', 'dia_semana']
+
 
 def test_el_payload_trae_todas_las_secciones_que_la_pantalla_espera(cliente):
     datos = payload(cliente)
     for seccion in ('freezer', 'heladera', 'historial', 'tablero', 'params',
-                    'badge', 'recordatorio', 'bebe'):
+                    'badge', 'recordatorio', 'bebe', 'muestras'):
         assert seccion in datos, seccion
 
 
@@ -137,6 +144,91 @@ def test_el_tablero_llega_completo(cliente):
         assert clave in tablero, clave
 
 
+def test_la_pantalla_no_tira_ninguna_seccion_al_repintarse(cliente):
+    """La costura del otro lado: lo que el servidor manda y la pantalla ignora.
+
+    Después de cada acción, lactancia.js NO se queda con la respuesta tal cual:
+    rearma su copia nombrando sección por sección (`DATOS = { freezer: …,
+    heladera: … }`). Es prolijo, pero tiene una trampa: si el servidor empieza a
+    mandar algo nuevo y nadie lo agrega a esa lista, esa sección desaparece de la
+    pantalla apenas la mamá toca cualquier botón. Al entrar se ve bien —ahí los
+    datos llegan por otro camino—, así que el error se disfraza de "se borró
+    solo".
+
+    Esta prueba compara las dos listas y avisa antes de que pase."""
+    import re
+
+    ruta = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        'static', 'lactancia.js')
+    with open(ruta, encoding='utf-8') as f:
+        js = f.read()
+
+    # `(?<![\w.])` evita el comentario de la cabecera, que menciona
+    # "window.LAC_DATOS = {" y engañaría a una búsqueda de texto pelada.
+    arranque = re.search(r'(?<![\w.])DATOS = \{', js)
+    assert arranque, 'no se encontró el bloque DATOS = { … } en lactancia.js'
+    inicio = arranque.start()
+    profundidad, fin = 0, inicio
+    for i in range(js.index('{', inicio), len(js)):
+        if js[i] == '{':
+            profundidad += 1
+        elif js[i] == '}':
+            profundidad -= 1
+            if profundidad == 0:
+                fin = i
+                break
+    bloque = js[inicio:fin]
+
+    for seccion in payload(cliente):
+        if seccion == 'ok':                     # no es una sección, es el visto bueno
+            continue
+        assert re.search(r'^\s*' + seccion + r':', bloque, re.M), (
+            f'el servidor manda "{seccion}" pero lactancia.js no lo copia al '
+            f'repintar: se perdería en cuanto la mamá toque cualquier botón')
+
+
+def test_todo_archivo_propio_de_la_pantalla_entra_en_el_numero_de_version(cliente):
+    """La otra costura silenciosa: el caché del navegador.
+
+    Cada hoja de estilo y cada script viajan con un `?v=` que sale del archivo
+    modificado más recientemente (app._static_version). Si se suma un archivo
+    propio a la pantalla y NO se lo suma a esa cuenta, tocarlo no cambia el
+    número: el celular de la mamá se queda con la versión vieja para siempre y
+    la corrección no llega nunca. No falla nada visible — simplemente no pasa.
+
+    Los de vendor/ quedan afuera a propósito: son una versión clavada de
+    flatpickr, que solo cambia si se la reemplaza a mano por otra."""
+    import re
+
+    import app as app_modulo
+
+    html = cliente.get('/').get_data(as_text=True)
+    referidos = set(re.findall(r'/static/([\w./-]+\.(?:js|css))\?v=', html))
+    assert referidos, 'la pantalla no referenció ningún archivo estático'
+
+    contados = set(re.findall(r"'([\w.-]+\.(?:js|css))'",
+                              inspect.getsource(app_modulo._static_version)))
+
+    for archivo in referidos:
+        if archivo.startswith('vendor/'):
+            continue
+        assert archivo in contados, (
+            f'{archivo} se muestra en la pantalla pero no entra en el cálculo '
+            f'de la versión: al cambiarlo, el navegador seguiría con el viejo')
+
+
+def test_cada_muestra_del_grafico_llega_completa(cliente):
+    crear(cliente, ubicacion='heladera', volumen_ml=120, hora='07:30', dias_atras=1)
+    m = payload(cliente)['muestras'][0]
+    for clave in MUESTRA:
+        assert clave in m, clave
+    # Los tres que el gráfico usa como números: si vinieran como texto, las
+    # barras saldrían todas del mismo alto y el eje quedaría desordenado.
+    assert isinstance(m['ml'], int)
+    assert isinstance(m['dia_semana'], int)
+    assert isinstance(m['id'], int)
+
+
 def test_el_recordatorio_y_el_bebe_llegan_siempre_aunque_no_esten_configurados(cliente):
     datos = payload(cliente)
     assert set(datos['recordatorio']) == {'activo', 'hora', 'pendiente'}
@@ -185,5 +277,5 @@ def test_toda_accion_devuelve_el_estado_completo_y_no_solo_un_ok(cliente):
         datos = post(cliente, url, **campos).get_json()
         assert datos['ok'], url
         for seccion in ('freezer', 'heladera', 'historial', 'tablero',
-                        'params', 'badge', 'recordatorio', 'bebe'):
+                        'params', 'badge', 'recordatorio', 'bebe', 'muestras'):
             assert seccion in datos, f'{url} no devolvió {seccion}'

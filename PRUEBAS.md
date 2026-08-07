@@ -53,7 +53,8 @@ cd /c/Proyectos/lactancia && ./venv/Scripts/python.exe -m pip install -r require
 | `tests/test_validaciones.py` | Que no se pueda cargar un dato imposible (3000 ml, una extracción de mañana). |
 | `tests/test_api.py` | La app entera: cargar, usar, descartar, freezar, bajar, deshacer, configurar, descargar. |
 | `tests/test_seguridad.py` | Que una mamá no pueda ver ni tocar los datos de otra. Que las claves se guarden cifradas. Que el acceso con Google no se pueda falsificar. |
-| `tests/test_contrato_payload.py` | Que el servidor le mande a la pantalla todos los datos que la pantalla busca. |
+| `tests/test_contrato_payload.py` | Que el servidor le mande a la pantalla todos los datos que la pantalla busca, que la pantalla no tire ninguno al repintarse, y que un archivo cambiado le llegue al celular (que no se quede el viejo en el caché). |
+| `tests/test_grafico.py` | Que las extracciones que alimentan el gráfico del Resumen se cuenten UNA sola vez (freezar o descongelar no es leche nueva) y que sus textos estén en los dos idiomas. |
 
 **Importante:** las pruebas trabajan sobre una carpeta temporal, nunca sobre
 `data/`. Se pueden correr mil veces sin riesgo para la información real.
@@ -130,6 +131,23 @@ a producción. Tildá a medida que vayas probando.
       resumen y lo que sobró cuenta como desperdicio.
 - [ ] Usar el botón "deshacer" del cartelito que aparece abajo después de cerrar
       una bolsita.
+
+### El gráfico del Resumen ("Explorar mis datos")
+
+- [ ] Abrirlo: arranca en *hora de extracción* contra *ml de cada extracción*, y
+      se ve la nube de puntos con la frase que la explica y la tabla.
+- [ ] Cambiar los dos desplegables por todas las combinaciones: ninguna tiene que
+      dejar el gráfico en blanco.
+- [ ] Sin fecha de nacimiento del bebé cargada: los ejes por edad aparecen
+      apagados y abajo dice dónde cargarla.
+- [ ] Con pocas bolsitas cargadas (menos de 8): la frase **no** afirma nada, dice
+      que todavía son pocas.
+- [ ] Cargar una bolsita nueva: el gráfico se actualiza solo, sin recargar.
+- [ ] Tildar dos de la heladera y freezarlas: el total de ml del pie de la tabla
+      **no** tiene que cambiar (es la misma leche cambiando de lugar).
+- [ ] En modo noche: los puntos, las barras y los números se leen bien.
+- [ ] En pantalla de celular: la tabla se desliza sola adentro de su recuadro,
+      sin arrastrar la página entera.
 
 ### La app de Google Play
 
