@@ -20,3 +20,6 @@ signing-key-info.txt
 # Sistema
 .DS_Store
 Thumbs.db
+
+# El registro del vigia del sitio: es de cada maquina, no del proyecto.
+herramientas/vigilancia.log
