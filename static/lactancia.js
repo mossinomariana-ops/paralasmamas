@@ -1071,7 +1071,6 @@ opciones" (⋯) de cada partida.
                     toast('🥛 ' + T('{vol} a la heladera.', { vol: fmtMl(vol) }));
                 }
                 resetFormAlta();
-                $('lac-ex-volumen').focus();
             }, function () { btn.disabled = false; });
         });
     }
