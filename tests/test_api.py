@@ -258,6 +258,25 @@ def test_una_hora_de_recordatorio_invalida_se_rechaza(cliente, hora):
                 activo='1', hora=hora).status_code == 400
 
 
+def test_guardar_dias_de_jardin_del_recordatorio(cliente):
+    datos = post(cliente, '/api/lactancia/recordatorio',
+                 activo='1', hora='21:30', dias='0,2,4').get_json()
+    assert datos['recordatorio']['dias'] == [0, 2, 4]
+
+
+def test_sin_mandar_dias_se_mantienen_los_que_ya_estaban(cliente):
+    post(cliente, '/api/lactancia/recordatorio', activo='1', hora='21:30', dias='1,3')
+    datos = post(cliente, '/api/lactancia/recordatorio',
+                 activo='1', hora='22:00').get_json()
+    assert datos['recordatorio']['dias'] == [1, 3]
+
+
+@pytest.mark.parametrize('dias', ['7', '-1', 'lunes', '1,x,3'])
+def test_dias_de_recordatorio_invalidos_se_rechazan(cliente, dias):
+    assert post(cliente, '/api/lactancia/recordatorio',
+                activo='1', hora='21:00', dias=dias).status_code == 400
+
+
 def test_guardar_los_datos_del_bebe_calcula_su_edad(cliente):
     nac = (date.today() - timedelta(days=40)).isoformat()
     datos = post(cliente, '/api/lactancia/bebe',

@@ -121,6 +121,7 @@ def crear_tablas_usuaria(uid):
         ('bolsa_capacidad_ml',       'INTEGER'),
         ('pedir_confirmacion',       'INTEGER'),
         ('idioma',                   'TEXT'),
+        ('recordatorio_dias',        'TEXT'),
     ):
         if nombre not in columnas:
             cur.execute(f'ALTER TABLE perfil ADD COLUMN {nombre} {tipo}')
@@ -151,7 +152,8 @@ def guardar_perfil(**campos):
     """Actualiza solo las columnas pasadas del perfil: datos del bebé, el
     recordatorio nocturno y las configuraciones de PERFIL_CONFIG."""
     permitidas = ('bebe_nombre', 'bebe_fecha_nacimiento',
-                  'recordatorio_activo', 'recordatorio_hora') + PERFIL_CONFIG
+                  'recordatorio_activo', 'recordatorio_hora',
+                  'recordatorio_dias') + PERFIL_CONFIG
     sets, args = [], []
     for k, v in campos.items():
         if k in permitidas:

@@ -213,6 +213,7 @@ EN = {
     "bajar bolsitas": "take bags down",
     "del freezer a la heladera (para el jardín)": "from the freezer to the fridge (for daycare)",
     "A las": "At",
+    "Días de jardín": "Daycare days",
 
     # ── Modales ────────────────────────────────────────────────────────────
     "Marcar usada": "Mark as used",

@@ -445,7 +445,14 @@ def _lac_recordatorio():
         datetime.strptime(hora, '%H:%M')
     except ValueError:
         hora = config.DEFAULTS['lactancia_recordatorio_hora']
-    return {'activo': activo, 'hora': hora}
+    dias_txt = perfil.get('recordatorio_dias')
+    if not dias_txt:
+        dias_txt = config.DEFAULTS['lactancia_recordatorio_dias']
+    try:
+        dias = {int(d) for d in dias_txt.split(',') if d.strip() != ''}
+    except ValueError:
+        dias = set(range(7))
+    return {'activo': activo, 'hora': hora, 'dias': sorted(dias)}
 
 
 def _lac_bajo_leche_hoy(ahora):
@@ -470,6 +477,9 @@ def _lac_recordatorio_pendiente(rec=None, ahora=None):
     if rec is None:
         rec = _lac_recordatorio()
     if not rec['activo']:
+        return False
+    manana = ahora.date() + timedelta(days=1)
+    if manana.weekday() not in rec.get('dias', range(7)):
         return False
     hh, mm = rec['hora'].split(':')
     hora_dt = ahora.replace(hour=int(hh), minute=int(mm), second=0, microsecond=0)

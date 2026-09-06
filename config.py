@@ -56,6 +56,9 @@ DEFAULTS = {
     'lactancia_pedir_confirmacion':       True,
     'lactancia_recordatorio_activo':      False,
     'lactancia_recordatorio_hora':        '21:00',
+    # Días de jardín: todos por defecto, para que a nadie que no lo tocó le
+    # cambie el comportamiento. "0"=lunes ... "6"=domingo.
+    'lactancia_recordatorio_dias':        '0,1,2,3,4,5,6',
     'bebe_nombre':            '',   # vacío → la UI usa "el bebé"
     'bebe_fecha_nacimiento':  '',
 }

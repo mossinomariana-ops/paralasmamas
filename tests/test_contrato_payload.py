@@ -231,7 +231,7 @@ def test_cada_muestra_del_grafico_llega_completa(cliente):
 
 def test_el_recordatorio_y_el_bebe_llegan_siempre_aunque_no_esten_configurados(cliente):
     datos = payload(cliente)
-    assert set(datos['recordatorio']) == {'activo', 'hora', 'pendiente'}
+    assert set(datos['recordatorio']) == {'activo', 'hora', 'dias', 'pendiente'}
     assert set(datos['bebe']) == {'nombre', 'fecha_nacimiento', 'edad_texto',
                                   'mes_de_vida'}
     # Sin nombre cargado la pantalla no puede quedar diciendo "None".

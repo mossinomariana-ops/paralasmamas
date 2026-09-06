@@ -325,8 +325,21 @@ def api_lactancia_recordatorio():
             datetime.strptime(hora, '%H:%M')
         except ValueError:
             raise ValueError("La hora del recordatorio debe ser HH:MM (ej: 21:00).")
-        database.guardar_perfil(recordatorio_activo=1 if activo else 0,
-                                recordatorio_hora=hora)
+        dias_raw = request.form.get('dias')
+        if dias_raw is None:
+            dias_txt = None
+        else:
+            try:
+                dias = sorted({int(d) for d in dias_raw.split(',') if d.strip() != ''})
+            except ValueError:
+                raise ValueError("Los días del recordatorio no son válidos.")
+            if any(d < 0 or d > 6 for d in dias):
+                raise ValueError("Los días del recordatorio no son válidos.")
+            dias_txt = ','.join(str(d) for d in dias)
+        campos = dict(recordatorio_activo=1 if activo else 0, recordatorio_hora=hora)
+        if dias_txt is not None:
+            campos['recordatorio_dias'] = dias_txt
+        database.guardar_perfil(**campos)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
         return redirect(url_for('inicio'))
