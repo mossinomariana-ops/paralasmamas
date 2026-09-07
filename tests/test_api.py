@@ -164,12 +164,44 @@ def test_una_bolsita_recien_cargada_no_esta_en_el_jardin(cliente):
     assert datos['tablero']['jardin_bolsas'] == 0
 
 
-def test_la_leche_de_la_heladera_no_se_puede_mandar_al_jardin(cliente):
-    # Al jardín va leche congelada, no la de la heladera: no aguantaría el viaje
-    # ni el día allá.
+def test_la_leche_de_la_heladera_tambien_puede_estar_en_el_jardin(cliente):
+    # El día que León se va con una bolsita ya descongelada: está en la heladera
+    # del jardín, no en la de casa.
     pid = crear_id(cliente, ubicacion='heladera', volumen_ml=80)
-    assert post(cliente, f'/api/lactancia/{pid}/jardin',
-                en_jardin='1').status_code == 400
+    datos = post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1').get_json()
+    assert datos['ok']
+    p = datos['heladera'][0]
+    assert p['en_jardin'] is True
+    assert p['estado'] == 'en_jardin'
+    assert datos['freezer'] == []                 # no se cambió de lista
+    assert datos['tablero']['jardin_bolsas'] == 1
+
+
+def test_la_leche_del_jardin_sigue_sumando_al_stock_de_la_heladera(cliente):
+    pid = crear_id(cliente, ubicacion='heladera', volumen_ml=80)
+    antes = payload(cliente)['tablero']
+    ahora = post(cliente, f'/api/lactancia/{pid}/jardin',
+                 en_jardin='1').get_json()['tablero']
+    assert ahora['heladera_ml'] == antes['heladera_ml']
+    assert ahora['heladera_bolsas'] == antes['heladera_bolsas']
+
+
+def test_al_bajarla_del_freezer_la_marca_del_jardin_la_sigue(cliente):
+    # El back up que el jardín descongeló allá: la bolsita nueva sigue estando
+    # en el jardín, no aparece de golpe en la heladera de casa.
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    datos = post(cliente, f'/api/lactancia/{pid}/bajar').get_json()
+    nueva = datos['heladera'][0]
+    assert nueva['tipo'] == 'descongelada'
+    assert nueva['en_jardin'] is True
+    assert nueva['estado'] == 'en_jardin'
+
+
+def test_una_bolsita_de_casa_al_bajarla_sigue_siendo_de_casa(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    datos = post(cliente, f'/api/lactancia/{pid}/bajar').get_json()
+    assert datos['heladera'][0]['en_jardin'] is False
 
 
 def test_una_bolsita_ya_cerrada_no_se_puede_mandar_al_jardin(cliente):
@@ -198,7 +230,8 @@ def test_los_dias_de_stock_cuentan_el_freezer_la_heladera_y_el_jardin(cliente):
     crear_id(cliente, ubicacion='freezer', volumen_ml=300)
     jardin = crear_id(cliente, ubicacion='freezer', volumen_ml=200)
     post(cliente, f'/api/lactancia/{jardin}/jardin', en_jardin='1')
-    crear_id(cliente, ubicacion='heladera', volumen_ml=200)
+    en_el_jardin = crear_id(cliente, ubicacion='heladera', volumen_ml=200)
+    post(cliente, f'/api/lactancia/{en_el_jardin}/jardin', en_jardin='1')
     assert payload(cliente)['tablero']['dias_stock'] == 7             # 700 / 100
 
 

@@ -101,9 +101,14 @@ def _lac_estado(p, params, ahora):
     """Estado en cascada: cierre manual > vencida > vence_pronto > en_jardin >
     disponible (freezer) | en_heladera (heladera).
 
-    `en_jardin` va DEBAJO del aviso a propósito: que la bolsita esté en el jardín
-    no puede tapar que se está por vencer. Para no perder de vista dónde está, la
-    tarjeta muestra la etiqueta 🏫 aparte de esta pastilla."""
+    `en_jardin` vale en las DOS ubicaciones: la bolsita puede estar en el freezer
+    del jardín (el back up) o ya descongelada en su heladera, que es lo que pasa
+    el día que León se va con una bolsita bajada acá.
+
+    Va DEBAJO del aviso a propósito: que esté en el jardín no puede tapar que se
+    está por vencer — menos todavía en la heladera, donde el reloj corre en
+    horas. Para no perder de vista dónde está, la tarjeta muestra la etiqueta 🏫
+    aparte de esta pastilla."""
     if p.get('motivo_cierre'):
         return p['motivo_cierre']
     venc = _lac_vencimiento(p, params)
@@ -117,7 +122,9 @@ def _lac_estado(p, params, ahora):
     horas = (venc - ahora).total_seconds() / 3600
     umbral = (params['aviso_descongelada_horas'] if p.get('tipo') == 'descongelada'
               else params['aviso_heladera_horas'])
-    return 'vence_pronto' if horas <= umbral else 'en_heladera'
+    if horas <= umbral:
+        return 'vence_pronto'
+    return 'en_jardin' if p.get('en_jardin') else 'en_heladera'
 
 
 def _lac_horas_en_heladera(p, ahora):
@@ -180,7 +187,7 @@ def _lac_payload():
                        key=lambda p: (p['fecha_cierre'] or '', p['id']), reverse=True)
 
     usables = [p for p in freezer if p['estado'] in ('disponible', 'en_jardin', 'vence_pronto')]
-    heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'vence_pronto')]
+    heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'en_jardin', 'vence_pronto')]
 
     def _consumido(p):
         return p['consumido_ml'] if p.get('consumido_ml') is not None else p['volumen_ml']
@@ -216,8 +223,11 @@ def _lac_payload():
         'freezer_vence_pronto':  sum(1 for p in freezer if p['estado'] == 'vence_pronto'),
         'freezer_vencidas':      sum(1 for p in freezer if p['estado'] == 'vencida'),
         'freezer_proximo_venc':  min((p['vencimiento'] for p in usables), default=None),
-        'jardin_bolsas':         sum(1 for p in usables if p['en_jardin']),
-        'jardin_ml':             sum(p['volumen_ml'] for p in usables if p['en_jardin']),
+        # Lo que está en el jardín, esté congelado allá o ya descongelado en su
+        # heladera. Va junto a propósito: lo que dice es qué NO hay en casa.
+        'jardin_bolsas':         sum(1 for p in usables + heladera_vigente if p['en_jardin']),
+        'jardin_ml':             sum(p['volumen_ml'] for p in usables + heladera_vigente
+                                     if p['en_jardin']),
         'usadas_total':          sum(1 for p in partidas if p['motivo_cierre'] == 'usada'),
         'descartadas_total':     sum(1 for p in partidas if p['motivo_cierre'] == 'descartada'),
         'heladera_bolsas':       len(heladera_vigente),

@@ -219,18 +219,18 @@ def api_lactancia_cerrar(id):
 
 @app.route('/api/lactancia/<int:id>/jardin', methods=['POST'])
 def api_lactancia_jardin(id):
-    """Marca o desmarca una bolsita del freezer como back up en el jardín.
+    """Marca o desmarca una bolsita como que está en el jardín.
 
-    No cierra nada: la bolsita se queda en el freezer y sigue contando como
-    stock. Lo único que cambia es que no la tenés en casa."""
+    Vale en las dos ubicaciones: el back up congelado que queda en el freezer de
+    allá, y la bolsita que se bajó acá y se fue con León. No cierra nada ni la
+    mueve de lista: sigue contando como stock. Lo único que cambia es que no la
+    tenés en casa."""
     try:
         partida = database.obtener_partida_lactancia(id)
         if partida is None:
             raise ValueError(f"No existe la bolsita {id}.")
         if partida['motivo_cierre']:
             raise ValueError("La bolsita ya está cerrada.")
-        if partida['ubicacion'] != 'freezer':
-            raise ValueError("Al jardín solo se llevan bolsitas congeladas.")
 
         en_jardin = (request.form.get('en_jardin') or '').strip() == '1'
         database.marcar_jardin_lactancia(id, en_jardin)

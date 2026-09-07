@@ -144,6 +144,23 @@ def test_sin_la_marca_la_bolsita_sigue_estando_disponible():
         assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'disponible'
 
 
+def test_una_bolsita_de_heladera_del_jardin_dice_que_esta_en_el_jardin():
+    # La que se fue con León ya descongelada.
+    p = {'ubicacion': 'heladera', 'tipo': 'fresca', 'en_jardin': 1,
+         'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
+    params = params_base(heladera_horas=48, aviso_heladera_horas=12)  # vence 3/7 08:00
+    assert logica._lac_estado(p, params, datetime(2026, 7, 2, 10, 0)) == 'en_jardin'
+
+
+def test_en_la_heladera_el_aviso_tambien_le_gana_a_la_marca_del_jardin():
+    # Acá importa más todavía: el reloj de la heladera corre en horas.
+    p = {'ubicacion': 'heladera', 'tipo': 'fresca', 'en_jardin': 1,
+         'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
+    params = params_base(heladera_horas=48, aviso_heladera_horas=12)
+    assert logica._lac_estado(p, params, datetime(2026, 7, 2, 20, 0)) == 'vence_pronto'
+    assert logica._lac_estado(p, params, datetime(2026, 7, 3, 9, 0)) == 'vencida'
+
+
 def test_heladera_avisa_justo_cuando_faltan_las_horas_configuradas():
     p = {'ubicacion': 'heladera', 'tipo': 'fresca',
          'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
