@@ -7,7 +7,7 @@
 # en segundos y sin olvidarse ningún caso.
 # =============================================================================
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -286,6 +286,101 @@ def test_no_se_puede_bajar_dos_veces_la_misma_bolsa(cliente):
     pid = crear_id(cliente, ubicacion='freezer')
     post(cliente, f'/api/lactancia/{pid}/bajar')
     assert post(cliente, f'/api/lactancia/{pid}/bajar').status_code == 400
+
+
+# ── Corregir a qué hora la bajaste de verdad ─────────────────────────────────
+# Se baja la bolsita en la cocina y recién se carga en la app un rato después.
+# Como la leche descongelada se cuenta desde que salió del freezer y no desde el
+# toque en la pantalla, esa hora se puede corregir en el editor.
+def editar(cliente, pid, p, **cambios):
+    """Reenvía el editor con lo que la bolsita ya tiene, cambiando solo lo que se
+    pida — igual que el modal, que llega precargado."""
+    campos = {'volumen_ml': p['volumen_ml'], 'notas': p['notas'] or '',
+              'fecha_extraccion': p['fecha_extraccion'],
+              'hora_extraccion': p['hora_extraccion'] or '00:00'}
+    campos.update(cambios)
+    return post(cliente, f'/api/lactancia/{pid}/editar', **campos)
+
+
+def bajar(cliente, dias_atras=2):
+    """Una bolsita ya bajada del freezer, lista para corregirle la hora."""
+    pid = crear_id(cliente, ubicacion='freezer', dias_atras=dias_atras)
+    datos = post(cliente, f'/api/lactancia/{pid}/bajar').get_json()
+    assert datos['ok'], datos
+    return pid, datos['heladera'][0], datos['params']['descongelada_horas']
+
+
+def test_corregir_la_hora_en_que_la_bajaste_le_corre_el_vencimiento(cliente):
+    _, p, horas = bajar(cliente)
+    bajada = datetime.fromisoformat(p['cargada']) - timedelta(hours=3)
+    datos = editar(cliente, p['id'], p,
+                   fecha_bajada=bajada.date().isoformat(),
+                   hora_bajada=bajada.strftime('%H:%M')).get_json()
+    assert datos['ok'], datos
+    corregida = datos['heladera'][0]
+    assert corregida['cargada'] == bajada.strftime('%Y-%m-%dT%H:%M:00')
+    # El vencimiento se cuenta desde la hora corregida, no desde el toque.
+    esperado = bajada.replace(second=0, microsecond=0) + timedelta(hours=horas)
+    assert datetime.fromisoformat(corregida['vencimiento']) == esperado
+    assert corregida['horas_restantes'] < p['horas_restantes']
+
+
+def test_si_la_bajaste_hace_mucho_la_app_te_la_muestra_vencida(cliente):
+    # El caso que importa de verdad: la app tiene que avisar que esa leche ya no
+    # va, en vez de regalarle horas de vida útil que no tuvo.
+    _, p, horas = bajar(cliente, dias_atras=20)
+    bajada = datetime.now() - timedelta(hours=horas + 1)
+    datos = editar(cliente, p['id'], p,
+                   fecha_bajada=bajada.date().isoformat(),
+                   hora_bajada=bajada.strftime('%H:%M')).get_json()
+    assert datos['heladera'][0]['estado'] == 'vencida'
+
+
+def test_no_se_puede_decir_que_la_bajaste_en_el_futuro(cliente):
+    _, p, _ = bajar(cliente)
+    manana = date.today() + timedelta(days=1)
+    r = editar(cliente, p['id'], p,
+               fecha_bajada=manana.isoformat(), hora_bajada='12:00')
+    assert r.status_code == 400
+    assert r.get_json()['ok'] is False
+
+
+def test_no_pudiste_bajarla_antes_de_haberte_extraido_la_leche(cliente):
+    _, p, _ = bajar(cliente, dias_atras=2)
+    antes_de_extraer = date.today() - timedelta(days=3)
+    r = editar(cliente, p['id'], p,
+               fecha_bajada=antes_de_extraer.isoformat(), hora_bajada='10:00')
+    assert r.status_code == 400
+    assert r.get_json()['ok'] is False
+
+
+def test_a_una_bolsita_que_no_se_descongelo_no_le_cambia_nada(cliente):
+    # En una fresca `cargada` es solo el sello de cuándo se cargó el dato: su
+    # vencimiento sale de la extracción, así que el campo ni se muestra.
+    pid = crear_id(cliente, ubicacion='heladera', dias_atras=1)
+    p = payload(cliente)['heladera'][0]
+    ayer = date.today() - timedelta(days=1)
+    datos = editar(cliente, pid, p,
+                   fecha_bajada=ayer.isoformat(), hora_bajada='05:00').get_json()
+    assert datos['ok'], datos
+    assert datos['heladera'][0]['cargada'] == p['cargada']
+
+
+def test_editar_sin_tocar_la_bajada_deja_la_hora_como_estaba(cliente):
+    # El pedido que manda la app cuando solo se corrige un volumen.
+    _, p, _ = bajar(cliente)
+    datos = editar(cliente, p['id'], p, volumen_ml=77).get_json()
+    assert datos['heladera'][0]['volumen_ml'] == 77
+    assert datos['heladera'][0]['cargada'] == p['cargada']
+
+
+def test_al_corregir_el_dia_el_historial_no_dice_que_la_bajaste_hoy(cliente):
+    pid, p, _ = bajar(cliente, dias_atras=3)
+    anoche = date.today() - timedelta(days=1)
+    datos = editar(cliente, p['id'], p,
+                   fecha_bajada=anoche.isoformat(), hora_bajada='22:00').get_json()
+    vieja = [h for h in datos['historial'] if h['id'] == pid][0]
+    assert vieja['fecha_cierre'] == anoche.isoformat()
 
 
 # ── Configuraciones ──────────────────────────────────────────────────────────

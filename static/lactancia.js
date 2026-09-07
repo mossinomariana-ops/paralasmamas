@@ -48,8 +48,10 @@ opciones" (⋯) de cada partida.
     var fpExFecha = null;
     var fpCfFecha = null;
     var fpEdFecha = null;
+    var fpEdBajFecha = null;  // fecha en que se bajó del freezer (solo descongeladas)
     var fpExHora = null;   // hora extracción alta (24h)
     var fpEdHora = null;   // hora extracción editor (24h)
+    var fpEdBajHora = null;   // hora en que se bajó del freezer (24h)
     var fpRecHora = null;  // hora del recordatorio nocturno (24h)
     var fpBebeNac = null;  // fecha de nacimiento del bebé
 
@@ -897,7 +899,9 @@ opciones" (⋯) de cada partida.
     }
 
     // ── Modal: Editor (fecha/hora de extracción editables en ambas
-    //    ubicaciones; `cargada` — base del vencimiento de heladera — no) ──────
+    //    ubicaciones. En las DESCONGELADAS se edita además `cargada`, el momento
+    //    en que se bajó del freezer: es la base de su vencimiento, y si la bajó
+    //    a la noche y la cargó más tarde, el reloj arrancaba tarde) ────────────
     function abrirEditor(id) {
         var p = buscarPartida(id);
         if (!p) return;
@@ -907,6 +911,13 @@ opciones" (⋯) de cada partida.
         $('lac-ed-notas').value = p.notas || '';
         fpEdFecha.setDate(p.fecha_extraccion, true);
         fpEdHora.setDate(p.hora_extraccion || '', true);
+        // `cargada` viene del servidor como 'YYYY-MM-DDTHH:MM:SS'.
+        var esDescongelada = p.tipo === 'descongelada' && !!p.cargada;
+        $('lac-ed-bajada-wrap').hidden = !esDescongelada;
+        if (esDescongelada) {
+            fpEdBajFecha.setDate(p.cargada.slice(0, 10), true);
+            fpEdBajHora.setDate(p.cargada.slice(11, 16), true);
+        }
         $('lac-modal-editor').hidden = false;
     }
 
@@ -921,6 +932,14 @@ opciones" (⋯) de cada partida.
         }
         params.append('fecha_extraccion', $('lac-ed-fecha').value);
         params.append('hora_extraccion', $('lac-ed-hora').value);
+        if (!$('lac-ed-bajada-wrap').hidden) {
+            if (!$('lac-ed-bajada-fecha').value || !$('lac-ed-bajada-hora').value) {
+                toast('⚠ ' + T('Poné la fecha y la hora en que bajaste la bolsita.'), 'error');
+                return;
+            }
+            params.append('fecha_bajada', $('lac-ed-bajada-fecha').value);
+            params.append('hora_bajada', $('lac-ed-bajada-hora').value);
+        }
         var btn = $('lac-ed-guardar');
         btn.disabled = true;
         postAccion('/api/lactancia/' + edPartidaId + '/editar', params, function () {
@@ -1250,6 +1269,11 @@ opciones" (⋯) de cada partida.
             allowInput: true, maxDate: 'today'
         });
         frenarTecladoHastaSegundoToque(fpEdFecha);
+        fpEdBajFecha = flatpickr($('lac-ed-bajada-fecha'), {
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            allowInput: true, maxDate: 'today'
+        });
+        frenarTecladoHastaSegundoToque(fpEdBajFecha);
         // Hora en 24h. disableMobile es CLAVE: sin él, flatpickr en celulares
         // se reemplaza solo por el <input type="time"> NATIVO ("modo mobile"),
         // que en iOS es 12h AM/PM y desborda la tarjeta "+Cargar" — justo lo
@@ -1266,6 +1290,11 @@ opciones" (⋯) de cada partida.
             time_24hr: true, allowInput: true, disableMobile: true
         });
         frenarTecladoHastaSegundoToque(fpEdHora);
+        fpEdBajHora = flatpickr($('lac-ed-bajada-hora'), {
+            enableTime: true, noCalendar: true, dateFormat: 'H:i',
+            time_24hr: true, allowInput: true, disableMobile: true
+        });
+        frenarTecladoHastaSegundoToque(fpEdBajHora);
         fpRecHora = flatpickr($('lac-rec-hora'), {
             enableTime: true, noCalendar: true, dateFormat: 'H:i',
             time_24hr: true, allowInput: true, disableMobile: true

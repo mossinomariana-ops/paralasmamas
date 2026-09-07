@@ -389,16 +389,41 @@ def agregar_partida_lactancia(ubicacion, fecha_extraccion, hora_extraccion, volu
     return nuevo_id
 
 
-def editar_partida_lactancia(partida_id, fecha_extraccion, hora_extraccion, volumen_ml, notas):
-    """Actualiza los campos editables de una partida. NO toca ubicacion ni cargada."""
+def editar_partida_lactancia(partida_id, fecha_extraccion, hora_extraccion, volumen_ml,
+                             notas, cargada=None):
+    """Actualiza los campos editables de una partida. NO toca ubicacion.
+
+    `cargada` (opcional) es el momento real en que se bajó la bolsita del freezer.
+    Se corrige a mano SOLO en las descongeladas, porque de ahí sale su vencimiento
+    (`logica._lac_vencimiento`): si la bajó a las 20 y recién la cargó a las 23, sin
+    esto la app le regalaría 3 h de vida útil a leche que ya venía descongelándose.
+    Cuando se corrige, la bolsa de freezer de origen se mueve al mismo día, así el
+    historial no dice que se bajó hoy algo que se bajó anoche."""
     conn = conectar()
-    conn.execute('''
-        UPDATE lactancia_partidas
-        SET fecha_extraccion=?, hora_extraccion=?, volumen_ml=?, notas=?, actualizado=?
-        WHERE id=?
-    ''', (fecha_extraccion, hora_extraccion, volumen_ml, notas, _ahora_iso(), partida_id))
-    conn.commit()
-    conn.close()
+    try:
+        ahora = _ahora_iso()
+        if cargada is None:
+            conn.execute('''
+                UPDATE lactancia_partidas
+                SET fecha_extraccion=?, hora_extraccion=?, volumen_ml=?, notas=?, actualizado=?
+                WHERE id=?
+            ''', (fecha_extraccion, hora_extraccion, volumen_ml, notas, ahora, partida_id))
+        else:
+            conn.execute('''
+                UPDATE lactancia_partidas
+                SET fecha_extraccion=?, hora_extraccion=?, volumen_ml=?, notas=?,
+                    cargada=?, actualizado=?
+                WHERE id=?
+            ''', (fecha_extraccion, hora_extraccion, volumen_ml, notas, cargada,
+                  ahora, partida_id))
+            conn.execute('''
+                UPDATE lactancia_partidas
+                SET fecha_cierre=?, actualizado=?
+                WHERE origen_id=? AND motivo_cierre='trasladada'
+            ''', (cargada[:10], ahora, partida_id))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def marcar_jardin_lactancia(partida_id, en_jardin):

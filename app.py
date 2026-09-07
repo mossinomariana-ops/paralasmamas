@@ -604,7 +604,8 @@ def api_lactancia_editar(id):
                                                  logica._lac_params())
         notas = (request.form.get('notas') or '').strip()[:200]
         fecha, hora = logica._lac_parsear_extraccion(request.form)
-        database.editar_partida_lactancia(id, fecha, hora, volumen_ml, notas)
+        cargada = logica._lac_parsear_bajada(request.form, partida, fecha, hora)
+        database.editar_partida_lactancia(id, fecha, hora, volumen_ml, notas, cargada)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
         return redirect(url_for('inicio'))

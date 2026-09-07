@@ -462,6 +462,25 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
           <input type="text" id="lac-ed-hora" placeholder="HH:MM" autocomplete="off">
         </div>
       </div>
+      {# Momento real en que se bajó del freezer. Solo aparece en las
+         descongeladas: de acá sale su vencimiento, y si la bajaste a la noche y
+         la cargaste más tarde, el reloj arrancaba tarde y la leche parecía más
+         fresca de lo que estaba. #}
+      <div id="lac-ed-bajada-wrap" hidden>
+        <div class="lac-form-grid">
+          <div class="lac-campo">
+            <label for="lac-ed-bajada-fecha">{{ t('Fecha en que la bajaste') }}</label>
+            <input type="text" id="lac-ed-bajada-fecha" placeholder="DD/MM/AAAA" autocomplete="off">
+          </div>
+          <div class="lac-campo">
+            <label for="lac-ed-bajada-hora">{{ t('Hora en que la bajaste') }}</label>
+            <input type="text" id="lac-ed-bajada-hora" placeholder="HH:MM" autocomplete="off">
+          </div>
+        </div>
+        <p class="lac-confirm-input-hint">
+          {{ t('Desde este momento se cuentan las horas que la leche descongelada sigue estando bien. Si la bajaste antes de cargarla en la app, corregilo acá.') }}
+        </p>
+      </div>
       <div class="lac-campo">
         <label for="lac-ed-notas">{{ t('Notas') }}</label>
         <input type="text" id="lac-ed-notas" maxlength="200">

@@ -427,6 +427,39 @@ def _lac_parsear_extraccion(form):
     return fecha, hora
 
 
+def _lac_parsear_bajada(form, partida, fecha_extraccion, hora_extraccion):
+    """Momento real en que se bajó la bolsita del freezer (columna `cargada`),
+    corregido a mano desde el editor. Devuelve el ISO a guardar, o None si no hay
+    nada que cambiar.
+
+    Solo aplica a las descongeladas: en el resto `cargada` es el sello de auditoría
+    de cuándo se cargó el dato y el vencimiento sale de la extracción real, así que
+    tocarlo no significaría nada. Se valida contra la extracción que viene en ESTE
+    mismo form (no la guardada), porque el editor deja cambiar las dos a la vez."""
+    fecha = (form.get('fecha_bajada') or '').strip()
+    hora = (form.get('hora_bajada') or '').strip()
+    if not fecha and not hora:
+        return None
+    if dict(partida).get('tipo') != 'descongelada':
+        return None
+    try:
+        datetime.strptime(fecha, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError(f"Fecha de bajada inválida: {fecha}")
+    try:
+        datetime.strptime(hora, '%H:%M')
+    except ValueError:
+        raise ValueError(f"Hora de bajada inválida: {hora}")
+    bajada = datetime.fromisoformat(f"{fecha}T{hora}")
+    if bajada > datetime.now():
+        raise ValueError("El momento en que bajaste la bolsita no puede ser futuro.")
+    extraccion = _lac_extraccion_dt({'fecha_extraccion': fecha_extraccion,
+                                     'hora_extraccion': hora_extraccion})
+    if bajada < extraccion:
+        raise ValueError("No podés haber bajado la bolsita antes de haberte extraído la leche.")
+    return bajada.isoformat(timespec='seconds')
+
+
 def _lac_parsear_fecha_cierre(valor):
     valor = (valor or '').strip()
     if not valor:

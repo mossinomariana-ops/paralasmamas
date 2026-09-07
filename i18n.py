@@ -122,6 +122,12 @@ EN = {
     "Volumen (ml)": "Amount (ml)",
     "Hora de extracción": "Time pumped",
     "Fecha de extracción": "Date pumped",
+    "Fecha en que la bajaste": "Date you took it out",
+    "Hora en que la bajaste": "Time you took it out",
+    "Desde este momento se cuentan las horas que la leche descongelada sigue estando bien. Si la bajaste antes de cargarla en la app, corregilo acá.":
+        "This is when the clock starts for how long thawed milk stays good. If you took it out of the freezer before adding it here, fix the time.",
+    "Poné la fecha y la hora en que bajaste la bolsita.":
+        "Enter the date and time you took the bag out of the freezer.",
     "Notas (opcional)": "Notes (optional)",
     "Notas": "Notes",
     "Ej: 150": "e.g. 150",
@@ -425,6 +431,10 @@ EN = {
         "The date of birth must be a valid date (day/month/year).",
     "La fecha de nacimiento no puede ser futura.": "The date of birth cannot be in the future.",
     "Solo se pueden bajar bolsitas del freezer.": "Only freezer bags can be moved down.",
+    "El momento en que bajaste la bolsita no puede ser futuro.":
+        "The time you took the bag out of the freezer cannot be in the future.",
+    "No podés haber bajado la bolsita antes de haberte extraído la leche.":
+        "You cannot have taken the bag out of the freezer before you pumped the milk.",
     "Esa bolsita ya no está en el freezer.": "That bag is no longer in the freezer.",
     "No se puede reabrir: la bolsita freezada con esta leche ya se cerró.":
         "Cannot reopen: the frozen bag made with this milk has already been closed.",
