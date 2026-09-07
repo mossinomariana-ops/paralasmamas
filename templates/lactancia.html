@@ -429,6 +429,9 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
       <button type="button" class="lac-x" data-lac-cerrar-modal aria-label="{{ t('Cerrar') }}">×</button>
     </div>
     <div class="lac-modal-body lac-menu">
+      {# El texto lo escribe el JS: dice "marcar" o "sacar" según dónde esté la
+         bolsita, y el botón se esconde para las de heladera y las del historial. #}
+      <button type="button" class="lac-menu-btn lac-menu-btn-jardin" id="lac-mas-jardin" hidden></button>
       <button type="button" class="lac-menu-btn" id="lac-mas-usada">✓ {{ t('Marcar usada con otra fecha…') }}</button>
       <button type="button" class="lac-menu-btn" id="lac-mas-descartada">🗑 {{ t('Marcar descartada con otra fecha…') }}</button>
       <button type="button" class="lac-menu-btn" id="lac-mas-editar">✎ {{ t('Editar bolsita…') }}</button>

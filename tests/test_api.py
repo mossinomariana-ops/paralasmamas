@@ -123,6 +123,85 @@ def test_una_bolsita_que_no_existe_da_un_error_claro_y_no_un_choque(cliente):
         assert r.get_json()['ok'] is False
 
 
+# ── El back up del jardín ────────────────────────────────────────────────────
+# Marcar una bolsita como "está en el jardín" NO la cierra ni la saca del
+# freezer: solo dice dónde está guardada. Todo lo que la mamá mira para saber
+# cuánta leche tiene tiene que quedar igual.
+def test_marcar_una_bolsita_como_back_up_del_jardin(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    datos = post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1').get_json()
+    assert datos['ok']
+    p = datos['freezer'][0]
+    assert p['en_jardin'] is True
+    assert p['estado'] == 'en_jardin'
+    assert p['motivo_cierre'] is None           # no se cerró nada
+    assert datos['historial'] == []             # no cayó al historial
+
+
+def test_la_bolsita_del_jardin_sigue_contando_como_stock(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    antes = payload(cliente)['tablero']
+    datos = post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1').get_json()
+    ahora = datos['tablero']
+    assert ahora['freezer_ml'] == antes['freezer_ml']
+    assert ahora['freezer_bolsas'] == antes['freezer_bolsas']
+    assert (ahora['jardin_bolsas'], ahora['jardin_ml']) == (1, 120)
+
+
+def test_sacar_la_bolsita_del_jardin_la_deja_como_estaba(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    datos = post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='0').get_json()
+    p = datos['freezer'][0]
+    assert p['en_jardin'] is False
+    assert p['estado'] == 'disponible'
+    assert datos['tablero']['jardin_bolsas'] == 0
+
+
+def test_una_bolsita_recien_cargada_no_esta_en_el_jardin(cliente):
+    datos = crear(cliente, ubicacion='freezer', volumen_ml=100).get_json()
+    assert datos['freezer'][0]['en_jardin'] is False
+    assert datos['tablero']['jardin_bolsas'] == 0
+
+
+def test_la_leche_de_la_heladera_no_se_puede_mandar_al_jardin(cliente):
+    # Al jardín va leche congelada, no la de la heladera: no aguantaría el viaje
+    # ni el día allá.
+    pid = crear_id(cliente, ubicacion='heladera', volumen_ml=80)
+    assert post(cliente, f'/api/lactancia/{pid}/jardin',
+                en_jardin='1').status_code == 400
+
+
+def test_una_bolsita_ya_cerrada_no_se_puede_mandar_al_jardin(cliente):
+    pid = crear_id(cliente, ubicacion='freezer')
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada')
+    assert post(cliente, f'/api/lactancia/{pid}/jardin',
+                en_jardin='1').status_code == 400
+
+
+def test_la_marca_del_jardin_sobrevive_al_cierre_y_a_la_reapertura(cliente):
+    # Si el jardín se la terminó dando a León, el historial tiene que seguir
+    # diciendo que esa bolsita estaba allá.
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    datos = post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada').get_json()
+    assert datos['historial'][0]['en_jardin'] is True
+    datos = post(cliente, f'/api/lactancia/{pid}/reabrir').get_json()
+    assert datos['freezer'][0]['estado'] == 'en_jardin'
+
+
+def test_los_dias_de_stock_cuentan_el_freezer_la_heladera_y_el_jardin(cliente):
+    # "Alcanza para" mide TODA la leche que León tiene para tomar, esté donde
+    # esté. Con 700 ml y un consumo de 100 ml/día, son 7 días.
+    usada = crear_id(cliente, ubicacion='freezer', volumen_ml=700)
+    post(cliente, f'/api/lactancia/{usada}/cerrar', motivo='usada')   # 700 en 7 días
+    crear_id(cliente, ubicacion='freezer', volumen_ml=300)
+    jardin = crear_id(cliente, ubicacion='freezer', volumen_ml=200)
+    post(cliente, f'/api/lactancia/{jardin}/jardin', en_jardin='1')
+    crear_id(cliente, ubicacion='heladera', volumen_ml=200)
+    assert payload(cliente)['tablero']['dias_stock'] == 7             # 700 / 100
+
+
 # ── Editar y eliminar ────────────────────────────────────────────────────────
 def test_editar_cambia_el_volumen_y_la_fecha(cliente):
     pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100)

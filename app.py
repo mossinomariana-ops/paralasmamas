@@ -217,6 +217,36 @@ def api_lactancia_cerrar(id):
         return redirect(url_for('inicio'))
 
 
+@app.route('/api/lactancia/<int:id>/jardin', methods=['POST'])
+def api_lactancia_jardin(id):
+    """Marca o desmarca una bolsita del freezer como back up en el jardín.
+
+    No cierra nada: la bolsita se queda en el freezer y sigue contando como
+    stock. Lo único que cambia es que no la tenés en casa."""
+    try:
+        partida = database.obtener_partida_lactancia(id)
+        if partida is None:
+            raise ValueError(f"No existe la bolsita {id}.")
+        if partida['motivo_cierre']:
+            raise ValueError("La bolsita ya está cerrada.")
+        if partida['ubicacion'] != 'freezer':
+            raise ValueError("Al jardín solo se llevan bolsitas congeladas.")
+
+        en_jardin = (request.form.get('en_jardin') or '').strip() == '1'
+        database.marcar_jardin_lactancia(id, en_jardin)
+        if _es_ajax():
+            return jsonify({'ok': True, **logica._lac_payload()})
+        return redirect(url_for('inicio'))
+    except ValueError as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        return redirect(url_for('inicio'))
+
+
 @app.route('/api/lactancia/freezar', methods=['POST'])
 def api_lactancia_freezar():
     from datetime import date

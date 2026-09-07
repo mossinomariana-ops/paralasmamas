@@ -27,12 +27,13 @@ from conftest import crear, crear_id, payload, post
 # itemHistorial y extraidaTxt en lactancia.js).
 CAMPOS_COMUNES = ['id', 'volumen_ml', 'estado', 'vencimiento',
                   'fecha_extraccion', 'hora_extraccion', 'notas',
-                  'ubicacion', 'tipo', 'motivo_cierre', 'fecha_cierre']
+                  'ubicacion', 'tipo', 'motivo_cierre', 'fecha_cierre',
+                  'en_jardin']
 
 # Los estados que el JavaScript sabe dibujar (ESTADO_LABEL, lactancia.js:165).
 # Un estado que no esté en esta lista saldría en pantalla como texto crudo.
-ESTADOS_CONOCIDOS = {'disponible', 'vence_pronto', 'vencida', 'en_heladera',
-                     'usada', 'descartada', 'trasladada'}
+ESTADOS_CONOCIDOS = {'disponible', 'en_jardin', 'vence_pronto', 'vencida',
+                     'en_heladera', 'usada', 'descartada', 'trasladada'}
 
 # Configuraciones que el JavaScript pinta en la pantalla de ajustes
 # (CFG_NUM y CFG_BOOL, lactancia.js:1062).
@@ -44,7 +45,8 @@ CFG_BOOL = ['bolsa_capacidad_activa', 'pedir_confirmacion']
 
 # Números del tablero de arriba (renderTablero, lactancia.js:371).
 TABLERO = ['freezer_bolsas', 'freezer_ml', 'freezer_vence_pronto',
-           'freezer_vencidas', 'freezer_proximo_venc', 'usadas_total',
+           'freezer_vencidas', 'freezer_proximo_venc',
+           'jardin_bolsas', 'jardin_ml', 'usadas_total',
            'descartadas_total', 'heladera_bolsas', 'heladera_ml',
            'producido_ml', 'descongelada_ml', 'consumida_ml',
            'desperdicio_ml', 'dias_stock', 'bolsa_sugerida_ml']
@@ -118,10 +120,12 @@ def test_ningun_estado_sale_con_un_nombre_que_la_pantalla_no_sepa_dibujar(client
     post(cliente, '/api/lactancia/freezar', ids=str(fresca))             # trasladada
     baja = crear_id(cliente, ubicacion='freezer', volumen_ml=100)
     post(cliente, f'/api/lactancia/{baja}/bajar')                        # descongelada
+    jardin = crear_id(cliente, ubicacion='freezer', volumen_ml=100)
+    post(cliente, f'/api/lactancia/{jardin}/jardin', en_jardin='1')      # en el jardín
 
     datos = payload(cliente)
     todas = datos['freezer'] + datos['heladera'] + datos['historial']
-    assert len(todas) >= 7
+    assert len(todas) >= 8
     for p in todas:
         assert p['estado'] in ESTADOS_CONOCIDOS, p['estado']
         assert p['tipo'] in ('fresca', 'congelada', 'descongelada'), p['tipo']

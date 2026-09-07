@@ -98,8 +98,12 @@ def _lac_vencimiento(p, params):
 
 
 def _lac_estado(p, params, ahora):
-    """Estado en cascada: cierre manual > vencida > vence_pronto > disponible
-    (freezer) | en_heladera (heladera)."""
+    """Estado en cascada: cierre manual > vencida > vence_pronto > en_jardin >
+    disponible (freezer) | en_heladera (heladera).
+
+    `en_jardin` va DEBAJO del aviso a propósito: que la bolsita esté en el jardín
+    no puede tapar que se está por vencer. Para no perder de vista dónde está, la
+    tarjeta muestra la etiqueta 🏫 aparte de esta pastilla."""
     if p.get('motivo_cierre'):
         return p['motivo_cierre']
     venc = _lac_vencimiento(p, params)
@@ -107,7 +111,9 @@ def _lac_estado(p, params, ahora):
         return 'vencida'
     if p['ubicacion'] == 'freezer':
         dias = (venc.date() - ahora.date()).days
-        return 'vence_pronto' if dias <= params['aviso_freezer_dias'] else 'disponible'
+        if dias <= params['aviso_freezer_dias']:
+            return 'vence_pronto'
+        return 'en_jardin' if p.get('en_jardin') else 'disponible'
     horas = (venc - ahora).total_seconds() / 3600
     umbral = (params['aviso_descongelada_horas'] if p.get('tipo') == 'descongelada'
               else params['aviso_heladera_horas'])
@@ -142,6 +148,9 @@ def _lac_enriquecer(row, params, ahora):
     venc = _lac_vencimiento(p, params)
     p['vencimiento'] = venc.isoformat(timespec='seconds')
     p['estado'] = _lac_estado(p, params, ahora)
+    # Las filas viejas (previas a la columna) traen NULL: el front espera un
+    # booleano firme para decidir si dibuja la etiqueta del jardín.
+    p['en_jardin'] = bool(p.get('en_jardin'))
     if p['ubicacion'] == 'freezer':
         p['dias_restantes'] = (venc.date() - ahora.date()).days
         p['horas_restantes'] = None
@@ -170,7 +179,7 @@ def _lac_payload():
     historial = sorted((p for p in partidas if p['motivo_cierre']),
                        key=lambda p: (p['fecha_cierre'] or '', p['id']), reverse=True)
 
-    usables = [p for p in freezer if p['estado'] in ('disponible', 'vence_pronto')]
+    usables = [p for p in freezer if p['estado'] in ('disponible', 'en_jardin', 'vence_pronto')]
     heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'vence_pronto')]
 
     def _consumido(p):
@@ -193,7 +202,12 @@ def _lac_payload():
     ventana = ahora.date() - timedelta(days=6)
     consumo_semana = sum(_consumido(p) for p in usadas
                          if _fecha_cierre(p) and _fecha_cierre(p) >= ventana)
-    stock_usable_ml = sum(p['volumen_ml'] for p in usables)
+    # Para cuántos días alcanza se mide sobre TODA la leche que León tiene para
+    # tomar: freezer + heladera + la que está de back up en el jardín. El resto
+    # del tablero sigue separando freezer y heladera (son stocks de naturaleza
+    # distinta); este KPI es la excepción a propósito.
+    stock_usable_ml = (sum(p['volumen_ml'] for p in usables)
+                       + sum(p['volumen_ml'] for p in heladera_vigente))
     dias_stock = int(stock_usable_ml / (consumo_semana / 7)) if consumo_semana else None
 
     tablero = {
@@ -202,6 +216,8 @@ def _lac_payload():
         'freezer_vence_pronto':  sum(1 for p in freezer if p['estado'] == 'vence_pronto'),
         'freezer_vencidas':      sum(1 for p in freezer if p['estado'] == 'vencida'),
         'freezer_proximo_venc':  min((p['vencimiento'] for p in usables), default=None),
+        'jardin_bolsas':         sum(1 for p in usables if p['en_jardin']),
+        'jardin_ml':             sum(p['volumen_ml'] for p in usables if p['en_jardin']),
         'usadas_total':          sum(1 for p in partidas if p['motivo_cierre'] == 'usada'),
         'descartadas_total':     sum(1 for p in partidas if p['motivo_cierre'] == 'descartada'),
         'heladera_bolsas':       len(heladera_vigente),

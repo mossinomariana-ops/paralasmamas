@@ -112,6 +112,38 @@ def test_freezer_avisa_justo_cuando_faltan_los_dias_configurados():
     assert logica._lac_estado(p, params, datetime(2026, 6, 16, 10, 0)) == 'disponible'
 
 
+# ── El back up del jardín ────────────────────────────────────────────────────
+# La bolsita que Mari deja en el freezer del jardín maternal sigue estando bien y
+# sigue siendo stock: lo único que cambia es que no la tiene en casa. Por eso la
+# marca reemplaza solo a "disponible" y JAMÁS puede tapar un aviso de
+# vencimiento: si se está por vencer, hay que ir a buscarla.
+def test_una_bolsita_del_jardin_dice_que_esta_en_el_jardin():
+    p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': 1}
+    params = params_base(freezer_meses=6, aviso_freezer_dias=14)  # vence el 1/7
+    assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'en_jardin'
+
+
+def test_el_aviso_de_vencimiento_le_gana_a_la_marca_del_jardin():
+    p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': 1}
+    params = params_base(freezer_meses=6, aviso_freezer_dias=14)  # vence el 1/7
+    assert logica._lac_estado(p, params, datetime(2026, 6, 17, 10, 0)) == 'vence_pronto'
+    assert logica._lac_estado(p, params, datetime(2026, 7, 2, 0, 1)) == 'vencida'
+
+
+def test_una_bolsita_del_jardin_ya_cerrada_muestra_su_cierre():
+    p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': 1,
+         'motivo_cierre': 'usada'}
+    assert logica._lac_estado(p, params_base(), datetime(2026, 2, 1)) == 'usada'
+
+
+def test_sin_la_marca_la_bolsita_sigue_estando_disponible():
+    # Las bolsitas viejas, anteriores a la columna, llegan con el campo en None.
+    for marca in (None, 0):
+        p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': marca}
+        params = params_base(freezer_meses=6, aviso_freezer_dias=14)
+        assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'disponible'
+
+
 def test_heladera_avisa_justo_cuando_faltan_las_horas_configuradas():
     p = {'ubicacion': 'heladera', 'tipo': 'fresca',
          'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
