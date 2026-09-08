@@ -263,7 +263,7 @@ EN = {
     " y ": " and ",
     ". Revisá el stock.": ". Check your stock.",
     "Bolsitas disponibles": "Bags available",
-    "Stock freezer": "Freezer stock",
+    "Stock total": "Total stock",
     "Vencen pronto": "Expiring soon",
     "Vencidas": "Expired",
     "Próxima a vencer": "Next to expire",

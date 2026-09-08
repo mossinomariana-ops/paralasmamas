@@ -235,6 +235,37 @@ def test_los_dias_de_stock_cuentan_el_freezer_la_heladera_y_el_jardin(cliente):
     assert payload(cliente)['tablero']['dias_stock'] == 7             # 700 / 100
 
 
+def test_el_stock_total_suma_el_freezer_la_heladera_y_el_jardin(cliente):
+    # El KPI grande del tablero dice "Stock total": TODA la leche que León
+    # tiene para tomar, esté en el freezer de casa, en la heladera o de back up
+    # en el jardín (congelada allá o ya descongelada en su heladera).
+    crear(cliente, ubicacion='freezer', volumen_ml=300)
+    crear(cliente, ubicacion='heladera', volumen_ml=100)
+    jardin_freezer = crear_id(cliente, ubicacion='freezer', volumen_ml=200)
+    post(cliente, f'/api/lactancia/{jardin_freezer}/jardin', en_jardin='1')
+    jardin_heladera = crear_id(cliente, ubicacion='heladera', volumen_ml=50)
+    datos = post(cliente, f'/api/lactancia/{jardin_heladera}/jardin',
+                 en_jardin='1').get_json()
+    t = datos['tablero']
+    assert t['stock_total_ml'] == 650                     # 300 + 100 + 200 + 50
+    assert t['stock_total_ml'] == t['freezer_ml'] + t['heladera_ml']
+    # El contador de bolsitas de al lado cuenta el mismo stock, no solo freezer.
+    assert t['stock_total_bolsas'] == 4
+    assert t['stock_total_bolsas'] == t['freezer_bolsas'] + t['heladera_bolsas']
+
+
+def test_lo_usado_y_lo_descartado_no_cuentan_en_el_stock_total(cliente):
+    # Stock es lo que queda para tomar: lo que salió del banco no suma.
+    crear(cliente, ubicacion='freezer', volumen_ml=300)
+    usada = crear_id(cliente, ubicacion='freezer', volumen_ml=100)
+    descartada = crear_id(cliente, ubicacion='heladera', volumen_ml=80)
+    post(cliente, f'/api/lactancia/{usada}/cerrar', motivo='usada')
+    datos = post(cliente, f'/api/lactancia/{descartada}/cerrar',
+                 motivo='descartada').get_json()
+    assert datos['tablero']['stock_total_ml'] == 300
+    assert datos['tablero']['stock_total_bolsas'] == 1
+
+
 # ── Editar y eliminar ────────────────────────────────────────────────────────
 def test_editar_cambia_el_volumen_y_la_fecha(cliente):
     pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100)
