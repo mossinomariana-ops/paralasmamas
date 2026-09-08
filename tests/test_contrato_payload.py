@@ -49,7 +49,9 @@ TABLERO = ['freezer_bolsas', 'freezer_ml', 'freezer_vence_pronto',
            'jardin_bolsas', 'jardin_ml', 'usadas_total',
            'descartadas_total', 'heladera_bolsas', 'heladera_ml',
            'producido_ml', 'descongelada_ml', 'consumida_ml',
-           'desperdicio_ml', 'dias_stock', 'bolsa_sugerida_ml']
+           'desperdicio_ml', 'stock_total_bolsas', 'stock_total_ml',
+           'dias_stock',
+           'bolsa_sugerida_ml']
 
 # Campos de cada muestra que lee el gráfico del Resumen (los ejes de
 # static/grafico.js: EJES_X y EJES_Y). Si falta uno, el desplegable queda con
