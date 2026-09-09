@@ -130,6 +130,13 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
               {{ t('Para ver los ejes por edad del bebé, cargá su fecha de nacimiento en Ajustes.') }}
             </p>
 
+            {# Aparece solo cuando el eje vertical mira la leche que TOMÓ el
+               bebé: de eso se guarda el día, no la hora, así que las variables
+               por hora quedan apagadas y conviene decir por qué. #}
+            <p class="lac-gr-nota-bebe" id="lac-gr-nota-hora" hidden>
+              {{ t('De lo que tomó no queda registrada la hora: por eso los ejes por hora quedan apagados.') }}
+            </p>
+
             <div class="lac-gr-lienzo" id="lac-gr-lienzo"></div>
             <div id="lac-gr-lectura"></div>
             <div id="lac-gr-tabla"></div>

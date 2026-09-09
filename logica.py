@@ -170,6 +170,16 @@ def _lac_enriquecer(row, params, ahora):
     return p
 
 
+def _lac_consumido(p):
+    """Ml que el bebé TOMÓ de una bolsita cerrada como 'usada'.
+
+    Si la mamá anotó cuánto tomó de verdad, va ese número; si no, se asume que
+    tomó la bolsita entera. Vive acá afuera y no adentro de una función porque
+    la misma regla la usan el KPI del tablero, la fuente del gráfico y la tabla
+    día a día: escrita tres veces, algún día iban a decir tres cosas."""
+    return p['consumido_ml'] if p.get('consumido_ml') is not None else p['volumen_ml']
+
+
 def _lac_payload():
     """Payload completo: listas FIFO + historial + tablero + params + badge +
     recordatorio + bebe. Usado por GET / y por TODAS las mutaciones."""
@@ -189,9 +199,6 @@ def _lac_payload():
     usables = [p for p in freezer if p['estado'] in ('disponible', 'en_jardin', 'vence_pronto')]
     heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'en_jardin', 'vence_pronto')]
 
-    def _consumido(p):
-        return p['consumido_ml'] if p.get('consumido_ml') is not None else p['volumen_ml']
-
     usadas = [p for p in partidas if p['motivo_cierre'] == 'usada']
     desperdicio_ml = (
         sum(p['volumen_ml'] for p in partidas if p['motivo_cierre'] == 'descartada')
@@ -207,7 +214,7 @@ def _lac_payload():
             return None
 
     ventana = ahora.date() - timedelta(days=6)
-    consumo_semana = sum(_consumido(p) for p in usadas
+    consumo_semana = sum(_lac_consumido(p) for p in usadas
                          if _fecha_cierre(p) and _fecha_cierre(p) >= ventana)
     # El stock total (y para cuántos días alcanza) se mide sobre TODA la leche
     # que León tiene para tomar: freezer + heladera + la que está de back up en
@@ -241,7 +248,15 @@ def _lac_payload():
                                         if p.get('tipo') != 'descongelada'),
         'producido_ml':          sum(p['volumen_ml'] for p in partidas if p.get('tipo') == 'fresca'),
         'descongelada_ml':       sum(p['volumen_ml'] for p in partidas if p.get('tipo') == 'descongelada'),
-        'consumida_ml':          sum(_consumido(p) for p in usadas),
+        'consumida_ml':          sum(_lac_consumido(p) for p in usadas),
+        # El desglose del KPI de arriba: DÓNDE tomó esa leche. La marca del
+        # jardín queda congelada al cerrar la bolsita (después ya no se puede
+        # tocar), así que dice dónde estaba la leche cuando León la tomó. Lo que
+        # se usó antes de que la marca existiera cuenta como fuera del jardín:
+        # es el único dato que hay. Los dos suman exactamente 'consumida_ml'.
+        'consumida_jardin_ml':   sum(_lac_consumido(p) for p in usadas if p['en_jardin']),
+        'consumida_fuera_ml':    sum(_lac_consumido(p) for p in usadas
+                                     if not p['en_jardin']),
         'desperdicio_ml':        desperdicio_ml,
         'stock_total_bolsas':    len(usables) + len(heladera_vigente),
         'stock_total_ml':        stock_usable_ml,
@@ -257,7 +272,8 @@ def _lac_payload():
     return {'freezer': freezer, 'heladera': heladera, 'historial': historial,
             'tablero': tablero, 'params': params, 'badge': badge,
             'recordatorio': recordatorio, 'bebe': bebe,
-            'muestras': _lac_muestras(partidas, bebe)}
+            'muestras': _lac_muestras(partidas, bebe),
+            'consumos': _lac_consumos(partidas, bebe)}
 
 
 # ── Tabla día a día (la que se descarga) ─────────────────────────────────────
@@ -327,6 +343,60 @@ def _lac_muestras(partidas=None, bebe=None):
     return muestras
 
 
+# ── Consumos para los gráficos del Resumen ───────────────────────────────────
+def _lac_consumos(partidas=None, bebe=None):
+    """Una fila por BOLSITA QUE TOMÓ el bebé: la otra materia prima del gráfico.
+
+    Hermana de _lac_muestras, y con los MISMOS nombres de campo a propósito: así
+    los ejes horizontales (fecha, día de la semana, día de vida…) sirven para las
+    dos listas sin una línea extra. Lo único que se agrega es `en_jardin`, que es
+    lo que después permite separar lo que tomó en el jardín de lo que tomó en
+    casa.
+
+    La fecha es la del CIERRE —el día en que la mamá marcó la bolsita como
+    usada—, no la de extracción: acá la pregunta es cuándo TOMÓ, no cuándo se
+    sacó. Es el mismo criterio que usa _lac_dia_a_dia.
+
+    Solo cuentan las 'usada'. Una descartada se tiró y una trasladada apenas
+    cambió de lugar: ninguna de las dos se la tomó nadie. Y al revés que en
+    _lac_muestras, acá NO se filtra por tipo: una bolsita se usa una sola vez, no
+    hay forma de contar dos veces los mismos mililitros.
+
+    `hora` viaja siempre en None: el cierre guarda el día y nada más. La pantalla
+    lo sabe y deshabilita los ejes por hora cuando se mira lo tomado.
+    """
+    if partidas is None:
+        partidas = database.obtener_partidas_lactancia()
+    if bebe is None:
+        bebe = _lac_bebe()
+    try:
+        nac = datetime.strptime(bebe['fecha_nacimiento'], '%Y-%m-%d').date()
+    except ValueError:
+        nac = None
+
+    consumos = []
+    for fila in partidas:
+        p = dict(fila)
+        if p.get('motivo_cierre') != 'usada':
+            continue
+        try:
+            dia = datetime.strptime(str(p['fecha_cierre']), '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            continue
+        dia_vida, mes_vida = _lac_dia_de_vida(nac, dia)
+        consumos.append({
+            'id':         p['id'],
+            'fecha':      dia.isoformat(),
+            'hora':       None,
+            'ml':         _lac_consumido(p),
+            'en_jardin':  bool(p.get('en_jardin')),
+            'dia_vida':   dia_vida,
+            'mes_vida':   mes_vida,
+            'dia_semana': dia.weekday(),      # 0 = lunes … 6 = domingo
+        })
+    return consumos
+
+
 def _lac_dia_a_dia(hoy=None):
     """Un renglón por cada día de vida del bebé: qué se extrajo y qué tomó.
 
@@ -369,9 +439,7 @@ def _lac_dia_a_dia(hoy=None):
         if f_ci:
             movimientos.append(f_ci)
             if p.get('motivo_cierre') == 'usada':
-                ml = (p['consumido_ml'] if p.get('consumido_ml') is not None
-                      else p['volumen_ml'])
-                tomado[f_ci] = tomado.get(f_ci, 0) + ml
+                tomado[f_ci] = tomado.get(f_ci, 0) + _lac_consumido(p)
             elif p.get('motivo_cierre') == 'descartada':
                 descartado[f_ci] = descartado.get(f_ci, 0) + p['volumen_ml']
 

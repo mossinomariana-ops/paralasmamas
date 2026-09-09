@@ -548,6 +548,38 @@ EN = {
     "Es lo que muestran tus datos, no una regla: cada mamá y cada día son únicos.":
         "This is what your own data shows, not a rule: every mum and every day is unique.",
 
+    # ── Explorar mis datos: la leche que TOMÓ el bebé ──────────────────────
+    # La otra serie del gráfico. Cada fila es una bolsita marcada como usada, no
+    # una extracción: por eso el gráfico cambia de palabras cuando se la mira.
+    "Ml que tomó {bebe} (total)": "Ml {bebe} drank (total)",
+    "Ml que tomó {bebe} en el jardín": "Ml {bebe} drank at daycare",
+    "Ml que tomó {bebe} fuera del jardín": "Ml {bebe} drank outside daycare",
+    "Fecha en que la tomó": "Date it was drunk",
+    "Bolsitas": "Bags",
+    "Todavía no hay bolsitas usadas para graficar": "No bags marked as used yet",
+    "Marcá una bolsita como usada y anotá cuánto tomó.":
+        "Mark a bag as used and note how much they drank.",
+    "Ninguna bolsita usada tiene ese dato cargado": "No used bag has that information",
+    "Todavía no hay bolsitas tomadas en el jardín": "No bags drunk at daycare yet",
+    "Marcá la bolsita con 🏫 antes de darla por usada.":
+        "Mark the bag with 🏫 before marking it as used.",
+    "Todavía no hay bolsitas tomadas fuera del jardín": "No bags drunk outside daycare yet",
+    "Acá van las que tomó en casa.": "The ones drunk at home show up here.",
+    "Todavía son pocas bolsitas usadas para ver una relación. Seguí cargando y esto se va a ir afinando.":
+        "There are still too few used bags to show a pattern. Keep adding them and this will sharpen up.",
+    "Donde más toma: {grupo}, con {prom} por bolsita, contra {resto} en el resto. ({n} de {total} bolsitas)":
+        "Most is drunk in {grupo}, with {prom} per bag, against {resto} in the rest. ({n} of {total} bags)",
+    "Lo que toma se mantiene parejo: {a} por bolsita al principio y {b} ahora.":
+        "How much they drink is holding steady: {a} per bag at the start and {b} now.",
+    "Últimamente toma más: {b} por bolsita, contra {a} al principio.":
+        "Lately they are drinking more: {b} per bag, against {a} at the start.",
+    "Últimamente toma menos: {b} por bolsita, contra {a} al principio.":
+        "Lately they are drinking less: {b} per bag, against {a} at the start.",
+    "De lo que tomó no queda registrada la hora: por eso los ejes por hora quedan apagados.":
+        "The time of day is not recorded for milk drunk, so the hour axes stay off.",
+    # El desglose de la tarjeta "Consumida por"
+    "{jardin} en el jardín · {fuera} fuera": "{jardin} at daycare · {fuera} elsewhere",
+
     # ── Pantalla de privacidad ─────────────────────────────────────────────
     "Privacidad": "Privacy",
     "Qué datos guarda la app": "What data the app stores",
