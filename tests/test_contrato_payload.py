@@ -49,6 +49,7 @@ TABLERO = ['freezer_bolsas', 'freezer_ml', 'freezer_vence_pronto',
            'jardin_bolsas', 'jardin_ml', 'usadas_total',
            'descartadas_total', 'heladera_bolsas', 'heladera_ml',
            'producido_ml', 'descongelada_ml', 'consumida_ml',
+           'consumida_jardin_ml', 'consumida_fuera_ml',
            'desperdicio_ml', 'stock_total_bolsas', 'stock_total_ml',
            'dias_stock',
            'bolsa_sugerida_ml']
@@ -58,11 +59,17 @@ TABLERO = ['freezer_bolsas', 'freezer_ml', 'freezer_vence_pronto',
 # una opción que dibuja un gráfico vacío y nadie se entera.
 MUESTRA = ['id', 'fecha', 'hora', 'ml', 'dia_vida', 'mes_vida', 'dia_semana']
 
+# La otra lista del gráfico: una fila por bolsita que el bebé tomó. Se llama
+# igual campo por campo que una muestra —así los ejes horizontales sirven para
+# las dos— más `en_jardin`, que es lo que separa lo que tomó en el jardín de lo
+# que tomó en casa.
+CONSUMO = MUESTRA + ['en_jardin']
+
 
 def test_el_payload_trae_todas_las_secciones_que_la_pantalla_espera(cliente):
     datos = payload(cliente)
     for seccion in ('freezer', 'heladera', 'historial', 'tablero', 'params',
-                    'badge', 'recordatorio', 'bebe', 'muestras'):
+                    'badge', 'recordatorio', 'bebe', 'muestras', 'consumos'):
         assert seccion in datos, seccion
 
 
@@ -233,6 +240,26 @@ def test_cada_muestra_del_grafico_llega_completa(cliente):
     assert isinstance(m['ml'], int)
     assert isinstance(m['dia_semana'], int)
     assert isinstance(m['id'], int)
+
+
+def test_cada_consumo_del_grafico_llega_completo(cliente):
+    """La lista de lo que el bebé tomó tiene que llegar con los MISMOS nombres
+    de campo que una muestra: de eso depende que los ejes horizontales (fecha,
+    día de la semana, día de vida) sirvan para las dos sin una línea extra."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=90)
+
+    c = payload(cliente)['consumos'][0]
+    for clave in CONSUMO:
+        assert clave in c, clave
+    assert isinstance(c['ml'], int)
+    assert isinstance(c['dia_semana'], int)
+    assert isinstance(c['id'], int)
+    assert c['en_jardin'] is True
+    # Sin hora a propósito: el cierre guarda el día, no la hora. La pantalla lo
+    # usa para apagar los ejes por hora cuando se mira lo tomado.
+    assert c['hora'] is None
 
 
 def test_el_recordatorio_y_el_bebe_llegan_siempre_aunque_no_esten_configurados(cliente):

@@ -140,6 +140,77 @@ def test_todo_texto_del_grafico_tiene_su_traduccion_al_ingles():
     assert not faltan, f'sin traducción al inglés: {faltan}'
 
 
+# ── Lo que el bebé TOMÓ: la otra lista del gráfico ───────────────────────────
+# Misma idea que las muestras, pero mirando el otro extremo del ciclo. Acá la
+# trampa es otra: la fecha que importa es la del CIERRE (el día en que la mamá
+# marcó la bolsita como usada), no la de extracción. Una bolsita sacada en enero
+# y tomada en marzo es leche que el bebé tomó EN MARZO; imputarla a enero
+# dibujaría un consumo que ese día no existió.
+def consumos(cliente):
+    """Lo tomado tal como lo recibe el navegador."""
+    return payload(cliente)['consumos']
+
+
+def test_una_bolsita_usada_es_un_consumo_con_los_ml_que_tomo(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=90)
+    cs = consumos(cliente)
+    assert len(cs) == 1
+    assert cs[0]['ml'] == 90
+    assert cs[0]['en_jardin'] is False
+
+
+def test_una_bolsita_usada_sin_anotar_los_ml_cuenta_entera(cliente):
+    """Mismo criterio que la tarjeta "Consumida por" del Resumen: si la mamá no
+    anotó cuánto tomó, se asume que tomó la bolsita entera. Si acá contara cero,
+    el gráfico mostraría días sin consumo en los que sí hubo."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada')
+    assert consumos(cliente)[0]['ml'] == 120
+
+
+def test_la_fecha_de_un_consumo_es_la_del_cierre_y_no_la_de_la_extraccion(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100, dias_atras=10)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=100)
+    c = consumos(cliente)[0]
+    hoy = date.today()
+    assert c['fecha'] == hoy.isoformat()
+    assert c['dia_semana'] == hoy.weekday()
+
+
+def test_una_bolsita_descartada_no_es_un_consumo(cliente):
+    """Se tiró: no la tomó nadie. Contarla inflaría el consumo con leche que el
+    bebé nunca vio."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='descartada')
+    assert consumos(cliente) == []
+
+
+def test_freezar_bolsitas_no_es_un_consumo(cliente):
+    """Al combinar de heladera a freezer, las de origen se cierran como
+    'trasladada'. Esa leche cambió de lugar, no se la tomó nadie."""
+    a = crear_id(cliente, ubicacion='heladera', volumen_ml=60)
+    b = crear_id(cliente, ubicacion='heladera', volumen_ml=60)
+    post(cliente, '/api/lactancia/freezar', ids=f'{a},{b}')
+    assert consumos(cliente) == []
+
+
+def test_la_bolsita_del_jardin_queda_marcada_al_tomarse(cliente):
+    """La marca del jardín se congela al cerrar la bolsita (después ya no se
+    puede tocar): es lo que permite separar lo que tomó allá de lo que tomó en
+    casa."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=100)
+    c = consumos(cliente)[0]
+    assert c['en_jardin'] is True
+    assert c['ml'] == 100
+
+
+def test_una_cuenta_recien_creada_no_tiene_consumos(cliente):
+    assert consumos(cliente) == []
+
+
 # ── Función pura, sin pasar por las rutas ────────────────────────────────────
 def test_una_fila_sin_tipo_cuenta_como_fresca(usuaria):
     """Las bolsitas cargadas antes de que existiera la columna `tipo` la tienen
@@ -157,3 +228,23 @@ def test_una_fila_sin_tipo_cuenta_como_fresca(usuaria):
     ms = logica._lac_muestras()
     assert len(ms) == 1
     assert ms[0]['ml'] == 110
+
+
+def test_una_bolsita_vieja_sin_marca_de_jardin_cuenta_como_fuera(usuaria):
+    """Todo lo que se usó antes de que existiera la marca del jardín tiene la
+    columna en NULL. Tiene que caer en "fuera del jardín" y no romper: es el
+    único dato que hay, y es lo más parecido a la verdad."""
+    import database
+    conn = database.conectar()
+    conn.execute(
+        "INSERT INTO lactancia_partidas (ubicacion, cargada, fecha_extraccion, "
+        "hora_extraccion, volumen_ml, motivo_cierre, fecha_cierre, en_jardin) "
+        "VALUES ('freezer', ?, ?, '09:00', 110, 'usada', ?, NULL)",
+        ('2026-01-01T00:00:00', date.today().isoformat(), date.today().isoformat()))
+    conn.commit()
+    conn.close()
+
+    cs = logica._lac_consumos()
+    assert len(cs) == 1
+    assert cs[0]['ml'] == 110
+    assert cs[0]['en_jardin'] is False

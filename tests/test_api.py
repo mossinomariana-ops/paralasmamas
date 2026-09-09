@@ -222,6 +222,56 @@ def test_la_marca_del_jardin_sobrevive_al_cierre_y_a_la_reapertura(cliente):
     assert datos['freezer'][0]['estado'] == 'en_jardin'
 
 
+# ── Dónde tomó la leche ──────────────────────────────────────────────────────
+# El KPI de consumo se abre en dos: lo que tomó en el jardín y lo que tomó en
+# casa. Los dos salen de la marca que tenía la bolsita al cerrarse, y tienen que
+# sumar SIEMPRE el total: si no sumaran, la mamá vería tres números que no
+# cierran entre sí y no sabría cuál creer.
+def test_lo_que_tomo_se_abre_en_el_jardin_y_fuera_del_jardin(cliente):
+    en_casa = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{en_casa}/cerrar', motivo='usada', consumido_ml=100)
+
+    en_jardin = crear_id(cliente, ubicacion='freezer', volumen_ml=150)
+    post(cliente, f'/api/lactancia/{en_jardin}/jardin', en_jardin='1')
+    t = post(cliente, f'/api/lactancia/{en_jardin}/cerrar',
+             motivo='usada', consumido_ml=140).get_json()['tablero']
+
+    assert t['consumida_jardin_ml'] == 140
+    assert t['consumida_fuera_ml'] == 100
+    assert t['consumida_ml'] == 240
+    assert t['consumida_jardin_ml'] + t['consumida_fuera_ml'] == t['consumida_ml']
+
+
+def test_sin_jardin_todo_lo_que_tomo_cuenta_como_fuera(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    t = post(cliente, f'/api/lactancia/{pid}/cerrar',
+             motivo='usada', consumido_ml=90).get_json()['tablero']
+    assert t['consumida_jardin_ml'] == 0
+    assert t['consumida_fuera_ml'] == 90
+
+
+def test_la_bolsita_que_volvio_del_jardin_antes_de_usarse_cuenta_como_de_casa(cliente):
+    """Se la mandaron de back up, no la usaron y volvió a casa: la tomó acá."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='0')
+    t = post(cliente, f'/api/lactancia/{pid}/cerrar',
+             motivo='usada', consumido_ml=120).get_json()['tablero']
+    assert t['consumida_jardin_ml'] == 0
+    assert t['consumida_fuera_ml'] == 120
+
+
+def test_lo_descartado_en_el_jardin_no_cuenta_como_tomado(cliente):
+    """Se venció allá y se tiró: es desperdicio, no leche que León tomó."""
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1')
+    t = post(cliente, f'/api/lactancia/{pid}/cerrar',
+             motivo='descartada').get_json()['tablero']
+    assert t['consumida_jardin_ml'] == 0
+    assert t['consumida_ml'] == 0
+    assert t['desperdicio_ml'] == 120
+
+
 def test_los_dias_de_stock_cuentan_el_freezer_la_heladera_y_el_jardin(cliente):
     # "Alcanza para" mide TODA la leche que León tiene para tomar, esté donde
     # esté. Con 700 ml y un consumo de 100 ml/día, son 7 días.
