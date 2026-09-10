@@ -32,7 +32,7 @@ CAMPOS_COMUNES = ['id', 'volumen_ml', 'estado', 'vencimiento',
 
 # Los estados que el JavaScript sabe dibujar (ESTADO_LABEL, lactancia.js:165).
 # Un estado que no esté en esta lista saldría en pantalla como texto crudo.
-ESTADOS_CONOCIDOS = {'disponible', 'en_jardin', 'vence_pronto', 'vencida',
+ESTADOS_CONOCIDOS = {'disponible', 'vence_pronto', 'vencida',
                      'en_heladera', 'usada', 'descartada', 'trasladada'}
 
 # Configuraciones que el JavaScript pinta en la pantalla de ajustes

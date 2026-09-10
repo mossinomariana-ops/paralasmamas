@@ -124,16 +124,16 @@ def test_una_bolsita_que_no_existe_da_un_error_claro_y_no_un_choque(cliente):
 
 
 # ── El back up del jardín ────────────────────────────────────────────────────
-# Marcar una bolsita como "está en el jardín" NO la cierra ni la saca del
-# freezer: solo dice dónde está guardada. Todo lo que la mamá mira para saber
-# cuánta leche tiene tiene que quedar igual.
+# Marcar una bolsita como "está en el jardín" NO la cierra, no la saca del
+# freezer y no le cambia el estado: solo dice dónde está guardada. Todo lo que
+# la mamá mira para saber cuánta leche tiene tiene que quedar igual.
 def test_marcar_una_bolsita_como_back_up_del_jardin(cliente):
     pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
     datos = post(cliente, f'/api/lactancia/{pid}/jardin', en_jardin='1').get_json()
     assert datos['ok']
     p = datos['freezer'][0]
     assert p['en_jardin'] is True
-    assert p['estado'] == 'en_jardin'
+    assert p['estado'] == 'disponible'          # el jardín no es un estado
     assert p['motivo_cierre'] is None           # no se cerró nada
     assert datos['historial'] == []             # no cayó al historial
 
@@ -158,6 +158,18 @@ def test_sacar_la_bolsita_del_jardin_la_deja_como_estaba(cliente):
     assert datos['tablero']['jardin_bolsas'] == 0
 
 
+def test_el_aviso_de_vencimiento_y_la_marca_del_jardin_viajan_juntos(cliente):
+    # La pantalla dibuja el 🏫 SIEMPRE que la bolsita esté marcada, así que el
+    # payload tiene que traer las dos cosas a la vez y sin pisarse: DÓNDE está
+    # (en_jardin) y CUÁNTO le queda (estado). Es el caso que más importa: la
+    # leche que se está por vencer y encima hay que ir a buscarla al jardín.
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120, dias_atras=170)
+    p = post(cliente, f'/api/lactancia/{pid}/jardin',
+             en_jardin='1').get_json()['freezer'][0]
+    assert p['en_jardin'] is True
+    assert p['estado'] == 'vence_pronto'
+
+
 def test_una_bolsita_recien_cargada_no_esta_en_el_jardin(cliente):
     datos = crear(cliente, ubicacion='freezer', volumen_ml=100).get_json()
     assert datos['freezer'][0]['en_jardin'] is False
@@ -172,7 +184,7 @@ def test_la_leche_de_la_heladera_tambien_puede_estar_en_el_jardin(cliente):
     assert datos['ok']
     p = datos['heladera'][0]
     assert p['en_jardin'] is True
-    assert p['estado'] == 'en_jardin'
+    assert p['estado'] == 'en_heladera'           # el jardín no es un estado
     assert datos['freezer'] == []                 # no se cambió de lista
     assert datos['tablero']['jardin_bolsas'] == 1
 
@@ -195,7 +207,7 @@ def test_al_bajarla_del_freezer_la_marca_del_jardin_la_sigue(cliente):
     nueva = datos['heladera'][0]
     assert nueva['tipo'] == 'descongelada'
     assert nueva['en_jardin'] is True
-    assert nueva['estado'] == 'en_jardin'
+    assert nueva['estado'] == 'en_heladera'
 
 
 def test_una_bolsita_de_casa_al_bajarla_sigue_siendo_de_casa(cliente):
@@ -219,7 +231,8 @@ def test_la_marca_del_jardin_sobrevive_al_cierre_y_a_la_reapertura(cliente):
     datos = post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada').get_json()
     assert datos['historial'][0]['en_jardin'] is True
     datos = post(cliente, f'/api/lactancia/{pid}/reabrir').get_json()
-    assert datos['freezer'][0]['estado'] == 'en_jardin'
+    assert datos['freezer'][0]['en_jardin'] is True
+    assert datos['freezer'][0]['estado'] == 'disponible'
 
 
 # ── Dónde tomó la leche ──────────────────────────────────────────────────────

@@ -98,17 +98,21 @@ def _lac_vencimiento(p, params):
 
 
 def _lac_estado(p, params, ahora):
-    """Estado en cascada: cierre manual > vencida > vence_pronto > en_jardin >
+    """Estado en cascada: cierre manual > vencida > vence_pronto >
     disponible (freezer) | en_heladera (heladera).
 
-    `en_jardin` vale en las DOS ubicaciones: la bolsita puede estar en el freezer
-    del jardín (el back up) o ya descongelada en su heladera, que es lo que pasa
-    el día que León se va con una bolsita bajada acá.
+    El jardín NO es un estado: es la marca `en_jardin`, que vale en las DOS
+    ubicaciones —la bolsita puede estar en el freezer del jardín (el back up) o
+    ya descongelada en la heladera de allá, que es lo que pasa el día que León
+    se va con una bolsita bajada acá— y que la pantalla dibuja SIEMPRE como una
+    etiqueta 🏫 aparte de esta pastilla.
 
-    Va DEBAJO del aviso a propósito: que esté en el jardín no puede tapar que se
-    está por vencer — menos todavía en la heladera, donde el reloj corre en
-    horas. Para no perder de vista dónde está, la tarjeta muestra la etiqueta 🏫
-    aparte de esta pastilla."""
+    Antes también era un estado, y eso hacía que la misma bolsita se viera de
+    dos formas distintas según el día: si un aviso de vencimiento le ganaba en
+    la cascada, el jardín pasaba a decirse con la etiqueta; si no, con la
+    pastilla. Y encima, mientras la pastilla decía "En el jardín", dejaba de
+    decir lo único que solo ella puede decir: si a esa leche le queda tiempo o
+    no. Un dato, un lugar: acá el estado, en la etiqueta el dónde."""
     if p.get('motivo_cierre'):
         return p['motivo_cierre']
     venc = _lac_vencimiento(p, params)
@@ -116,15 +120,11 @@ def _lac_estado(p, params, ahora):
         return 'vencida'
     if p['ubicacion'] == 'freezer':
         dias = (venc.date() - ahora.date()).days
-        if dias <= params['aviso_freezer_dias']:
-            return 'vence_pronto'
-        return 'en_jardin' if p.get('en_jardin') else 'disponible'
+        return 'vence_pronto' if dias <= params['aviso_freezer_dias'] else 'disponible'
     horas = (venc - ahora).total_seconds() / 3600
     umbral = (params['aviso_descongelada_horas'] if p.get('tipo') == 'descongelada'
               else params['aviso_heladera_horas'])
-    if horas <= umbral:
-        return 'vence_pronto'
-    return 'en_jardin' if p.get('en_jardin') else 'en_heladera'
+    return 'vence_pronto' if horas <= umbral else 'en_heladera'
 
 
 def _lac_horas_en_heladera(p, ahora):
@@ -196,8 +196,8 @@ def _lac_payload():
     historial = sorted((p for p in partidas if p['motivo_cierre']),
                        key=lambda p: (p['fecha_cierre'] or '', p['id']), reverse=True)
 
-    usables = [p for p in freezer if p['estado'] in ('disponible', 'en_jardin', 'vence_pronto')]
-    heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'en_jardin', 'vence_pronto')]
+    usables = [p for p in freezer if p['estado'] in ('disponible', 'vence_pronto')]
+    heladera_vigente = [p for p in heladera if p['estado'] in ('en_heladera', 'vence_pronto')]
 
     usadas = [p for p in partidas if p['motivo_cierre'] == 'usada']
     desperdicio_ml = (

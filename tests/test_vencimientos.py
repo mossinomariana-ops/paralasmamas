@@ -114,16 +114,17 @@ def test_freezer_avisa_justo_cuando_faltan_los_dias_configurados():
 
 # ── El back up del jardín ────────────────────────────────────────────────────
 # La bolsita que Mari deja en el freezer del jardín maternal sigue estando bien y
-# sigue siendo stock: lo único que cambia es que no la tiene en casa. Por eso la
-# marca reemplaza solo a "disponible" y JAMÁS puede tapar un aviso de
-# vencimiento: si se está por vencer, hay que ir a buscarla.
-def test_una_bolsita_del_jardin_dice_que_esta_en_el_jardin():
+# sigue siendo stock: lo único que cambia es que no la tiene en casa. Por eso el
+# jardín NO es un estado —no reemplaza a nada— sino una marca aparte: el estado
+# sigue diciendo cuánto tiempo le queda a esa leche, todos los días igual, y la
+# pantalla dibuja el 🏫 al lado.
+def test_la_marca_del_jardin_no_le_cambia_el_estado_a_la_bolsita():
     p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': 1}
     params = params_base(freezer_meses=6, aviso_freezer_dias=14)  # vence el 1/7
-    assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'en_jardin'
+    assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'disponible'
 
 
-def test_el_aviso_de_vencimiento_le_gana_a_la_marca_del_jardin():
+def test_el_aviso_de_vencimiento_se_ve_igual_este_o_no_en_el_jardin():
     p = {'ubicacion': 'freezer', 'fecha_extraccion': '2026-01-01', 'en_jardin': 1}
     params = params_base(freezer_meses=6, aviso_freezer_dias=14)  # vence el 1/7
     assert logica._lac_estado(p, params, datetime(2026, 6, 17, 10, 0)) == 'vence_pronto'
@@ -144,15 +145,16 @@ def test_sin_la_marca_la_bolsita_sigue_estando_disponible():
         assert logica._lac_estado(p, params, datetime(2026, 2, 1, 10, 0)) == 'disponible'
 
 
-def test_una_bolsita_de_heladera_del_jardin_dice_que_esta_en_el_jardin():
-    # La que se fue con León ya descongelada.
+def test_en_la_heladera_la_marca_del_jardin_tampoco_cambia_el_estado():
+    # La que se fue con León ya descongelada: sigue estando "en heladera", que es
+    # lo que le importa al reloj. Que sea la heladera del jardín lo dice el 🏫.
     p = {'ubicacion': 'heladera', 'tipo': 'fresca', 'en_jardin': 1,
          'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
     params = params_base(heladera_horas=48, aviso_heladera_horas=12)  # vence 3/7 08:00
-    assert logica._lac_estado(p, params, datetime(2026, 7, 2, 10, 0)) == 'en_jardin'
+    assert logica._lac_estado(p, params, datetime(2026, 7, 2, 10, 0)) == 'en_heladera'
 
 
-def test_en_la_heladera_el_aviso_tambien_le_gana_a_la_marca_del_jardin():
+def test_en_la_heladera_el_aviso_tambien_se_ve_igual_con_la_marca_del_jardin():
     # Acá importa más todavía: el reloj de la heladera corre en horas.
     p = {'ubicacion': 'heladera', 'tipo': 'fresca', 'en_jardin': 1,
          'fecha_extraccion': '2026-07-01', 'hora_extraccion': '08:00'}
