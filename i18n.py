@@ -249,7 +249,6 @@ EN = {
     "Vence en 1 h": "Expires in 1 h",
     "Vence en {n} h": "Expires in {n} h",
     "Disponible": "Available",
-    "En el jardín": "At daycare",
     "Vence pronto": "Expiring soon",
     "Vencida": "Expired",
     "En heladera": "In the fridge",
