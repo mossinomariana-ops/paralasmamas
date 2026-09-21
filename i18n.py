@@ -365,8 +365,16 @@ EN = {
     "{vol} (extraída el {fecha})": "{vol} (pumped on {fecha})",
     "Marcar como usada": "Mark as used",
     "Sí, usada": "Yes, used",
-    "Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.":
-        "Given to {bebe}: {det}. It will be closed with today's date.",
+    "Se le dio a {bebe}: {det}.": "Given to {bebe}: {det}.",
+    # "Tomó otro día": la fecha la elige la mamá (sugerencia de una tester).
+    "¿Qué día la tomó {bebe}?": "What day did {bebe} drink it?",
+    "Otro día": "Another day",
+    "{vol} marcada como usada el {fecha}.": "{vol} marked as used on {fecha}.",
+    "Corregir la fecha o los ml": "Fix the date or the ml",
+    "La fecha no puede ser anterior a la extracción de la bolsita.":
+        "The date cannot be earlier than the day the bag was pumped.",
+    "Solo se puede corregir una bolsita usada o descartada.":
+        "Only a used or discarded bag can be corrected.",
     "¿Cuántos ml tomó {bebe}? (opcional — ej: dato de la maestra)":
         "How many ml did {bebe} drink? (optional — e.g. what daycare told you)",
     "Descartar bolsita": "Discard bag",

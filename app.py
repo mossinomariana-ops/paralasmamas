@@ -187,23 +187,48 @@ def api_lactancia_cerrar(id):
         if motivo not in ('usada', 'descartada'):
             raise ValueError(f"Motivo de cierre inválido: {motivo}")
 
-        fecha_cierre = logica._lac_parsear_fecha_cierre(request.form.get('fecha_cierre'))
+        fecha_cierre, consumido_ml = logica._lac_parsear_cierre_de(partida, request.form)
+        if motivo != 'usada':
+            consumido_ml = None
         notas = (request.form.get('notas') or '').strip()[:200] or None
 
-        consumido_ml = None
-        if motivo == 'usada':
-            crudo = (request.form.get('consumido_ml') or '').strip()
-            if crudo:
-                try:
-                    consumido_ml = int(crudo)
-                except ValueError:
-                    raise ValueError("El consumo (ml) debe ser un número entero.")
-                if not 0 <= consumido_ml <= partida['volumen_ml']:
-                    raise ValueError(
-                        f"El consumo debe estar entre 0 y {partida['volumen_ml']} ml "
-                        "(lo que tenía la bolsita).")
-
         database.cerrar_partida_lactancia(id, motivo, fecha_cierre, notas, consumido_ml)
+        if _es_ajax():
+            return jsonify({'ok': True, **logica._lac_payload()})
+        return redirect(url_for('inicio'))
+    except ValueError as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': i18n.t(str(e))}), 400
+        return redirect(url_for('inicio'))
+    except Exception as e:
+        if _es_ajax():
+            return jsonify({'ok': False, 'error': str(e)}), 500
+        return redirect(url_for('inicio'))
+
+
+@app.route('/api/lactancia/<int:id>/editar-cierre', methods=['POST'])
+def api_lactancia_editar_cierre(id):
+    """Corrige, desde el historial, cuándo se usó (o descartó) una bolsita y
+    cuánto tomó el bebé. Es para la mamá que marcó hoy lo que se tomó ayer: sin
+    esto, lo único que podía hacer era reabrirla y volver a cerrarla.
+
+    Las freezadas no se tocan acá: su fecha de cierre es la de la bolsa de
+    freezer que armaron, y cambiarla sola dejaría las dos contando cosas
+    distintas."""
+    try:
+        partida = database.obtener_partida_lactancia(id)
+        if partida is None:
+            raise ValueError(f"No existe la bolsita {id}.")
+        if partida['motivo_cierre'] not in ('usada', 'descartada'):
+            raise ValueError("Solo se puede corregir una bolsita usada o descartada.")
+
+        fecha_cierre, consumido_ml = logica._lac_parsear_cierre_de(partida, request.form)
+        if partida['motivo_cierre'] != 'usada':
+            consumido_ml = None
+        notas = (request.form.get('notas') or '').strip()[:200]
+
+        database.cerrar_partida_lactancia(id, partida['motivo_cierre'], fecha_cierre,
+                                          notas, consumido_ml)
         if _es_ajax():
             return jsonify({'ok': True, **logica._lac_payload()})
         return redirect(url_for('inicio'))

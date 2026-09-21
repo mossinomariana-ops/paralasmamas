@@ -1586,6 +1586,24 @@ html[data-theme="dark"] .lac-destino-card { color: var(--color-texto-muted); }
   font-weight: 700;
 }
 
+/* Qué día la tomó (modal de Usada): "Hoy" / "Otro día" con las mismas
+   tarjetas de Heladera/Freezer del alta, y el almanaque debajo. Va con borde
+   neutro: la tarjeta con acento es la de los ml, que es la que más importa. */
+.lac-confirm-cuando {
+  display: block;
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.8rem 0.75rem;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  font-size: 0.9rem;
+  color: var(--color-texto);
+}
+.lac-confirm-cuando[hidden] { display: none; }
+.lac-cuando-cards { margin-top: 0.5rem; }
+.lac-cuando-cards .lac-destino-card { padding: 0.55rem 0.3rem; font-size: 0.9rem; }
+.lac-cuando-fecha { margin: 0.55rem 0 0; }
+.lac-cuando-fecha[hidden] { display: none; }
+
 /* Cuánto tomó el bebé, en el modal de confirmación. Es opcional, pero es el
    dato que alimenta "Bolsita sugerida", "Alcanza para" y la tabla que se
    descarga: por eso va en su propia tarjeta con el color de acento, y no como

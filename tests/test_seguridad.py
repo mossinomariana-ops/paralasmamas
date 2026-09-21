@@ -44,6 +44,7 @@ def test_sin_sesion_los_botones_reciben_un_aviso_y_no_una_pantalla(flask_app, ca
 @pytest.mark.parametrize('url', [
     '/api/lactancia/crear', '/api/lactancia/freezar',
     '/api/lactancia/1/cerrar', '/api/lactancia/1/editar',
+    '/api/lactancia/1/editar-cierre',
     '/api/lactancia/1/eliminar', '/api/lactancia/1/reabrir',
     '/api/lactancia/1/bajar', '/api/lactancia/config',
     '/api/lactancia/bebe', '/api/lactancia/recordatorio',
@@ -83,6 +84,7 @@ def test_una_mama_no_puede_cerrar_usar_ni_borrar_la_leche_de_otra(cliente, clien
         (f'/api/lactancia/{ajeno}/editar',   {'volumen_ml': 1,
                                               'fecha_extraccion': '2026-01-01',
                                               'hora_extraccion': '08:00'}),
+        (f'/api/lactancia/{ajeno}/editar-cierre', {'fecha_cierre': '2026-01-01'}),
         (f'/api/lactancia/{ajeno}/eliminar', {}),
         (f'/api/lactancia/{ajeno}/reabrir',  {}),
         (f'/api/lactancia/{ajeno}/bajar',    {}),

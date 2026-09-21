@@ -40,6 +40,7 @@ opciones" (⋯) de cada partida.
 
     var cfPartidaId = null;      // id en el modal Cerrar con fecha
     var cfMotivo = 'usada';      // 'usada' | 'descartada' en ese modal
+    var cfEditando = false;      // true: corrige un cierre del historial (✎)
     var masPartidaId = null;     // id en la hoja Más opciones
     var edPartidaId = null;      // id en el Editor
 
@@ -47,6 +48,7 @@ opciones" (⋯) de cada partida.
     // Y-m-d, altInput muestra d/m/Y). Se llenan en initFlatpickrs().
     var fpExFecha = null;
     var fpCfFecha = null;
+    var fpConfirmFecha = null;  // "Otro día" del modal de Usada
     var fpEdFecha = null;
     var fpEdBajFecha = null;  // fecha en que se bajó del freezer (solo descongeladas)
     var fpExHora = null;   // hora extracción alta (24h)
@@ -672,6 +674,9 @@ opciones" (⋯) de cada partida.
                 '</div>' + notasHtml(p) +
             '</div>' +
             '<div class="lac-item-actions">' +
+                (p.motivo_cierre === 'usada' || p.motivo_cierre === 'descartada'
+                    ? '<button type="button" class="lac-btn-icono" data-lac-editar-cierre="' + p.id + '" title="' + T('Corregir la fecha o los ml') + '">✎</button>'
+                    : '') +
                 '<button type="button" class="lac-btn-icono" data-lac-reabrir="' + p.id + '" title="' + T('Reabrir (deshacer el cierre)') + '">↩</button>' +
                 '<button type="button" class="lac-btn-icono" data-lac-eliminar="' + p.id + '" title="' + T('Eliminar definitivamente') + '">✕</button>' +
             '</div>' +
@@ -744,19 +749,25 @@ opciones" (⋯) de cada partida.
         });
     }
 
-    function cerrarDirecto(id, motivo, consumido) {
+    function cerrarDirecto(id, motivo, consumido, fecha) {
         var p = buscarPartida(id);
         var params = new URLSearchParams();
-        params.append('motivo', motivo);   // fecha_cierre vacía → hoy en el server
+        params.append('motivo', motivo);
+        // Sin fecha (o con la de hoy) el server cierra con hoy.
+        var otroDia = !!fecha && fecha !== isoDate(hoy());
+        if (otroDia) params.append('fecha_cierre', fecha);
         // Consumo real de León (opcional, solo 'usada'): cuántos ml tomó.
         if (motivo === 'usada' && consumido !== undefined && consumido !== null && consumido !== '') {
             params.append('consumido_ml', consumido);
         }
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
             var vol = p ? fmtMl(p.volumen_ml) : T('Bolsita');
-            var texto = (motivo === 'usada')
-                ? '✓ ' + T('{vol} marcada como usada.', { vol: vol })
-                : '🗑 ' + T('{vol} descartada.', { vol: vol });
+            var texto = (motivo !== 'usada')
+                ? '🗑 ' + T('{vol} descartada.', { vol: vol })
+                : otroDia
+                    ? '✓ ' + T('{vol} marcada como usada el {fecha}.',
+                               { vol: vol, fecha: fmtFechaCorta(fecha) })
+                    : '✓ ' + T('{vol} marcada como usada.', { vol: vol });
             toast(texto, 'ok', function () { deshacerCierre(id); });
         });
     }
@@ -767,13 +778,42 @@ opciones" (⋯) de cada partida.
         if (!p) return;
         cfPartidaId = id;
         cfMotivo = motivo;
+        cfEditando = false;
         $('lac-cf-titulo').childNodes[0].textContent = (motivo === 'usada')
             ? '✓ ' + T('Marcar usada') + ' ' : '🗑 ' + T('Marcar descartada') + ' ';
         $('lac-cf-sub').textContent = subPartida(p);
         $('lac-cf-fecha-label').textContent = (motivo === 'usada')
             ? T('¿Cuándo se usó?') : T('¿Cuándo se descartó?');
+        fpCfFecha.set('minDate', p.fecha_extraccion);
         fpCfFecha.setDate(isoDate(hoy()), true);
+        $('lac-cf-ml-wrap').hidden = true;
         $('lac-cf-notas').value = '';
+        $('lac-modal-cerrar').hidden = false;
+    }
+
+    // ✎ del historial: corrige cuándo se usó (o descartó) y cuánto tomó. Es el
+    // mismo modal de "otra fecha", con los datos que ya tenía la bolsita.
+    function abrirEditarCierre(id) {
+        var p = buscarPartida(id);
+        if (!p) return;
+        cfPartidaId = id;
+        cfMotivo = p.motivo_cierre;
+        cfEditando = true;
+        var usada = p.motivo_cierre === 'usada';
+        $('lac-cf-titulo').childNodes[0].textContent = '✎ ' + T('Editar bolsita') + ' ';
+        $('lac-cf-sub').textContent = subPartida(p);
+        $('lac-cf-fecha-label').textContent = usada
+            ? T('¿Qué día la tomó {bebe}?', { bebe: nombreBebe() }) : T('¿Cuándo se descartó?');
+        fpCfFecha.set('minDate', p.fecha_extraccion);
+        fpCfFecha.setDate(p.fecha_cierre, true);
+        $('lac-cf-ml-wrap').hidden = !usada;
+        if (usada) {
+            $('lac-cf-ml-label').textContent = T('¿Cuántos ml tomó {bebe}?', { bebe: nombreBebe() });
+            $('lac-cf-ml').max = p.volumen_ml;
+            $('lac-cf-ml').value = (p.consumido_ml === null || p.consumido_ml === undefined)
+                ? '' : p.consumido_ml;
+        }
+        $('lac-cf-notas').value = p.notas || '';
         $('lac-modal-cerrar').hidden = false;
     }
 
@@ -785,11 +825,20 @@ opciones" (⋯) de cada partida.
             return;
         }
         var params = new URLSearchParams();
-        params.append('motivo', cfMotivo);
         params.append('fecha_cierre', fecha);
         params.append('notas', $('lac-cf-notas').value.trim());
         var id = cfPartidaId;
         var btn = $('lac-cf-guardar');
+        if (cfEditando) {
+            if (cfMotivo === 'usada') params.append('consumido_ml', $('lac-cf-ml').value.trim());
+            btn.disabled = true;
+            postAccion('/api/lactancia/' + id + '/editar-cierre', params, function () {
+                $('lac-modal-cerrar').hidden = true;
+                toast('✎ ' + T('Bolsita actualizada.'));
+            }, function () { btn.disabled = false; });
+            return;
+        }
+        params.append('motivo', cfMotivo);
         btn.disabled = true;
         postAccion('/api/lactancia/' + id + '/cerrar', params, function () {
             $('lac-modal-cerrar').hidden = true;
@@ -993,9 +1042,10 @@ opciones" (⋯) de cada partida.
     function abrirConfirm(opts) {
         // Preferencia "sin confirmación" (de Configuraciones): ejecuta la acción
         // directo, sin modal ni checkbox ni input opcional. Aplica a TODAS.
-        if (!confirmacionesActivadas()) {
+        if (!opts.forzar && !confirmacionesActivadas()) {
             var inSalto = $('lac-confirm-input');
             if (inSalto) inSalto.value = '';
+            $('lac-confirm-cuando').hidden = true;   // sin modal, la fecha es hoy
             if (opts.accion) opts.accion();
             return;
         }
@@ -1043,8 +1093,37 @@ opciones" (⋯) de cada partida.
             inWrap.hidden = true;
         }
 
+        // opts.cuando = {label, min, otro}: "Hoy" / "Otro día" + almanaque.
+        var cuWrap = $('lac-confirm-cuando');
+        if (opts.cuando) {
+            $('lac-confirm-cuando-label').textContent = opts.cuando.label;
+            fpConfirmFecha.set('minDate', opts.cuando.min || null);
+            fpConfirmFecha.setDate(isoDate(hoy()), true);
+            elegirCuando(opts.cuando.otro ? 'otro' : 'hoy');
+            cuWrap.hidden = false;
+        } else {
+            cuWrap.hidden = true;
+        }
+
         confirmAccion = opts.accion;
         $('lac-modal-confirm').hidden = false;
+    }
+
+    function elegirCuando(valor) {
+        var radios = document.querySelectorAll('#lac-confirm-cuando input[name="lac-cuando"]');
+        [].slice.call(radios).forEach(function (r) {
+            r.checked = r.value === valor;
+            r.closest('.lac-destino-card').classList.toggle('is-activa', r.checked);
+        });
+        $('lac-confirm-fecha-wrap').hidden = valor !== 'otro';
+    }
+
+    // La fecha que eligió en el modal de Usada: la del almanaque si tildó
+    // "Otro día"; vacío (= hoy) en cualquier otro caso.
+    function fechaElegida() {
+        var otro = document.querySelector('#lac-confirm-cuando input[value="otro"]');
+        if ($('lac-confirm-cuando').hidden || !otro.checked) return '';
+        return $('lac-confirm-fecha').value;
     }
 
     function confirmarSi() {
@@ -1055,7 +1134,10 @@ opciones" (⋯) de cada partida.
     }
 
     // "✓ Usada" y "🗑 Tirar" de cada partida: piden confirmación antes de cerrar
-    function pedirCierre(id, motivo) {
+    // otroDia (solo 'usada'): abre con "Otro día" ya elegido. Lo usa "Marcar
+    // usada con otra fecha…" de Más opciones, y abre el modal aunque la mamá
+    // haya apagado las confirmaciones: vino justamente a elegir la fecha.
+    function pedirCierre(id, motivo, otroDia) {
         var p = buscarPartida(id);
         if (!p) return;
         var det = T('{vol} (extraída el {fecha})',
@@ -1063,13 +1145,16 @@ opciones" (⋯) de cada partida.
         if (motivo === 'usada') {
             abrirConfirm({
                 emoji: '✓', titulo: T('Marcar como usada'), peligro: false, boton: T('Sí, usada'),
-                msg: T('Se le dio a {bebe}: {det}. Se cierra con fecha de hoy.',
-                       { bebe: nombreBebe(), det: det }),
+                msg: T('Se le dio a {bebe}: {det}.', { bebe: nombreBebe(), det: det }),
+                forzar: !!otroDia,
+                cuando: { label: T('¿Qué día la tomó {bebe}?', { bebe: nombreBebe() }),
+                          min: p.fecha_extraccion, otro: !!otroDia },
                 input: { label: T('¿Cuántos ml tomó {bebe}?', { bebe: nombreBebe() }),
                          hint: T('Es opcional, pero con este dato calculo la bolsita que te conviene y para cuántos días te alcanza.'),
                          max: p.volumen_ml },
                 accion: function () {
-                    cerrarDirecto(id, 'usada', $('lac-confirm-input').value.trim());
+                    cerrarDirecto(id, 'usada', $('lac-confirm-input').value.trim(),
+                                  fechaElegida());
                 }
             });
         } else {
@@ -1289,6 +1374,11 @@ opciones" (⋯) de cada partida.
             allowInput: true, maxDate: 'today'
         });
         frenarTecladoHastaSegundoToque(fpCfFecha);
+        fpConfirmFecha = flatpickr($('lac-confirm-fecha'), {
+            locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
+            allowInput: true, maxDate: 'today', disableMobile: true
+        });
+        frenarTecladoHastaSegundoToque(fpConfirmFecha);
         fpEdFecha = flatpickr($('lac-ed-fecha'), {
             locale: LOCALE_FP, dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y',
             allowInput: true, maxDate: 'today'
@@ -1623,6 +1713,12 @@ opciones" (⋯) de cada partida.
         $('lac-confirm-check').addEventListener('change', function () {
             $('lac-confirm-si').disabled = !this.checked;
         });
+        // "Hoy" / "Otro día" del modal de Usada
+        $('lac-confirm-cuando').addEventListener('change', function (e) {
+            if (e.target.name !== 'lac-cuando') return;
+            elegirCuando(e.target.value);
+            if (e.target.value === 'otro') fpConfirmFecha.open();
+        });
         // "Tomó todo": completa el consumo con lo que tenía la bolsita
         $('lac-confirm-input-todo').addEventListener('click', function () {
             var inEl = $('lac-confirm-input');
@@ -1666,7 +1762,7 @@ opciones" (⋯) de cada partida.
         });
         $('lac-mas-usada').addEventListener('click', function () {
             $('lac-modal-mas').hidden = true;
-            abrirCerrarFecha(masPartidaId, 'usada');
+            pedirCierre(masPartidaId, 'usada', true);
         });
         $('lac-mas-descartada').addEventListener('click', function () {
             $('lac-modal-mas').hidden = true;
@@ -1691,6 +1787,8 @@ opciones" (⋯) de cada partida.
             if (btn) { pedirBajar(parseInt(btn.getAttribute('data-lac-bajar'), 10)); return; }
             btn = e.target.closest('[data-lac-mas]');
             if (btn) { abrirMas(parseInt(btn.getAttribute('data-lac-mas'), 10)); return; }
+            btn = e.target.closest('[data-lac-editar-cierre]');
+            if (btn) { abrirEditarCierre(parseInt(btn.getAttribute('data-lac-editar-cierre'), 10)); return; }
             btn = e.target.closest('[data-lac-reabrir]');
             if (btn) { pedirReabrir(parseInt(btn.getAttribute('data-lac-reabrir'), 10)); return; }
             btn = e.target.closest('[data-lac-eliminar]');

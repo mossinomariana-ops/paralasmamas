@@ -416,6 +416,12 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         <label for="lac-cf-fecha" id="lac-cf-fecha-label">{{ t('¿Cuándo se usó?') }}</label>
         <input type="text" id="lac-cf-fecha" placeholder="DD/MM/AAAA" autocomplete="off">
       </div>
+      {# Solo al corregir una usada desde el historial (✎): los ml se cargan en
+         el cierre, así que en el alta de este modal no hace falta. #}
+      <div class="lac-campo" id="lac-cf-ml-wrap" hidden>
+        <label for="lac-cf-ml" id="lac-cf-ml-label"></label>
+        <input type="number" id="lac-cf-ml" min="0" step="1" inputmode="numeric" placeholder="—">
+      </div>
       <div class="lac-campo">
         <label for="lac-cf-notas">{{ t('Notas (opcional)') }}</label>
         <input type="text" id="lac-cf-notas" maxlength="200">
@@ -515,6 +521,28 @@ El disclaimer médico se sacó de esta página a pedido de Elías (2026-07-06).
         <input type="checkbox" id="lac-confirm-check">
         <span id="lac-confirm-check-txt"></span>
       </label>
+      {# Cuándo la tomó (al marcar Usada). "Hoy" viene elegido; "Otro día" abre
+         el almanaque para la mamá que se olvidó de marcarla en su momento. Si
+         no, lo de ayer se sumaba a hoy y el gráfico mostraba un día inflado
+         (sugerencia de una tester, 21/09/2026). #}
+      <div class="lac-confirm-cuando" id="lac-confirm-cuando" hidden>
+        <span class="lac-confirm-input-label" id="lac-confirm-cuando-label"></span>
+        <div class="lac-destino-cards lac-cuando-cards" role="radiogroup"
+             aria-labelledby="lac-confirm-cuando-label">
+          <label class="lac-destino-card">
+            <input type="radio" name="lac-cuando" value="hoy" checked>
+            <span>{{ t('Hoy') }}</span>
+          </label>
+          <label class="lac-destino-card">
+            <input type="radio" name="lac-cuando" value="otro">
+            <span>{{ t('Otro día') }}</span>
+          </label>
+        </div>
+        <div class="lac-campo lac-cuando-fecha" id="lac-confirm-fecha-wrap" hidden>
+          <input type="text" id="lac-confirm-fecha" placeholder="DD/MM/AAAA"
+                 autocomplete="off" aria-label="{{ t('Fecha en que la tomó') }}">
+        </div>
+      </div>
       {# Cuántos ml tomó el bebé (al marcar Usada). Es OPCIONAL —dejarlo vacío
          no bloquea el botón— pero va destacado en su propia tarjeta porque es
          el dato que alimenta "Bolsita sugerida", "Alcanza para" y la tabla que

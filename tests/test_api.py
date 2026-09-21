@@ -106,6 +106,107 @@ def test_no_se_puede_cerrar_dos_veces_la_misma_bolsita(cliente):
     assert r.status_code == 400
 
 
+# ── "Tomó otro día" (sugerencia de una tester, 21/09/2026) ───────────────────
+# Si la mamá se olvidó de marcar ayer lo que tomó el bebé y lo marca hoy, el
+# gráfico le suma los dos días en uno. Con la fecha elegida, cada bolsita cae
+# el día en que se tomó de verdad.
+def test_usada_otro_dia_cae_en_ese_dia_en_el_grafico(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100, dias_atras=5)
+    ayer = (date.today() - timedelta(days=1)).isoformat()
+    datos = post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada',
+                 fecha_cierre=ayer, consumido_ml=90).get_json()
+    assert datos['ok']
+    assert datos['historial'][0]['fecha_cierre'] == ayer
+    assert datos['historial'][0]['consumido_ml'] == 90    # los ml no se pierden
+    assert [(c['fecha'], c['ml']) for c in datos['consumos']] == [(ayer, 90)]
+
+
+def test_sin_fecha_la_usada_queda_con_la_de_hoy(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', dias_atras=5)
+    datos = post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada').get_json()
+    assert datos['historial'][0]['fecha_cierre'] == date.today().isoformat()
+
+
+def test_no_se_puede_haber_tomado_antes_de_extraerla(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', dias_atras=2)
+    antes = (date.today() - timedelta(days=3)).isoformat()
+    r = post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', fecha_cierre=antes)
+    assert r.status_code == 400
+    assert r.get_json()['error']
+    assert len(payload(cliente)['freezer']) == 1          # no se cerró
+
+
+def test_tampoco_se_puede_haber_tomado_manana(cliente):
+    pid = crear_id(cliente, ubicacion='freezer')
+    manana = (date.today() + timedelta(days=1)).isoformat()
+    assert post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada',
+                fecha_cierre=manana).status_code == 400
+
+
+# ── Corregir un cierre desde el historial (✎) ────────────────────────────────
+def test_corregir_el_dia_y_los_ml_de_una_usada(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120, dias_atras=5)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=120)
+    ayer = (date.today() - timedelta(days=1)).isoformat()
+    datos = post(cliente, f'/api/lactancia/{pid}/editar-cierre', fecha_cierre=ayer,
+                 consumido_ml=100, notas='la tomó en lo de la abuela').get_json()
+    assert datos['ok']
+    p = datos['historial'][0]
+    assert p['fecha_cierre'] == ayer
+    assert p['consumido_ml'] == 100
+    assert p['motivo_cierre'] == 'usada'                  # sigue siendo usada
+    assert p['notas'] == 'la tomó en lo de la abuela'
+    assert datos['tablero']['consumida_ml'] == 100
+    assert datos['tablero']['desperdicio_ml'] == 20
+    assert [(c['fecha'], c['ml']) for c in datos['consumos']] == [(ayer, 100)]
+
+
+def test_corregir_una_usada_sin_ml_vuelve_a_tomo_todo(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=120)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada', consumido_ml=50)
+    datos = post(cliente, f'/api/lactancia/{pid}/editar-cierre',
+                 fecha_cierre=date.today().isoformat(), consumido_ml='').get_json()
+    assert datos['historial'][0]['consumido_ml'] is None
+    assert datos['tablero']['consumida_ml'] == 120
+
+
+def test_corregir_una_descartada_no_le_inventa_ml(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100, dias_atras=3)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='descartada')
+    ayer = (date.today() - timedelta(days=1)).isoformat()
+    datos = post(cliente, f'/api/lactancia/{pid}/editar-cierre',
+                 fecha_cierre=ayer, consumido_ml=40).get_json()
+    p = datos['historial'][0]
+    assert p['fecha_cierre'] == ayer and p['motivo_cierre'] == 'descartada'
+    assert p['consumido_ml'] is None
+    assert datos['tablero']['desperdicio_ml'] == 100
+
+
+def test_la_correccion_valida_igual_que_el_cierre(cliente):
+    pid = crear_id(cliente, ubicacion='freezer', volumen_ml=100, dias_atras=2)
+    post(cliente, f'/api/lactancia/{pid}/cerrar', motivo='usada')
+    url = f'/api/lactancia/{pid}/editar-cierre'
+    hoy = date.today().isoformat()
+    antes = (date.today() - timedelta(days=3)).isoformat()
+    assert post(cliente, url, fecha_cierre=antes).status_code == 400
+    assert post(cliente, url, fecha_cierre=hoy, consumido_ml=150).status_code == 400
+    assert payload(cliente)['historial'][0]['fecha_cierre'] == hoy   # quedó igual
+
+
+def test_no_se_corrige_el_cierre_de_una_bolsita_abierta_ni_de_una_freezada(cliente):
+    abierta = crear_id(cliente, ubicacion='freezer')
+    hoy = date.today().isoformat()
+    r = post(cliente, f'/api/lactancia/{abierta}/editar-cierre', fecha_cierre=hoy)
+    assert r.status_code == 400
+    assert payload(cliente)['freezer'][0]['motivo_cierre'] is None
+
+    # Freezada: su fecha es la de la bolsa de freezer que armó; no se toca sola.
+    helad = crear_id(cliente, ubicacion='heladera')
+    post(cliente, '/api/lactancia/freezar', ids=str(helad))
+    r = post(cliente, f'/api/lactancia/{helad}/editar-cierre', fecha_cierre=hoy)
+    assert r.status_code == 400
+
+
 @pytest.mark.parametrize('motivo', ['', 'perdida', 'trasladada'])
 def test_solo_se_puede_cerrar_como_usada_o_descartada(cliente, motivo):
     # 'trasladada' existe en la base, pero es interna: la pone la app cuando se

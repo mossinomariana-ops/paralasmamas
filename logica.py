@@ -555,6 +555,31 @@ def _lac_parsear_fecha_cierre(valor):
     return valor
 
 
+def _lac_parsear_cierre_de(partida, form):
+    """Fecha y ml de un cierre, validados contra ESA bolsita.
+
+    Lo usan el cierre y la corrección del cierre desde el historial: con la
+    opción "tomó otro día" la fecha la elige la mamá, y un toque de más en el
+    almanaque no puede dejar una bolsita tomada antes de que existiera (el
+    gráfico la pondría en un día en que esa leche no estaba)."""
+    fecha_cierre = _lac_parsear_fecha_cierre(form.get('fecha_cierre'))
+    if fecha_cierre < str(partida['fecha_extraccion']):
+        raise ValueError("La fecha no puede ser anterior a la extracción de la bolsita.")
+
+    consumido_ml = None
+    crudo = (form.get('consumido_ml') or '').strip()
+    if crudo:
+        try:
+            consumido_ml = int(crudo)
+        except ValueError:
+            raise ValueError("El consumo (ml) debe ser un número entero.")
+        if not 0 <= consumido_ml <= partida['volumen_ml']:
+            raise ValueError(
+                f"El consumo debe estar entre 0 y {partida['volumen_ml']} ml "
+                "(lo que tenía la bolsita).")
+    return fecha_cierre, consumido_ml
+
+
 def _lac_leer_form_alta(form, params=None):
     ubicacion = form.get('ubicacion', '')
     if ubicacion not in LAC_UBICACIONES:
